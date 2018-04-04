@@ -27,6 +27,8 @@ public class CommonConfig {
     private long smallFileThreshold = 5 * 1024 * 1024;
     private boolean damonMode = false;
     private long damonInterVal = 60;
+    private int timeWindowBegin = 0;
+    private int timeWindowEnd = 24;
 
     public String getTempFolderPath() {
         return tempFolderPath;
@@ -254,5 +256,41 @@ public class CommonConfig {
 
     public long getDamonInterVal() {
         return damonInterVal;
+    }
+    
+    public void setTimeWindowsStr(String timeWindowStr) {
+        timeWindowStr = timeWindowStr.trim();
+        String[] timeWindowArray = timeWindowStr.split(",");
+        if (timeWindowArray.length != 2) {
+            throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,21");
+        }
+        try {
+            int number = Integer.valueOf(timeWindowArray[0]);
+            if (number < 0 || number >= 24) {
+                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,10");
+            }
+            this.timeWindowBegin = number;
+            
+            number = Integer.valueOf(timeWindowArray[1]);
+            if (number < 0 || number > 24) {
+                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,10");
+            }
+            this.timeWindowEnd = number;
+            
+            if (this.timeWindowEnd < this.timeWindowBegin) {
+                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,10");
+            }
+            
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("invalid executeTimeWindow");
+        }
+    }
+
+    public int getTimeWindowBegin() {
+        return timeWindowBegin;
+    }
+
+    public int getTimeWindowEnd() {
+        return timeWindowEnd;
     }
 }

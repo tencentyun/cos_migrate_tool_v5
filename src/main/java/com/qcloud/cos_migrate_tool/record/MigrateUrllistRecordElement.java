@@ -1,20 +1,21 @@
 package com.qcloud.cos_migrate_tool.record;
 
 import com.qcloud.cos_migrate_tool.config.MigrateType;
+import com.qcloud.cos_migrate_tool.utils.HeadAttr;
 
 public class MigrateUrllistRecordElement extends RecordElement {
     private String bucketName;
     private String cosPath;
     private String url;
-    private long fileSize;
+    private HeadAttr headAttr;
 
     public MigrateUrllistRecordElement(MigrateType migrateType, String bucketName, String cosPath,
-            String url, long fileSize) {
+            String url, HeadAttr headAttr) {
         super(migrateType);
         this.bucketName = bucketName;
         this.cosPath = cosPath;
         this.url = url;
-        this.fileSize = fileSize;
+        this.headAttr = headAttr;
     }
 
     @Override
@@ -26,7 +27,8 @@ public class MigrateUrllistRecordElement extends RecordElement {
 
     @Override
     public String buildValue() {
-        String value = String.format("[fileSize: %d]", fileSize);
+        String value = String.format("[fileSize: %d], [lastModify: %s]", headAttr.fileSize,
+                headAttr.lastModify);
         return value;
     }
 }

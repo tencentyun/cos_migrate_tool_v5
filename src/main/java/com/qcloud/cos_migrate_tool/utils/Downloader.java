@@ -54,10 +54,11 @@ public class Downloader {
         this.idleConnectionMonitor.start();
     }
 
-    public long headFile(String url) {
+    public HeadAttr headFile(String url) {
 
         int retry = 0;
         int maxRetryCount = 5;
+        HeadAttr headAttr = new HeadAttr();
         while (retry < maxRetryCount) {
             HttpHead httpHead = null;
             try {
@@ -67,10 +68,11 @@ public class Downloader {
                 httpHead = new HttpHead(uri);
             } catch (URISyntaxException e) {
                 String errMsg = "Invalid url:" + url;
-                log.error(errMsg);
+                log.error(errMsg, e);
+                return null;
             } catch (MalformedURLException e) {
                 log.error("headFile url fail,url:{},msg:{}", url, e.getMessage());
-                return -1;
+                return null;
             }
 
             httpHead.setConfig(requestConfig);
@@ -88,31 +90,37 @@ public class Downloader {
                     throw new Exception(errMsg);
                 }
 
-                if (!httpResponse.containsHeader("content-length")) {
-                    log.info("not find content-length");
-                    return -1;
-                }
-
-                Header header = httpResponse.getFirstHeader("content-length");
-
-                try {
-                    long contentLength = Long.valueOf(header.getValue());
-                    if (contentLength < 0) {
-                        throw new IllegalArgumentException("The minimum of content-length is 0");
+                if (httpResponse.containsHeader("content-length")) {
+                    Header header = httpResponse.getFirstHeader("content-length");
+                    long contentLength = -1;
+                    try {
+                        contentLength = Long.valueOf(header.getValue());
+                        if (contentLength < 0) {
+                            log.error("invalid contentlength, url {}, contentLength {}", url,
+                                    header.getValue());
+                            return null;
+                        }
+                        headAttr.fileSize = contentLength;
+                    } catch (NumberFormatException e) {
+                        log.error("invalid contentlength, url {}, contentLength {}", url,
+                                header.getValue());
+                        return null;
                     }
-                    return contentLength;
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("invalid content-length");
                 }
 
+                if (httpResponse.containsHeader("Last-Modified")) {
+                    Header header = httpResponse.getFirstHeader("Last-Modified");
+                    headAttr.lastModify = header.getValue();
+                }
+                return headAttr;
             } catch (Exception e) {
-                log.error(e.toString());
+                log.error("head file attr fail, url: {}, retry: {}/{}, exception: {}", url, retry,
+                        maxRetryCount, e.toString());
                 httpHead.abort();
-                return -1;
+                ++retry;
             }
-
         }
-        return -1;
+        return null;
     }
 
     private void showDownloadProgress(String url, long byteTotal, long byteDownloadSofar) {
@@ -146,7 +154,7 @@ public class Downloader {
                 log.error(errMsg);
                 return false;
             } catch (MalformedURLException e) {
-                log.error("downFile url fail,url:{},msg:{}", url, e.getMessage());
+                log.error("downFile url fail, url:{}, msg:{}", url, e.getMessage());
                 return false;
             }
 
@@ -200,7 +208,8 @@ public class Downloader {
                     }
                 }
             } catch (Exception e) {
-                log.error(e.toString());
+                log.error("download file failed, url: {}, retry: {}/{}, exception: {}", url, retry,
+                        maxRetryCount, e.toString());
                 httpGet.abort();
                 localFile.delete();
             }

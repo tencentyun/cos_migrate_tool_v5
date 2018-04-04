@@ -14,8 +14,6 @@ import com.qcloud.cos_migrate_tool.utils.Downloader;
 import com.qiniu.util.Auth;
 
 public class MigrateQiniuTask extends Task {
-
-	private CopyFromQiniuConfig config;
 	private Auth auth;
 	private String srcKey;
 	private long fileSize;
@@ -24,8 +22,7 @@ public class MigrateQiniuTask extends Task {
 	public MigrateQiniuTask(CopyFromQiniuConfig config, Auth auth, String srcKey, long fileSize, String etag,
 			TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
 			Semaphore semaphore) {
-	    super(semaphore, smallFileTransfer, bigFileTransfer, config.getSmallFileThreshold(), recordDb);
-
+	    super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
 		this.config = config;
 		this.srcKey = srcKey;
 		this.fileSize = fileSize;
@@ -37,7 +34,7 @@ public class MigrateQiniuTask extends Task {
 	}
 
 	private String buildCOSPath() {
-        String srcPrefix = config.getSrcPrefix();
+        String srcPrefix = ((CopyFromQiniuConfig)config).getSrcPrefix();
         int lastDelimiter = srcPrefix.lastIndexOf("/");
         String keyName = srcKey.substring(lastDelimiter + 1);
         String cosPrefix = config.getCosPath();
@@ -63,7 +60,7 @@ public class MigrateQiniuTask extends Task {
 		}
 
 		// generate download url
-		String baseUrl = "http://" + config.getSrcEndpoint() + "/" + srcKey;
+		String baseUrl = "http://" + ((CopyFromQiniuConfig)config).getSrcEndpoint() + "/" + srcKey;
 		String url = auth.privateDownloadUrl(baseUrl, 3600);
 
 		File localFile = new File(localPath);

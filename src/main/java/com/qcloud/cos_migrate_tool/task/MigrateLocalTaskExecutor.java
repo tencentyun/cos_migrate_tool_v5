@@ -69,20 +69,12 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
 
                 String localPath = SystemUtils.formatLocalPath(file.toString());
                 String filePath = "";
-                if (filePath.contains(".w.")) {
-                    return super.visitFile(file, attrs);
-                }
                 try {
                     if (!((CopyFromLocalConfig) config).isExcludes(localPath)) {
                         File localFile = new File(file.toString());
-                        StorageClass storageClass =
-                                ((CopyFromLocalConfig) config).getStorageClass();
-                        boolean entireFileMd5Attached = config.isEntireFileMd5Attached();
-                        long smallFileThreshold = config.getSmallFileThreshold();
-                        MigrateLocalTask migrateLocalTask = new MigrateLocalTask(bucketName,
-                                localFolder, cosFolder, localFile, storageClass,
-                                smallFileTransferManager, bigFileTransferManager,
-                                smallFileThreshold, recordDb, semaphore, entireFileMd5Attached);
+                        MigrateLocalTask migrateLocalTask =
+                                new MigrateLocalTask(semaphore, config, smallFileTransferManager,
+                                        bigFileTransferManager, recordDb, localFile);
                         AddTask(migrateLocalTask);
                     }
                 } catch (InterruptedException e) {

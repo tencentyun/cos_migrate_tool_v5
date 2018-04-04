@@ -39,6 +39,7 @@ public class ConfigParser {
     private static final String COMMON_ENTIRE_FILE_MD5_ATTACHED = "entireFileMd5Attached";
     private static final String COMMON_DAEMON_MODE = "daemonMode";
     private static final String COMMON_DAEMON_MODE_INTERVAL = "daemonModeInterVal";
+    private static final String COMMON_EXECUTE_TIME_WINDOW = "executeTimeWindow";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -300,12 +301,15 @@ public class ConfigParser {
         if (!isKeyExist(prefs, COMMON_SECTION_NAME, COMMON_ENTIRE_FILE_MD5_ATTACHED)) {
             return false;
         }
-        
+
         if (!isKeyExist(prefs, COMMON_SECTION_NAME, COMMON_DAEMON_MODE)) {
             return false;
         }
-        
+
         if (!isKeyExist(prefs, COMMON_SECTION_NAME, COMMON_DAEMON_MODE_INTERVAL)) {
+            return false;
+        }
+        if (!isKeyExist(prefs, COMMON_SECTION_NAME, COMMON_EXECUTE_TIME_WINDOW)) {
             return false;
         }
         return true;
@@ -404,22 +408,26 @@ public class ConfigParser {
                     getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_STORAGE_CLASS);
             assert (storageClassStr != null);
             commonConfig.setStorageClass(storageClassStr);
-            
+
 
             String entireFileMd5AttachedStr =
                     getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_ENTIRE_FILE_MD5_ATTACHED);
             assert (entireFileMd5AttachedStr != null);
             commonConfig.setEntireFileMd5Attached(entireFileMd5AttachedStr);
-            
-            String daemonModeStr =
-                    getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_DAEMON_MODE);
+
+            String daemonModeStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_DAEMON_MODE);
             assert (daemonModeStr != null);
             commonConfig.setDaemonMode(daemonModeStr);
 
             String daemonModeInterValStr =
                     getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_DAEMON_MODE_INTERVAL);
             assert (daemonModeInterValStr != null);
-            commonConfig.setDaemonModeInterVal(daemonModeInterValStr);       
+            commonConfig.setDaemonModeInterVal(daemonModeInterValStr);
+
+            String timeWindowStr =
+                    getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_EXECUTE_TIME_WINDOW);
+            assert (timeWindowStr != null);
+            commonConfig.setTimeWindowsStr(timeWindowStr);
 
         } catch (Exception e) {
             System.err.println(e.getMessage());

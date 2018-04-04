@@ -82,11 +82,10 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                     String keyName = srcKey.substring(lastDelimiter);
                     String copyDestKey = config.getCosPath() + keyName;
 
-                    MigrateCopyBucketTask task = new MigrateCopyBucketTask(semaphore,
-                            smallFileTransferManager, bigFileTransferManager,
-                            config.getSmallFileThreshold(), recordDb, srcCosClient,
-                            config.getRegion(), config.getBucketName(), copyDestKey, srcRegion,
-                            srcBucketName, srcKey, srcSize, srcEtag);
+                    MigrateCopyBucketTask task =
+                            new MigrateCopyBucketTask(semaphore, (CopyBucketConfig) config,
+                                    smallFileTransferManager, bigFileTransferManager, recordDb,
+                                    srcCosClient, srcKey, srcSize, srcEtag, copyDestKey);
                     AddTask(task);
                 }
                 if (!objectListing.isTruncated()) {

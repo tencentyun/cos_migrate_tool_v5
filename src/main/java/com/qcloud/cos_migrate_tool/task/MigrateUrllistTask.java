@@ -11,20 +11,17 @@ import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateUrllistRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.Downloader;
+import com.qcloud.cos_migrate_tool.utils.HeadAttr;
 
 public class MigrateUrllistTask extends Task {
 
-    private CopyFromUrllistConfig config;
     private String url;
     private String srcKey;
 
     public MigrateUrllistTask(CopyFromUrllistConfig config, String url, String srcKey,
             TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
             Semaphore semaphore) {
-        super(semaphore, smallFileTransfer, bigFileTransfer, config.getSmallFileThreshold(),
-                recordDb);
-
-        this.config = config;
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
         this.url = url;
         this.srcKey = srcKey;
         if (srcKey.startsWith("/")) {
@@ -46,15 +43,27 @@ public class MigrateUrllistTask extends Task {
 
         String cosPath = buildCOSPath();
         String localPath = config.getTempFolderPath() + ThreadLocalRandom.current().nextLong();
-        long fileSize = -1;
+        HeadAttr headAttr = null;
         try {
-            fileSize = Downloader.instance.headFile(url);
+            headAttr = Downloader.instance.headFile(url);
         } catch (Exception e) {
-            log.error("head file fail, url: {}, msg:{}", url, e.getMessage());
+            String printMsg = String.format("head url attr fail, url: %s", url);
+            System.err.println(printMsg);
+            log.error(printMsg, e);
+            TaskStatics.instance.addFailCnt();
+            return;
+        }
+        
+        if (headAttr == null) {
+            String printMsg = String.format("head url attr fail, url: %s", url);
+            System.err.println(printMsg);
+            log.error(printMsg);
+            TaskStatics.instance.addFailCnt();
+            return;
         }
 
         MigrateUrllistRecordElement urllistRecordElement = new MigrateUrllistRecordElement(
-                MigrateType.MIGRATE_FROM_URLLIST, config.getBucketName(), cosPath, url, fileSize);
+                MigrateType.MIGRATE_FROM_URLLIST, config.getBucketName(), cosPath, url, headAttr);
         if (isExist(urllistRecordElement)) {
             TaskStatics.instance.addSkipCnt();
             return;

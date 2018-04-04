@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos.transfer.TransferManager;
+import com.qcloud.cos_migrate_tool.config.CommonConfig;
+import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateLocalRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
@@ -24,16 +26,16 @@ public class MigrateLocalTask extends Task {
     private boolean entireMd5Attached;
 
 
-    public MigrateLocalTask(String bucketName, String localFolder, String cosFolder, File localFile,
-            StorageClass storageClass, TransferManager smallFileTransfer,
-            TransferManager bigFileTransfer, long smallFileThreshold, RecordDb recordDb, Semaphore semaphore,  boolean entireMd5Attached) {
-        super(semaphore, smallFileTransfer, bigFileTransfer, smallFileThreshold, recordDb);
-        this.bucketName = bucketName;
-        this.localFolder = localFolder;
-        this.cosFolder = cosFolder;
+    public MigrateLocalTask(Semaphore semaphore, CommonConfig commonConfig,
+            TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
+            File localFile) {
+        super(semaphore, commonConfig, smallFileTransfer, bigFileTransfer, recordDb);
+        this.bucketName = commonConfig.getBucketName();
+        this.localFolder = ((CopyFromLocalConfig) commonConfig).getLocalPath();
+        this.cosFolder = commonConfig.getCosPath();
         this.localFile = localFile;
-        this.storageClass = storageClass;
-        this.entireMd5Attached = entireMd5Attached;
+        this.storageClass = commonConfig.getStorageClass();
+        this.entireMd5Attached = commonConfig.isEntireFileMd5Attached();
     }
 
     private String buildCOSPath(String localPath) {
@@ -57,37 +59,14 @@ public class MigrateLocalTask extends Task {
             return;
         }
 
-		try {
-			uploadFile(bucketName, cosPath, localFile, storageClass, entireMd5Attached);
-            saveRecord(migrateLocalRecordElement);
-			TaskStatics.instance.addSuccessCnt();
-			String printMsg = String.format("[ok] task_info: %s", migrateLocalRecordElement.buildKey());
-			System.out.println(printMsg);
-			log.info(printMsg);
-		} catch (Exception e) {
-			String printMsg = String.format("[fail] task_info: %s", migrateLocalRecordElement.buildKey());
-			System.out.println(printMsg);
-			log.error("fail! task_info: [key: {}], [value: {}], exception: {}", migrateLocalRecordElement.buildKey(),
-					migrateLocalRecordElement.buildValue(), e.toString());
-			TaskStatics.instance.addFailCnt();
-		}
-		
-        /*
-        PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
-        putObjectRequest.setStorageClass(storageClass);
-        Upload upload = null;
         try {
-            if (fileSize >= SMALL_FILE_THRESHOLD) {
-                upload = bigFileTransfer.upload(putObjectRequest);
-            } else {
-                upload = smallFileTransfer.upload(putObjectRequest);
-            }
-            upload.waitForCompletion();
-            recordDb.saveRecord(migrateLocalRecordElement);
+            uploadFile(bucketName, cosPath, localFile, storageClass, entireMd5Attached);
+            saveRecord(migrateLocalRecordElement);
             TaskStatics.instance.addSuccessCnt();
             String printMsg =
                     String.format("[ok] task_info: %s", migrateLocalRecordElement.buildKey());
             System.out.println(printMsg);
+            log.info(printMsg);
         } catch (Exception e) {
             String printMsg =
                     String.format("[fail] task_info: %s", migrateLocalRecordElement.buildKey());
@@ -95,8 +74,7 @@ public class MigrateLocalTask extends Task {
             log.error("fail! task_info: [key: {}], [value: {}], exception: {}",
                     migrateLocalRecordElement.buildKey(), migrateLocalRecordElement.buildValue(),
                     e.toString());
-            TaskStatics.instance.addSkipCnt();
+            TaskStatics.instance.addFailCnt();
         }
-        */
     }
 }

@@ -20,7 +20,6 @@ import com.qcloud.cos_migrate_tool.record.RecordDb;
 
 public class MigrateAwsTask extends Task {
 
-    private CopyFromAwsConfig config;
     private String srcKey;
     private long fileSize;
     private String etag;
@@ -29,9 +28,7 @@ public class MigrateAwsTask extends Task {
     public MigrateAwsTask(CopyFromAwsConfig config, AmazonS3 s3Client, String srcKey, long fileSize,
             String etag, TransferManager smallFileTransfer, TransferManager bigFileTransfer,
             RecordDb recordDb, Semaphore semaphore) {
-        super(semaphore, smallFileTransfer, bigFileTransfer, config.getSmallFileThreshold(),
-                recordDb);
-        this.config = config;
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
         this.s3Client = s3Client;
         this.srcKey = srcKey;
         this.fileSize = fileSize;
@@ -39,11 +36,10 @@ public class MigrateAwsTask extends Task {
         if (srcKey.startsWith("/")) {
             this.srcKey = srcKey.substring(1);
         }
-
     }
 
     private String buildCOSPath() {
-        String srcPrefix = config.getSrcPrefix();
+        String srcPrefix = ((CopyFromAwsConfig) config).getSrcPrefix();
         int lastDelimiter = srcPrefix.lastIndexOf("/");
         String keyName = srcKey.substring(lastDelimiter + 1);
         String cosPrefix = config.getCosPath();
@@ -140,20 +136,25 @@ public class MigrateAwsTask extends Task {
         try {
             GetObjectProgressListener getObjectProgressListener =
                     new GetObjectProgressListener(srcKey);
-            s3Client.getObject(new GetObjectRequest(config.getSrcBucket(), srcKey)
-                    .<GetObjectRequest>withGeneralProgressListener(getObjectProgressListener),
+            s3Client.getObject(
+                    new GetObjectRequest(((CopyFromAwsConfig) config).getSrcBucket(), srcKey)
+                            .<GetObjectRequest>withGeneralProgressListener(
+                                    getObjectProgressListener),
                     localFile);
             if (!localFile.exists()) {
-                String printMsg = String.format("[fail] [task_info: %s]", awsRecordElement.buildKey());
+                String printMsg =
+                        String.format("[fail] [task_info: %s]", awsRecordElement.buildKey());
                 System.out.println(printMsg);
-                log.error("[fail] [taskInfo: {}] [srcKey: {}] [download localfile failed, localFile {} not exist]",
+                log.error(
+                        "[fail] [taskInfo: {}] [srcKey: {}] [download localfile failed, localFile {} not exist]",
                         awsRecordElement.buildKey(), srcKey, localPath);
                 TaskStatics.instance.addFailCnt();
                 return;
             }
 
             if (localFile.length() != this.fileSize) {
-                String printMsg = String.format("[fail] [task_info: %s]", awsRecordElement.buildKey());
+                String printMsg =
+                        String.format("[fail] [task_info: %s]", awsRecordElement.buildKey());
                 System.out.println(printMsg);
                 log.error("[fail] [taskInfo: {}] [download size {} not equal meta size {}]",
                         awsRecordElement.buildKey(), localFile.length(), this.fileSize);

@@ -56,7 +56,7 @@ public class MigrateUrllistTaskExecutor extends TaskExecutor {
 		SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
 			public FileVisitResult visitFile(Path urllistPath, BasicFileAttributes attrs) throws IOException {
 
-				System.out.println(urllistPath.toString());
+				log.info("ready to migrate url file {}", urllistPath.toAbsolutePath().toString());
 				File urllistFile = urllistPath.toFile();
 				FileInputStream fis = null;
 				try {

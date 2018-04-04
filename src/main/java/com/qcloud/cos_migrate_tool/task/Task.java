@@ -3,6 +3,7 @@ package com.qcloud.cos_migrate_tool.task;
 import java.io.File;
 import java.util.concurrent.Semaphore;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,7 @@ import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos.transfer.TransferProgress;
 import com.qcloud.cos.transfer.Upload;
 import com.qcloud.cos.utils.Md5Utils;
+import com.qcloud.cos_migrate_tool.config.CommonConfig;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.record.RecordElement;
 
@@ -27,14 +29,16 @@ public abstract class Task implements Runnable {
     protected TransferManager bigFileTransfer;
     protected long smallFileThreshold;
     private RecordDb recordDb;
+    protected CommonConfig config;
 
-    public Task(Semaphore semaphore, TransferManager smallFileTransfer,
-            TransferManager bigFileTransfer, long smallFileThreshold, RecordDb recordDb) {
+    public Task(Semaphore semaphore, CommonConfig config, TransferManager smallFileTransfer,
+            TransferManager bigFileTransfer, RecordDb recordDb) {
         super();
         this.semaphore = semaphore;
+        this.config = config;
         this.smallFileTransfer = smallFileTransfer;
         this.bigFileTransfer = bigFileTransfer;
-        this.smallFileThreshold = smallFileThreshold;
+        this.smallFileThreshold = config.getSmallFileThreshold();
         this.recordDb = recordDb;
     }
 
@@ -171,10 +175,29 @@ public abstract class Task implements Runnable {
 
     public abstract void doTask();
 
+    private void checkTimeWindows() throws InterruptedException {
+        int timeWindowBegin = config.getTimeWindowBegin();
+        int timeWindowEnd = config.getTimeWindowEnd();
+        while (true) {
+            DateTime dateTime = DateTime.now();
+            int hour = dateTime.getHourOfDay();
+            if (hour >= timeWindowBegin && hour <= timeWindowEnd) {
+                return;
+            }
+            String printTips = String.format("currentTime %s, wait next time window [%d, %d]",
+                    dateTime.toString("yyyy-MM-dd HH:mm:ss"), timeWindowBegin, timeWindowEnd);
+            System.out.println(printTips);
+            log.info(printTips);
+            Thread.sleep(60000);
+        }
+    }
 
     public void run() {
         try {
+            checkTimeWindows();
             doTask();
+        } catch (InterruptedException e) {
+            log.error("task is interrupted", e);
         } finally {
             semaphore.release();
         }

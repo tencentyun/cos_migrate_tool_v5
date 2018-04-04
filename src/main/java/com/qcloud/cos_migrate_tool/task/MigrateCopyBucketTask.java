@@ -7,6 +7,7 @@ import com.qcloud.cos.model.CopyObjectRequest;
 import com.qcloud.cos.region.Region;
 import com.qcloud.cos.transfer.Copy;
 import com.qcloud.cos.transfer.TransferManager;
+import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCopyBucketRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
@@ -22,17 +23,16 @@ public class MigrateCopyBucketTask extends Task {
     private final long srcSize;
     private final String srcEtag;
 
-    public MigrateCopyBucketTask(Semaphore semaphore, TransferManager smallFileTransfer,
-            TransferManager bigFileTransfer, long smallFileThreshold, RecordDb recordDb, COSClient srcCOSClient,
-            String destRegion, String destBucketName, String destKey, String srcRegion,
-            String srcBucketName, String srcKey, long srcSize, String srcEtag) {
-        super(semaphore, smallFileTransfer, bigFileTransfer, smallFileThreshold, recordDb);
+    public MigrateCopyBucketTask(Semaphore semaphore, CopyBucketConfig config,
+            TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
+            COSClient srcCOSClient, String srcKey, long srcSize, String srcEtag, String destKey) {
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
         this.srcCOSClient = srcCOSClient;
-        this.destRegion = destRegion;
-        this.destBucketName = destBucketName;
+        this.destRegion = config.getRegion();
+        this.destBucketName = config.getBucketName();
         this.destKey = destKey;
-        this.srcRegion = srcRegion;
-        this.srcBucketName = srcBucketName;
+        this.srcRegion = config.getSrcRegion();
+        this.srcBucketName = config.getSrcBucket();
         this.srcKey = srcKey;
         this.srcSize = srcSize;
         this.srcEtag = srcEtag;

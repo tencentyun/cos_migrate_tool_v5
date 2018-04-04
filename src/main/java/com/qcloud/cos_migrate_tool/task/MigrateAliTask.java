@@ -22,7 +22,6 @@ import com.qcloud.cos_migrate_tool.record.RecordDb;
 
 public class MigrateAliTask extends Task {
 
-    private CopyFromAliConfig config;
     private OSSClient ossClient;
     private String srcKey;
     private long fileSize;
@@ -31,10 +30,7 @@ public class MigrateAliTask extends Task {
     public MigrateAliTask(CopyFromAliConfig config, OSSClient ossClient, String srcKey,
             long fileSize, String etag, TransferManager smallFileTransfer,
             TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore) {
-        super(semaphore, smallFileTransfer, bigFileTransfer, config.getSmallFileThreshold(),
-                recordDb);
-
-        this.config = config;
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
         this.ossClient = ossClient;
         this.srcKey = srcKey;
         this.fileSize = fileSize;
@@ -46,7 +42,7 @@ public class MigrateAliTask extends Task {
     }
 
     private String buildCOSPath() {
-        String srcPrefix = config.getSrcPrefix();
+        String srcPrefix = ((CopyFromAliConfig)config).getSrcPrefix();
         int lastDelimiter = srcPrefix.lastIndexOf("/");
         String keyName = srcKey.substring(lastDelimiter + 1);
         String cosPrefix = config.getCosPath();
@@ -143,7 +139,7 @@ public class MigrateAliTask extends Task {
             GetObjectProgressListener downloadProgressListener =
                     new GetObjectProgressListener(srcKey);
             ObjectMetadata objMeta = ossClient.getObject(
-                    new GetObjectRequest(config.getSrcBucket(), srcKey)
+                    new GetObjectRequest(((CopyFromAliConfig)config).getSrcBucket(), srcKey)
                             .<GetObjectRequest>withProgressListener(downloadProgressListener),
                     new File(localPath));
             if (!downloadProgressListener.isSucceed()) {
