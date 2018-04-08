@@ -272,12 +272,12 @@ public class CommonConfig {
             this.timeWindowBegin = number;
             
             number = Integer.valueOf(timeWindowArray[1]);
-            if (number < 0 || number > 24) {
+            if (number <= 0 || number > 24) {
                 throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,10");
             }
             this.timeWindowEnd = number;
             
-            if (this.timeWindowEnd < this.timeWindowBegin) {
+            if (this.timeWindowEnd <= this.timeWindowBegin) {
                 throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,10");
             }
             

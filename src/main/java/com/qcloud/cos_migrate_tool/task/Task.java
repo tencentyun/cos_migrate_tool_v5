@@ -181,7 +181,7 @@ public abstract class Task implements Runnable {
         while (true) {
             DateTime dateTime = DateTime.now();
             int hour = dateTime.getHourOfDay();
-            if (hour >= timeWindowBegin && hour <= timeWindowEnd) {
+            if (hour >= timeWindowBegin && hour < timeWindowEnd) {
                 return;
             }
             String printTips = String.format("currentTime %s, wait next time window [%d, %d]",
