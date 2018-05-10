@@ -26,4 +26,4 @@ sh start_migrate.sh -DmigrateAws.prefix=/test_data/bbb/ -Dcommon.cosPath=/bbb
 因此，我们参照的db中是否有过迁移成功的记录，而不是查找COS，如果绕过了迁移工具，通过别的方式(比如coscmd或者控制台)删除修改了文件，那么运行迁移工具由于不会察觉到这种变化，是不会重新迁移的。
 
 ## 其他
-请参照COS迁移工具官网文档
+请参照COS迁移工具[官网文档](https://cloud.tencent.com/document/product/436/15392)
