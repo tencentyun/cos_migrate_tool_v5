@@ -26,16 +26,16 @@ public class MigrateLocalTask extends Task {
     private boolean entireMd5Attached;
 
 
-    public MigrateLocalTask(Semaphore semaphore, CommonConfig commonConfig,
+    public MigrateLocalTask(Semaphore semaphore, CopyFromLocalConfig copyFromLocalConfig,
             TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
             File localFile) {
-        super(semaphore, commonConfig, smallFileTransfer, bigFileTransfer, recordDb);
-        this.bucketName = commonConfig.getBucketName();
-        this.localFolder = ((CopyFromLocalConfig) commonConfig).getLocalPath();
-        this.cosFolder = commonConfig.getCosPath();
+        super(semaphore, copyFromLocalConfig, smallFileTransfer, bigFileTransfer, recordDb);
+        this.bucketName = copyFromLocalConfig.getBucketName();
+        this.localFolder = copyFromLocalConfig.getLocalPath();
+        this.cosFolder = copyFromLocalConfig.getCosPath();
         this.localFile = localFile;
-        this.storageClass = commonConfig.getStorageClass();
-        this.entireMd5Attached = commonConfig.isEntireFileMd5Attached();
+        this.storageClass = copyFromLocalConfig.getStorageClass();
+        this.entireMd5Attached = copyFromLocalConfig.isEntireFileMd5Attached();
     }
 
     private String buildCOSPath(String localPath) {
@@ -50,6 +50,20 @@ public class MigrateLocalTask extends Task {
         String cosPath = buildCOSPath(localPath);
         long mtime = localFile.lastModified();
         long fileSize = localFile.length();
+        long ignoreModifiedTimeLessThan =
+                ((CopyFromLocalConfig) config).getIgnoreModifiedTimeLessThan();
+        if (ignoreModifiedTimeLessThan > 0) {
+            long currTime = System.currentTimeMillis();
+            if ((currTime - mtime) / 1000 < ignoreModifiedTimeLessThan) {
+                String printMsg = String.format(
+                        "[condition_not_match] [reason: ignoreModifiedTimeLessThan]  [local_file: %s], [cur_time: %d], [lastModifed_time: %d]，[ignoreModifiedTimeLessThan: %d]",
+                        localFile.getAbsoluteFile(), currTime / 1000, mtime / 1000, ignoreModifiedTimeLessThan);
+                System.out.println(printMsg);
+                log.info(printMsg);
+                TaskStatics.instance.addConditionNotMatchCnt();
+                return;
+            }
+        }
 
         MigrateLocalRecordElement migrateLocalRecordElement =
                 new MigrateLocalRecordElement(bucketName, localPath, cosPath, mtime, fileSize);

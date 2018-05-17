@@ -26,6 +26,7 @@ public class ConfigParser {
 
     private static final String COMMON_SECTION_NAME = "common";
     private static final String COMMON_REGION = "region";
+    private static final String COMMON_ENDPOINT_SUFFIX = "endpoint_suffix";
     private static final String COMMON_BUCKETNAME = "bucketName";
     private static final String COMMON_AK = "secretId";
     private static final String COMMON_SK = "secretKey";
@@ -44,6 +45,7 @@ public class ConfigParser {
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
     private static final String LOCAL_EXECLUDE = "exeludes";
+    private static final String IGNORE_MODIFIED_TIME_LESS_THAN = "ignoreModifiedTimeLessThanSeconds";
 
     private static final String ALI_SECTION_NAME = "migrateAli";
     private static final String AWS_SECTION_NAME = "migrateAws";
@@ -428,6 +430,11 @@ public class ConfigParser {
                     getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_EXECUTE_TIME_WINDOW);
             assert (timeWindowStr != null);
             commonConfig.setTimeWindowsStr(timeWindowStr);
+            
+            String endPointSuffixStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_ENDPOINT_SUFFIX);
+            if (endPointSuffixStr != null && !endPointSuffixStr.trim().isEmpty()) {
+                commonConfig.setEndpointSuffix(endPointSuffixStr);
+            }
 
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -452,6 +459,11 @@ public class ConfigParser {
             String excludes = getConfigValue(prefs, LOCAL_SECTION_NAME, LOCAL_EXECLUDE);
             if (excludes != null && !excludes.trim().isEmpty()) {
                 copyLocalConfig.setExcludes(excludes);
+            }
+            
+            String ignoreModifiedTimeLessThanStr = getConfigValue(prefs, LOCAL_SECTION_NAME, IGNORE_MODIFIED_TIME_LESS_THAN);
+            if (ignoreModifiedTimeLessThanStr != null && !ignoreModifiedTimeLessThanStr.trim().isEmpty()) {
+                copyLocalConfig.setIgnoreModifiedTimeLessThan(ignoreModifiedTimeLessThanStr);
             }
 
         } catch (Exception e) {

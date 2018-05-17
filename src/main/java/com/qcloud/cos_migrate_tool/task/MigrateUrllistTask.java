@@ -42,7 +42,7 @@ public class MigrateUrllistTask extends Task {
     public void doTask() {
 
         String cosPath = buildCOSPath();
-        String localPath = config.getTempFolderPath() + ThreadLocalRandom.current().nextLong();
+        String localPath = config.getTempFolderPath() + ThreadLocalRandom.current().nextLong(Long.MAX_VALUE) + "_" + Thread.currentThread().getName();
         HeadAttr headAttr = null;
         try {
             headAttr = Downloader.instance.headFile(url);

@@ -2,6 +2,7 @@ package com.qcloud.cos_migrate_tool.task;
 
 import java.io.File;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -60,9 +61,11 @@ public abstract class Task implements Runnable {
     public void showTransferProgress(Upload upload, boolean multipart, String key, long mtime)
             throws InterruptedException {
         boolean pointSaveFlag = false;
+        int printCount = 0;
         do {
+            ++printCount;
             try {
-                Thread.sleep(2000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 return;
             }
@@ -73,11 +76,13 @@ public abstract class Task implements Runnable {
             if (byteTotal != 0) {
                 pct = progress.getPercentTransferred();
             }
-            String printMsg = String.format(
-                    "[UploadInProgress] [key: %s] [byteSent/ byteTotal/ percentage: %d/ %d/ %.2f%%]",
-                    key, byteSent, byteTotal, pct);
-            log.info(printMsg);
-            System.out.println(printMsg);
+            if (printCount % 5 == 0) {
+                String printMsg = String.format(
+                        "[UploadInProgress] [key: %s] [byteSent/ byteTotal/ percentage: %d/ %d/ %.2f%%]",
+                        key, byteSent, byteTotal, pct);
+                log.info(printMsg);
+                System.out.println(printMsg);
+            }
             if (multipart && byteSent > 0 && !pointSaveFlag) {
 
                 PersistableUpload persistableUploadInfo = upload.getResumeableMultipartUploadId();
@@ -122,7 +127,7 @@ public abstract class Task implements Runnable {
                 }
             }
         }
-        upload.waitForException();
+        upload.waitForUploadResult();
     }
 
     private void uploadBigFile(PutObjectRequest putObjectRequest) throws InterruptedException {
@@ -166,10 +171,25 @@ public abstract class Task implements Runnable {
             putObjectRequest.setMetadata(objectMetadata);
         }
 
-        if (localFile.length() >= smallFileThreshold) {
-            uploadBigFile(putObjectRequest);
-        } else {
-            uploadSmallFile(putObjectRequest);
+        int retryTime = 0;
+        final int maxRetry = 5;
+
+        while (retryTime < maxRetry) {
+            try {
+                if (localFile.length() >= smallFileThreshold) {
+                    uploadBigFile(putObjectRequest);
+                } else {
+                    uploadSmallFile(putObjectRequest);
+                }
+                return;
+            } catch (Exception e) {
+                ++retryTime;
+                if (retryTime >= maxRetry) {
+                    throw e;
+                } else {
+                    Thread.sleep(ThreadLocalRandom.current().nextLong(200, 1000));
+                }
+            }
         }
     }
 
@@ -180,12 +200,14 @@ public abstract class Task implements Runnable {
         int timeWindowEnd = config.getTimeWindowEnd();
         while (true) {
             DateTime dateTime = DateTime.now();
-            int hour = dateTime.getHourOfDay();
-            if (hour >= timeWindowBegin && hour < timeWindowEnd) {
+            int minuteOfDay = dateTime.getMinuteOfDay();
+            if (minuteOfDay >= timeWindowBegin && minuteOfDay <= timeWindowEnd) {
                 return;
             }
-            String printTips = String.format("currentTime %s, wait next time window [%d, %d]",
-                    dateTime.toString("yyyy-MM-dd HH:mm:ss"), timeWindowBegin, timeWindowEnd);
+            String printTips =
+                    String.format("currentTime %s, wait next time window [%02d:%02d, %02d:%02d]",
+                            dateTime.toString("yyyy-MM-dd HH:mm:ss"), timeWindowBegin / 60,
+                            timeWindowBegin % 60, timeWindowEnd / 60, timeWindowEnd % 60);
             System.out.println(printTips);
             log.info(printTips);
             Thread.sleep(60000);
@@ -198,6 +220,8 @@ public abstract class Task implements Runnable {
             doTask();
         } catch (InterruptedException e) {
             log.error("task is interrupted", e);
+        } catch (Exception e) {
+            log.error("unknown exception occur", e);
         } finally {
             semaphore.release();
         }

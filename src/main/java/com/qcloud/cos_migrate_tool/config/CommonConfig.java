@@ -29,6 +29,7 @@ public class CommonConfig {
     private long damonInterVal = 60;
     private int timeWindowBegin = 0;
     private int timeWindowEnd = 24;
+    private String endpointSuffix = null;
 
     public String getTempFolderPath() {
         return tempFolderPath;
@@ -72,6 +73,14 @@ public class CommonConfig {
             throw new IllegalArgumentException("region value is missing");
         }
         this.region = region.trim();
+    }
+    
+    public String getEndpointSuffix() {
+        return endpointSuffix;
+    }
+
+    public void setEndpointSuffix(String endpointSuffix) {
+        this.endpointSuffix = endpointSuffix;
     }
 
     public String getAk() {
@@ -262,24 +271,36 @@ public class CommonConfig {
         timeWindowStr = timeWindowStr.trim();
         String[] timeWindowArray = timeWindowStr.split(",");
         if (timeWindowArray.length != 2) {
-            throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,21");
+            throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
         }
         try {
-            int number = Integer.valueOf(timeWindowArray[0]);
-            if (number < 0 || number >= 24) {
-                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,10");
+            String[] timeBeginMemberArray = timeWindowArray[0].split(":");
+            if (timeBeginMemberArray.length != 2) {
+                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
             }
-            this.timeWindowBegin = number;
+            int hour = Integer.valueOf(timeBeginMemberArray[0]);
+            if (hour < 0 || hour >= 24) {
+                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+            }
+            int minute = Integer.valueOf(timeBeginMemberArray[1]);
+            if (minute < 0 || minute >= 60) {
+                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+            }
+            this.timeWindowBegin = hour * 60 + minute;
             
-            number = Integer.valueOf(timeWindowArray[1]);
-            if (number <= 0 || number > 24) {
-                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,10");
+            String[] timeEndMemberArray = timeWindowArray[1].split(":");
+            if (timeEndMemberArray.length != 2) {
+                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
             }
-            this.timeWindowEnd = number;
-            
-            if (this.timeWindowEnd <= this.timeWindowBegin) {
-                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 3,10");
+            hour = Integer.valueOf(timeEndMemberArray[0]);
+            if (hour < 0 || hour > 24) {
+                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
             }
+            minute = Integer.valueOf(timeEndMemberArray[1]);
+            if (minute < 0 || minute >= 60) {
+                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+            }
+            this.timeWindowEnd = hour * 60 + minute;
             
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("invalid executeTimeWindow");

@@ -19,6 +19,7 @@ public class TaskStatics {
     private AtomicLong successCnt = new AtomicLong(0L);
     private AtomicLong failCnt = new AtomicLong(0L);
     private AtomicLong skipCnt = new AtomicLong(0L);
+    private AtomicLong conditionNotMatchCnt = new AtomicLong(0L);
 
     private TaskStatics() {}
 
@@ -44,6 +45,14 @@ public class TaskStatics {
 
     public long getSkipCnt() {
         return this.skipCnt.get();
+    }
+    
+    public void addConditionNotMatchCnt() {
+        this.conditionNotMatchCnt.incrementAndGet();
+    }
+    
+    public long getConditionNotMatchCnt() {
+        return this.conditionNotMatchCnt.get();
     }
 
     public String getStartTimeStr() {

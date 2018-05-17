@@ -12,9 +12,9 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
+import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 
 public class MigrateLocalTaskExecutor extends TaskExecutor {
@@ -57,6 +57,7 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
                     throws IOException {
                 String dirPath = SystemUtils.formatLocalPath(dir.toString());
                 if (((CopyFromLocalConfig) config).isExcludes(dirPath)) {
+                    log.info("exclude folder: " + dirPath);
                     return FileVisitResult.SKIP_SUBTREE;
                 } else {
                     return super.preVisitDirectory(dir, attrs);
@@ -68,22 +69,30 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
                     throws IOException {
 
                 String localPath = SystemUtils.formatLocalPath(file.toString());
-                String filePath = "";
                 try {
                     if (!((CopyFromLocalConfig) config).isExcludes(localPath)) {
                         File localFile = new File(file.toString());
-                        MigrateLocalTask migrateLocalTask =
-                                new MigrateLocalTask(semaphore, config, smallFileTransferManager,
-                                        bigFileTransferManager, recordDb, localFile);
+                        MigrateLocalTask migrateLocalTask = new MigrateLocalTask(semaphore,
+                                ((CopyFromLocalConfig) config), smallFileTransferManager,
+                                bigFileTransferManager, recordDb, localFile);
                         AddTask(migrateLocalTask);
+                    } else {
+                        String printMsg = String.format(
+                                "[condition_not_match] [reason: excludes]  [local_file: %s]",
+                                file.toString());
+                        System.out.println(printMsg);
+                        log.info(printMsg);
+                        TaskStatics.instance.addConditionNotMatchCnt();
                     }
                 } catch (InterruptedException e) {
+                    log.error("visit file occur a exception", e);
                     throw new IOException(e.getMessage());
                 }
                 return super.visitFile(file, attrs);
             }
         };
 
+        log.info("ready to scan folder: " + localFolder);
         try {
             java.nio.file.Files.walkFileTree(Paths.get(localFolder), finder);
         } catch (IOException e) {

@@ -94,7 +94,13 @@ public class RecordDb {
 
     public boolean queryRecord(RecordElement recordElement) {
         String key = recordElement.buildKey();
-        String value = queryKV(key);
+        String value = null;
+        try {
+            value = queryKV(key);
+        } catch (Exception e) {
+            log.error("query kv occur a exception: ", e);
+            return false;
+        }
         if (value == null) {
             return false;
         }

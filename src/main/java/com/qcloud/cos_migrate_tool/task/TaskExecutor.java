@@ -49,6 +49,9 @@ public abstract class TaskExecutor {
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
         }
+        if (config.getEndpointSuffix() != null) {
+            clientConfig.setEndPointSuffix(config.getEndpointSuffix());
+        }
         clientConfig.setUserAgent("cos-migrate-tool-v1.0");
         this.cosClient = new COSClient(cred, clientConfig);
         this.smallFileTransferManager = new TransferManager(this.cosClient,
@@ -142,6 +145,9 @@ public abstract class TaskExecutor {
         System.out.println(printStr);
         log.info(printStr);
         printStr = String.format("%30s : %d", "migrate_skip", TaskStatics.instance.getSkipCnt());
+        System.out.println(printStr);
+        log.info(printStr);
+        printStr = String.format("%30s : %d", "migrate_condition_not_match", TaskStatics.instance.getConditionNotMatchCnt());
         System.out.println(printStr);
         log.info(printStr);
         printStr = String.format("%30s : %s", "start_time", TaskStatics.instance.getStartTimeStr());
