@@ -15,7 +15,7 @@ public class CopyFromUrllistConfig extends CommonConfig {
     public void setUrllistPath(String urllistPath) throws IllegalArgumentException {
         File localPathFile = new File(urllistPath);
         if (!localPathFile.exists()) {
-            throw new IllegalArgumentException("local path not exist!");
+            throw new IllegalArgumentException("urllistPath not exist!");
         }
         this.urllistPath = SystemUtils.formatLocalPath(urllistPath);
     }

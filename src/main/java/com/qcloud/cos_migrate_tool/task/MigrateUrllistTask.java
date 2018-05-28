@@ -103,7 +103,7 @@ public class MigrateUrllistTask extends Task {
 
         try {
             uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-                    config.isEntireFileMd5Attached(), null);
+                    config.isEntireFileMd5Attached(), headAttr.userMetaMap);
             saveRecord(urllistRecordElement);
             TaskStatics.instance.addSuccessCnt();
             String printMsg = String.format("[ok] task_info: %s", urllistRecordElement.buildKey());

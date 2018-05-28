@@ -125,6 +125,20 @@ public class Downloader {
                     Header header = httpResponse.getFirstHeader("Last-Modified");
                     headAttr.lastModify = header.getValue();
                 }
+                
+                Header[] allHeaders = httpResponse.getAllHeaders();
+                final String ossUserMetaPrefix = "x-oss-meta-";
+                final String awsUserMetaPrefix = "x-amz-meta-";
+                for (Header headerElement : allHeaders) {
+                    String headerName = headerElement.getName();
+                    String headerValue = headerElement.getValue();
+                    if (headerName.startsWith(ossUserMetaPrefix) && !headerName.equals(ossUserMetaPrefix)) {
+                        headAttr.userMetaMap.put(headerName.substring(ossUserMetaPrefix.length()), headerValue);
+                    } else if (headerName.startsWith(awsUserMetaPrefix) && !headerName.equals(awsUserMetaPrefix)) {
+                        headAttr.userMetaMap.put(headerName.substring(awsUserMetaPrefix.length()), headerValue);
+                    }
+                }
+                
                 return headAttr;
             } catch (Exception e) {
                 log.error("head file attr fail, url: {}, retry: {}/{}, exception: {}", url, retry,
