@@ -3,6 +3,7 @@ package com.qcloud.cos_migrate_tool.task;
 import java.io.File;
 import java.io.FileInputStream;
 import java.math.BigInteger;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -133,6 +134,8 @@ public class MigrateAliTask extends Task {
             TaskStatics.instance.addSkipCnt();
             return;
         }
+        
+        Map<String, String> userMetaMap = null;
         try {
             // download
             // 下载object到文件
@@ -147,6 +150,7 @@ public class MigrateAliTask extends Task {
             }
             String serverChecksum =
                     objMeta.getRawMetadata().get("x-oss-hash-crc64ecma").toString().trim();
+            userMetaMap = objMeta.getUserMetadata();
 
             if ((serverChecksum != null) && !serverChecksum.isEmpty()) {
                 FileInputStream stream = new FileInputStream(new File(localPath));
@@ -208,7 +212,7 @@ public class MigrateAliTask extends Task {
 
         try {
             uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-                    config.isEntireFileMd5Attached());
+                    config.isEntireFileMd5Attached(), userMetaMap);
             saveRecord(ossRecordElement);
             TaskStatics.instance.addSuccessCnt();
             String printMsg = String.format("[ok] task_info: %s", ossRecordElement.buildKey());

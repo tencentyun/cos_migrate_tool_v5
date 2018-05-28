@@ -1,6 +1,7 @@
 package com.qcloud.cos_migrate_tool.task;
 
 import java.io.File;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
@@ -11,6 +12,7 @@ import com.amazonaws.event.ProgressEventType;
 import com.amazonaws.event.ProgressListener;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyFromAwsConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
@@ -133,10 +135,11 @@ public class MigrateAwsTask extends Task {
         // 下载object到文件
         String localPath = config.getTempFolderPath() + UUID.randomUUID().toString();
         File localFile = new File(localPath);
+        Map<String , String> userMetaMap;
         try {
             GetObjectProgressListener getObjectProgressListener =
                     new GetObjectProgressListener(srcKey);
-            s3Client.getObject(
+            ObjectMetadata objectMetadata = s3Client.getObject(
                     new GetObjectRequest(((CopyFromAwsConfig) config).getSrcBucket(), srcKey)
                             .<GetObjectRequest>withGeneralProgressListener(
                                     getObjectProgressListener),
@@ -151,7 +154,8 @@ public class MigrateAwsTask extends Task {
                 TaskStatics.instance.addFailCnt();
                 return;
             }
-
+            
+            userMetaMap = objectMetadata.getUserMetadata();
             if (localFile.length() != this.fileSize) {
                 String printMsg =
                         String.format("[fail] [task_info: %s]", awsRecordElement.buildKey());
@@ -184,7 +188,7 @@ public class MigrateAwsTask extends Task {
         // upload file
         try {
             uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-                    config.isEntireFileMd5Attached());
+                    config.isEntireFileMd5Attached(), userMetaMap);
             saveRecord(awsRecordElement);
             TaskStatics.instance.addSuccessCnt();
             String printMsg = String.format("[ok] task_info: %s", awsRecordElement.buildKey());

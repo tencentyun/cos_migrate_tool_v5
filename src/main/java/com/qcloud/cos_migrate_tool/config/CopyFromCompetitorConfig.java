@@ -57,6 +57,10 @@ public class CopyFromCompetitorConfig extends CommonConfig {
     		throw new IllegalArgumentException("endPoint is empty");
     	}
     	
+    	if (endpoint.endsWith("/")) {
+    		endpoint = endpoint.substring(0, endpoint.length()-1);
+    	}
+    		
     	this.srcEndpoint = endpoint;
     }
     

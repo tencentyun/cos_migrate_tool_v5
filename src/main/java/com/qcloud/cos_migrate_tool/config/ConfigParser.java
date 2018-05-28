@@ -57,6 +57,8 @@ public class ConfigParser {
     private static final String OSS_END_POINT = "endPoint";
     private static final String OSS_PROXY_HOST = "proxyHost";
     private static final String OSS_PROXY_PORT = "proxyPort";
+    
+    private static final String QINIU_NEED_SIGN = "needSign";
 
     private static final String COPY_BUCKET_SECTION_NAME = "migrateBucketCopy";
     private static final String COPY_SRC_REGION = "srcRegion";
@@ -502,6 +504,25 @@ public class ConfigParser {
             return false;
         }
 
+        String needSignStr =
+                getConfigValue(prefs, QINIU_SECTION_NAME, QINIU_NEED_SIGN);
+        if (needSignStr == null) {
+        	copyQiniuConfig.setIsNeedSign(true);
+        	return true;
+        }
+        
+        needSignStr = needSignStr.trim();
+        if (needSignStr.compareToIgnoreCase("false") == 0) {
+        	copyQiniuConfig.setIsNeedSign(false);
+        } else if (needSignStr.compareToIgnoreCase("true") == 0) {
+        	copyQiniuConfig.setIsNeedSign(true);
+        } else {
+        	String errMsg = "qiniu section needSign invalid,need to be \"true\" or \"false\".\n";
+        	System.err.println(errMsg);
+        	log.error(errMsg);
+        	return false;
+        }
+        
         return true;
     }
 

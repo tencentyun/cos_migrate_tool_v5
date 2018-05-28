@@ -55,7 +55,13 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                     throws IOException {
-                String dirPath = SystemUtils.formatLocalPath(dir.toString());
+                String dirPath = "";
+                try {
+                    dirPath = SystemUtils.formatLocalPath(dir.toString());
+                } catch (IllegalArgumentException e) {
+                    log.error("skip the folder and it's sub member for illegal utf-8 letter");
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
                 if (((CopyFromLocalConfig) config).isExcludes(dirPath)) {
                     log.info("exclude folder: " + dirPath);
                     return FileVisitResult.SKIP_SUBTREE;
@@ -67,8 +73,13 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                     throws IOException {
-
-                String localPath = SystemUtils.formatLocalPath(file.toString());
+                String localPath = "";
+                try {
+                    localPath = SystemUtils.formatLocalPath(file.toString());
+                } catch (IllegalArgumentException e) {
+                    log.error("skip the file for illegal utf-8 letter");
+                    return super.visitFile(file, attrs);
+                }
                 try {
                     if (!((CopyFromLocalConfig) config).isExcludes(localPath)) {
                         File localFile = new File(file.toString());

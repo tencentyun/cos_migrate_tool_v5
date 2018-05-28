@@ -31,11 +31,9 @@ public class MigrateUrllistTask extends Task {
 
     private String buildCOSPath() {
         String cosPrefix = config.getCosPath();
-        if (cosPrefix.endsWith("/")) {
-            return cosPrefix + srcKey;
-        } else {
-            return cosPrefix + "/" + srcKey;
-        }
+        String cosPath = cosPrefix + "/" + srcKey; 
+		cosPath = cosPath.replaceAll("/{2,}", "/");
+		return cosPath;
     }
 
     @Override
@@ -105,7 +103,7 @@ public class MigrateUrllistTask extends Task {
 
         try {
             uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-                    config.isEntireFileMd5Attached());
+                    config.isEntireFileMd5Attached(), null);
             saveRecord(urllistRecordElement);
             TaskStatics.instance.addSuccessCnt();
             String printMsg = String.format("[ok] task_info: %s", urllistRecordElement.buildKey());

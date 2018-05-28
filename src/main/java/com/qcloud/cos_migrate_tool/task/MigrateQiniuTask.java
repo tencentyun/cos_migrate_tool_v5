@@ -28,21 +28,18 @@ public class MigrateQiniuTask extends Task {
 		this.fileSize = fileSize;
 		this.etag = etag;
 		this.auth = auth;
-		if (srcKey.startsWith("/")) {
-			this.srcKey = srcKey.substring(1);
-		}
 	}
 
 	private String buildCOSPath() {
         String srcPrefix = ((CopyFromQiniuConfig)config).getSrcPrefix();
         int lastDelimiter = srcPrefix.lastIndexOf("/");
         String keyName = srcKey.substring(lastDelimiter + 1);
-        String cosPrefix = config.getCosPath();
-        if (cosPrefix.endsWith("/")) {
-            return cosPrefix + keyName;
-        } else {
-            return cosPrefix + "/" + keyName;
-        }
+
+        StringBuffer cosPathBuffer = new StringBuffer();
+        cosPathBuffer.append(config.getCosPath()).append("/").append(keyName);
+
+		String cosPath = cosPathBuffer.toString().replaceAll("/{2,}", "/");
+		return cosPath;
 	}
 
 	@Override
@@ -60,8 +57,10 @@ public class MigrateQiniuTask extends Task {
 		}
 
 		// generate download url
-		String baseUrl = "http://" + ((CopyFromQiniuConfig)config).getSrcEndpoint() + "/" + srcKey;
-		String url = auth.privateDownloadUrl(baseUrl, 3600);
+		String url = "http://" + ((CopyFromQiniuConfig)config).getSrcEndpoint() + "/" + srcKey;
+		if (((CopyFromQiniuConfig)config).IsNeedSign()) {
+		    url = auth.privateDownloadUrl(url, 3600);
+		}
 
 		File localFile = new File(localPath);
 
@@ -99,8 +98,9 @@ public class MigrateQiniuTask extends Task {
 		}
 
 		try {
+			
 			uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-					config.isEntireFileMd5Attached());
+					config.isEntireFileMd5Attached(), null);
 			saveRecord(qiniuRecordElement);
 			TaskStatics.instance.addSuccessCnt();
 			String printMsg = String.format("[ok] task_info: %s", qiniuRecordElement.buildKey());

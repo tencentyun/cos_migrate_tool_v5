@@ -21,7 +21,7 @@ public class SystemUtils {
     public static String formatLocalPath(String localPath) throws IllegalArgumentException{
         File localFile = new File(localPath);
         if (!localFile.exists()) {
-            String errMsg = "localpath " + localPath + " not exist!";
+            String errMsg = "localpath " + localPath + " not exist! maybe the path contail illegal utf-8 letter ";
             log.error(errMsg);
             throw new IllegalArgumentException(errMsg);
         }

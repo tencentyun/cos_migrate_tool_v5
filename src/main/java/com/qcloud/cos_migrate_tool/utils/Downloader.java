@@ -6,10 +6,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -23,6 +23,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import com.qcloud.cos.http.IdleConnectionMonitorThread;
+import com.qcloud.cos.utils.UrlEncoderUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,18 +63,30 @@ public class Downloader {
         while (retry < maxRetryCount) {
             HttpHead httpHead = null;
             try {
+            	StringBuffer urlBuffer = new StringBuffer();
                 URL encodeUrl = new URL(url);
-                URI uri = new URI(encodeUrl.getProtocol(), encodeUrl.getHost(), encodeUrl.getPath(),
-                        encodeUrl.getQuery(), null);
-                httpHead = new HttpHead(uri);
-            } catch (URISyntaxException e) {
-                String errMsg = "Invalid url:" + url;
-                log.error(errMsg, e);
-                return null;
+                
+                urlBuffer.append(encodeUrl.getProtocol()).append("://").append(encodeUrl.getHost());
+
+                if (encodeUrl.getPath().startsWith("/")) {
+                	urlBuffer.append("/").append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath()).substring(1).replaceAll("/", "%2f"));
+                } else {
+                	urlBuffer.append("/").append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath()).replaceAll("/", "%2f"));
+                }
+                
+                if (encodeUrl.getQuery() != null) {
+                	urlBuffer.append("?").append(URLEncoder.encode(encodeUrl.getQuery(),"UTF-8"));
+                }
+                
+                
+                httpHead = new HttpHead(urlBuffer.toString());
             } catch (MalformedURLException e) {
                 log.error("headFile url fail,url:{},msg:{}", url, e.getMessage());
                 return null;
-            }
+            } catch (UnsupportedEncodingException e) {
+            	log.error("urlencode fail str:{}", url);
+				return null;
+			}
 
             httpHead.setConfig(requestConfig);
             httpHead.setHeader("Accept", "*/*");
@@ -145,18 +158,30 @@ public class Downloader {
         while (retry < maxRetryCount) {
             HttpGet httpGet = null;
             try {
+            	StringBuffer urlBuffer = new StringBuffer();
                 URL encodeUrl = new URL(url);
-                URI uri = new URI(encodeUrl.getProtocol(), encodeUrl.getHost(), encodeUrl.getPath(),
-                        encodeUrl.getQuery(), null);
-                httpGet = new HttpGet(uri);
-            } catch (URISyntaxException e) {
-                String errMsg = "Invalid url:" + url;
-                log.error(errMsg);
-                return false;
+                
+                urlBuffer.append(encodeUrl.getProtocol()).append("://").append(encodeUrl.getHost());
+
+                if (encodeUrl.getPath().startsWith("/")) {
+                	urlBuffer.append("/").append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath()).substring(1).replaceAll("/", "%2f"));
+                } else {
+                	urlBuffer.append("/").append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath()).replaceAll("/", "%2f"));
+                }
+                
+                if (encodeUrl.getQuery() != null) {
+                	urlBuffer.append("?").append(URLEncoder.encode(encodeUrl.getQuery(),"UTF-8"));
+                }
+                
+                httpGet = new HttpGet(urlBuffer.toString());
+                
             } catch (MalformedURLException e) {
                 log.error("downFile url fail, url:{}, msg:{}", url, e.getMessage());
                 return false;
-            }
+            } catch (UnsupportedEncodingException e) {
+            	log.error("urlencode fail str:{}", url);
+				return false;
+			}
 
             httpGet.setConfig(requestConfig);
             httpGet.setHeader("Accept", "*/*");

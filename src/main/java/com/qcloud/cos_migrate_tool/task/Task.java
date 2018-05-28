@@ -1,6 +1,7 @@
 package com.qcloud.cos_migrate_tool.task;
 
 import java.io.File;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -161,15 +162,20 @@ public abstract class Task implements Runnable {
 
 
     public void uploadFile(String bucketName, String cosPath, File localFile,
-            StorageClass storageClass, boolean entireMd5Attached) throws Exception {
+            StorageClass storageClass, boolean entireMd5Attached, Map<String, String> userMetaMap) throws Exception {
         PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
         putObjectRequest.setStorageClass(storageClass);
+        ObjectMetadata objectMetadata = new ObjectMetadata();
         if (entireMd5Attached) {
             String md5 = Md5Utils.md5Hex(localFile);
-            ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.addUserMetadata("md5", md5);
-            putObjectRequest.setMetadata(objectMetadata);
         }
+        
+        if (userMetaMap != null) {
+            objectMetadata.setUserMetadata(userMetaMap);
+        }
+        
+        putObjectRequest.setMetadata(objectMetadata);
 
         int retryTime = 0;
         final int maxRetry = 5;
