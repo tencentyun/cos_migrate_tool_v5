@@ -166,13 +166,13 @@ public abstract class Task implements Runnable {
         PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
         putObjectRequest.setStorageClass(storageClass);
         ObjectMetadata objectMetadata = new ObjectMetadata();
+        if (userMetaMap != null) {
+            objectMetadata.setUserMetadata(userMetaMap);
+        }
+        
         if (entireMd5Attached) {
             String md5 = Md5Utils.md5Hex(localFile);
             objectMetadata.addUserMetadata("md5", md5);
-        }
-        
-        if (userMetaMap != null) {
-            objectMetadata.setUserMetadata(userMetaMap);
         }
         
         putObjectRequest.setMetadata(objectMetadata);
