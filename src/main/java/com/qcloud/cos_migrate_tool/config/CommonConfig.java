@@ -203,7 +203,7 @@ public class CommonConfig {
     public void setSmallFileThreshold(String smallFileThresholdStr) {
         smallFileThresholdStr = smallFileThresholdStr.trim();
         try {
-            int number = Integer.valueOf(smallFileThresholdStr);
+            long number = Long.valueOf(smallFileThresholdStr);
             final long minSmallFile = 5 * 1024 * 1024; // 最小5MB
             final long maxSmallFile = 5 * 1024 * 1024 * 1024; // 最大5GB
             if (number < minSmallFile && number > maxSmallFile) {

@@ -38,7 +38,7 @@
 		<dependency>
 			<groupId>com.qcloud</groupId>
 			<artifactId>cos_api</artifactId>
-			<version>5.4.2</version>
+			<version>5.4.3</version>
 		</dependency>
 
 		<dependency>
@@ -93,10 +93,8 @@
 					<groupId>com.fasterxml.jackson.core</groupId>
 					<artifactId>jackson-databind</artifactId>
 				</exclusion>
-
 			</exclusions>
 		</dependency>
-
 	</dependencies>
 
 	<build>

@@ -9,6 +9,10 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qcloud.cos.COSClient;
+import com.qcloud.cos.exception.CosServiceException;
+import com.qcloud.cos.model.ListMultipartUploadsRequest;
+import com.qcloud.cos.model.ListPartsRequest;
 import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.StorageClass;
@@ -131,6 +135,17 @@ public abstract class Task implements Runnable {
         upload.waitForUploadResult();
     }
 
+    private boolean isMultipartUploadIdValid(String bucketName, String cosKey, String uploadId) {
+        ListPartsRequest listPartsRequest = new ListPartsRequest(bucketName, cosKey, uploadId);
+        try {
+            this.bigFileTransfer.getCOSClient().listParts(listPartsRequest);
+            return true;
+        } catch (CosServiceException cse) {
+            return false;
+        }
+
+    }
+
     private void uploadBigFile(PutObjectRequest putObjectRequest) throws InterruptedException {
         String bucketName = putObjectRequest.getBucketName();
         String cosKey = putObjectRequest.getKey();
@@ -144,7 +159,7 @@ public abstract class Task implements Runnable {
                 localPath, mtime, partSize, mutlipartUploadThreshold);
         Upload upload = null;
         // 如果multipartId不为Null, 则表示存在断点, 使用续传.
-        if (multipartId != null) {
+        if (multipartId != null && isMultipartUploadIdValid(bucketName, cosKey, multipartId)) {
             PersistableUpload persistableUpload = new PersistableUpload(bucketName, cosKey,
                     localPath, multipartId, partSize, mutlipartUploadThreshold);
             upload = this.bigFileTransfer.resumeUpload(persistableUpload);
@@ -154,6 +169,8 @@ public abstract class Task implements Runnable {
         showTransferProgress(upload, true, cosKey, mtime);
     }
 
+
+
     private void uploadSmallFile(PutObjectRequest putObjectRequest) throws InterruptedException {
         Upload upload = smallFileTransfer.upload(putObjectRequest);
         showTransferProgress(upload, false, putObjectRequest.getKey(),
@@ -162,19 +179,20 @@ public abstract class Task implements Runnable {
 
 
     public void uploadFile(String bucketName, String cosPath, File localFile,
-            StorageClass storageClass, boolean entireMd5Attached, Map<String, String> userMetaMap) throws Exception {
+            StorageClass storageClass, boolean entireMd5Attached, Map<String, String> userMetaMap)
+                    throws Exception {
         PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
         putObjectRequest.setStorageClass(storageClass);
         ObjectMetadata objectMetadata = new ObjectMetadata();
         if (userMetaMap != null) {
             objectMetadata.setUserMetadata(userMetaMap);
         }
-        
+
         if (entireMd5Attached) {
             String md5 = Md5Utils.md5Hex(localFile);
             objectMetadata.addUserMetadata("md5", md5);
         }
-        
+
         putObjectRequest.setMetadata(objectMetadata);
 
         int retryTime = 0;
@@ -189,6 +207,7 @@ public abstract class Task implements Runnable {
                 }
                 return;
             } catch (Exception e) {
+                log.warn("upload failed, ready to retry. retryTime:" + retryTime, e);
                 ++retryTime;
                 if (retryTime >= maxRetry) {
                     throw e;
