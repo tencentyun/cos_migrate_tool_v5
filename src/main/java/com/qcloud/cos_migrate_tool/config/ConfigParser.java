@@ -26,7 +26,7 @@ public class ConfigParser {
 
     private static final String COMMON_SECTION_NAME = "common";
     private static final String COMMON_REGION = "region";
-    private static final String COMMON_ENDPOINT_SUFFIX = "endpoint_suffix";
+    private static final String COMMON_ENDPOINT_SUFFIX = "endPointSuffix";
     private static final String COMMON_BUCKETNAME = "bucketName";
     private static final String COMMON_AK = "secretId";
     private static final String COMMON_SK = "secretKey";
@@ -66,6 +66,7 @@ public class ConfigParser {
     private static final String COPY_SRC_SECRETID = "srcSecretId";
     private static final String COPY_SRC_SECRETKEY = "srcSecretKey";
     private static final String COPY_SRC_COSPATH = "srcCosPath";
+    private static final String COPY_SRC_ENDPOINT_SUFFIX = "srcEndPointSuffix";
 
     private static final String URLLIST_SECTION_NAME = "migrateUrl";
     private static final String URLLIST_PATH = "urllistPath";
@@ -640,6 +641,11 @@ public class ConfigParser {
             String srcCosPath = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_COSPATH);
             assert (srcCosPath != null);
             copyBucketConfig.setSrcCosPath(srcCosPath);
+            
+            String srcEndpointSuffix = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_ENDPOINT_SUFFIX);
+            if (srcEndpointSuffix != null) {
+                copyBucketConfig.setSrcEndpointSuffix(srcEndpointSuffix);
+            }
 
         } catch (Exception e) {
             System.err.println(e.getMessage());

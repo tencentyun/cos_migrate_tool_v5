@@ -63,10 +63,25 @@ public abstract class Task implements Runnable {
         recordDb.saveRecord(recordElement);
     }
 
+    private void printTransferProgress(TransferProgress progress, String key) {
+        long byteSent = progress.getBytesTransferred();
+        long byteTotal = progress.getTotalBytesToTransfer();
+        double pct = 100.0;
+        if (byteTotal != 0) {
+            pct = progress.getPercentTransferred();
+        }
+        String printMsg = String.format(
+                "[UploadInProgress] [key: %s] [byteSent/ byteTotal/ percentage: %d/ %d/ %.2f%%]",
+                key, byteSent, byteTotal, pct);
+        log.info(printMsg);
+        System.out.println(printMsg);
+    }
+
     public void showTransferProgress(Upload upload, boolean multipart, String key, long mtime)
             throws InterruptedException {
         boolean pointSaveFlag = false;
-        int printCount = 0;
+        long printCount = 0;
+        TransferProgress progress = upload.getProgress();
         do {
             ++printCount;
             try {
@@ -74,19 +89,10 @@ public abstract class Task implements Runnable {
             } catch (InterruptedException e) {
                 return;
             }
-            TransferProgress progress = upload.getProgress();
+
             long byteSent = progress.getBytesTransferred();
-            long byteTotal = progress.getTotalBytesToTransfer();
-            double pct = 100.0;
-            if (byteTotal != 0) {
-                pct = progress.getPercentTransferred();
-            }
-            if (printCount % 5 == 0) {
-                String printMsg = String.format(
-                        "[UploadInProgress] [key: %s] [byteSent/ byteTotal/ percentage: %d/ %d/ %.2f%%]",
-                        key, byteSent, byteTotal, pct);
-                log.info(printMsg);
-                System.out.println(printMsg);
+            if (printCount % 20 == 0) {
+                printTransferProgress(progress, key);
             }
             if (multipart && byteSent > 0 && !pointSaveFlag) {
 
@@ -112,6 +118,8 @@ public abstract class Task implements Runnable {
             }
 
         } while (upload.isDone() == false);
+        // 结束后在打印下进度
+        printTransferProgress(progress, key);
         // 传输完成, 删除断点信息
         if (upload.getState() == TransferState.Completed && pointSaveFlag) {
             PersistableUpload persistableUploadInfo = upload.getResumeableMultipartUploadId();

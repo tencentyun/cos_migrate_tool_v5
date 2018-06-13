@@ -35,6 +35,9 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
         }
+        if (config.getSrcEndpointSuffix() != null) {
+            clientConfig.setEndPointSuffix(config.getSrcEndpointSuffix());
+        }
         clientConfig.setUserAgent("cos-migrate-tool-v1.0");
         this.srcCosClient = new COSClient(srcCred, clientConfig);
         this.srcRegion = config.getSrcRegion();

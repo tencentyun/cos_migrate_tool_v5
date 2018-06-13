@@ -18,6 +18,7 @@ public class MigrateCopyBucketTask extends Task {
     private final String destBucketName;
     private final String destKey;
     private final String srcRegion;
+    private final String srcEndpointSuffx;
     private final String srcBucketName;
     private final String srcKey;
     private final long srcSize;
@@ -32,6 +33,7 @@ public class MigrateCopyBucketTask extends Task {
         this.destBucketName = config.getBucketName();
         this.destKey = destKey;
         this.srcRegion = config.getSrcRegion();
+        this.srcEndpointSuffx = config.getSrcEndpointSuffix();
         this.srcBucketName = config.getSrcBucket();
         this.srcKey = srcKey;
         this.srcSize = srcSize;
@@ -51,6 +53,7 @@ public class MigrateCopyBucketTask extends Task {
         }
         CopyObjectRequest copyObjectRequest = new CopyObjectRequest(new Region(srcRegion),
                 srcBucketName, srcKey, destBucketName, destKey);
+        copyObjectRequest.setSourceEndpointSuffix(srcEndpointSuffx);
         try {
             Copy copy = smallFileTransfer.copy(copyObjectRequest, srcCOSClient, null);
             copy.waitForCompletion();

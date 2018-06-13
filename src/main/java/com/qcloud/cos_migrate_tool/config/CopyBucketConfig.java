@@ -10,6 +10,7 @@ public class CopyBucketConfig extends CommonConfig {
     private String srcAk;
     private String srcSk;
     private String srcCosPath;
+    private String srcEndpointSuffix;
 
     public String getSrcBucket() {
         return srcBucket;
@@ -69,4 +70,11 @@ public class CopyBucketConfig extends CommonConfig {
         this.srcCosPath = PathUtils.formatCosFolderPath(srcCosPath);
     }
 
+    public String getSrcEndpointSuffix() {
+        return srcEndpointSuffix;
+    }
+
+    public void setSrcEndpointSuffix(String srcEndpointSuffix) {
+        this.srcEndpointSuffix = srcEndpointSuffix;
+    }
 }
