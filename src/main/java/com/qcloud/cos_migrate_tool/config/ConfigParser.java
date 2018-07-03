@@ -643,7 +643,7 @@ public class ConfigParser {
             copyBucketConfig.setSrcCosPath(srcCosPath);
             
             String srcEndpointSuffix = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_ENDPOINT_SUFFIX);
-            if (srcEndpointSuffix != null) {
+            if (srcEndpointSuffix != null && !srcEndpointSuffix.trim().isEmpty()) {
                 copyBucketConfig.setSrcEndpointSuffix(srcEndpointSuffix);
             }
 
