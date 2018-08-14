@@ -41,6 +41,8 @@ public class ConfigParser {
     private static final String COMMON_DAEMON_MODE = "daemonMode";
     private static final String COMMON_DAEMON_MODE_INTERVAL = "daemonModeInterVal";
     private static final String COMMON_EXECUTE_TIME_WINDOW = "executeTimeWindow";
+    private static final String COMMON_PROXY_HOST = "proxyHost";
+    private static final String COMMON_PROXY_PORT = "proxyPort";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -438,6 +440,24 @@ public class ConfigParser {
             if (endPointSuffixStr != null && !endPointSuffixStr.trim().isEmpty()) {
                 commonConfig.setEndpointSuffix(endPointSuffixStr);
             }
+            
+            String proxyHost = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_PROXY_HOST);
+            if (proxyHost != null && !proxyHost.trim().isEmpty()) {
+                commonConfig.setProxyHost(proxyHost);
+            }
+            
+            int port = -1;
+            String portStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_PROXY_PORT);
+
+            if (portStr != null && !portStr.isEmpty()) {
+                port = Integer.valueOf(portStr);
+                if (port > 0) {
+                    commonConfig.setProxyPort(port);
+                } else {
+                    throw new Exception("invalid cos proxy port");
+                }
+            }
+
 
         } catch (Exception e) {
             System.err.println(e.getMessage());

@@ -102,11 +102,12 @@ public class MigrateUrllistTask extends Task {
         }
 
         try {
-            uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
+            String requestId = uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
                     config.isEntireFileMd5Attached(), headAttr.userMetaMap);
             saveRecord(urllistRecordElement);
+            saveRequestId(cosPath, requestId);
             TaskStatics.instance.addSuccessCnt();
-            String printMsg = String.format("[ok] task_info: %s", urllistRecordElement.buildKey());
+            String printMsg = String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, urllistRecordElement.buildKey());
             System.out.println(printMsg);
             log.info(printMsg);
         } catch (Exception e) {

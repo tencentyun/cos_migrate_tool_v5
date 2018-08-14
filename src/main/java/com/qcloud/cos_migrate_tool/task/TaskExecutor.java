@@ -37,6 +37,10 @@ public abstract class TaskExecutor {
     protected TransferManager smallFileTransferManager;
     protected TransferManager bigFileTransferManager;
 
+    enum RUN_MODE {
+        NORMAL, DUMP_REQUESTID, QUERY_REQUESTID;
+    }
+
     public TaskExecutor(MigrateType migrateType, CommonConfig config) {
         this.migrateType = migrateType;
         this.config = config;
@@ -53,7 +57,18 @@ public abstract class TaskExecutor {
             clientConfig.setEndPointSuffix(config.getEndpointSuffix());
         }
         clientConfig.setUserAgent("cos-migrate-tool-v1.0");
+        System.out.println("ppppppppppppppppppppppppppppppp");
+        System.out.println(config.getProxyHost());
+        System.out.println(config.getProxyPort());
+        System.out.println("ppppppppppppppppppppppppppppppp");
+        if (!config.getProxyHost().isEmpty() && config.getProxyPort() > 0) {
+            System.out.println(config.getProxyHost());
+            clientConfig.setHttpProxyIp(config.getProxyHost());
+            clientConfig.setHttpProxyPort(config.getProxyPort());
+        }
+        
         this.cosClient = new COSClient(cred, clientConfig);
+
         this.smallFileTransferManager = new TransferManager(this.cosClient,
                 Executors.newFixedThreadPool(config.getSmallFileExecutorNumber()));
         this.smallFileTransferManager.getConfiguration()
@@ -93,9 +108,43 @@ public abstract class TaskExecutor {
         }
     }
 
-
     // 用于产生任务
     public abstract void buildTask();
+
+    private RUN_MODE getRunMode() {
+        final String runMode = "RUN_MODE";
+        String debugModeValue = System.getenv(runMode);
+        if (debugModeValue == null || debugModeValue.equalsIgnoreCase("NORMAL")) {
+            return RUN_MODE.NORMAL;
+        } else if (debugModeValue.equalsIgnoreCase("QUERY_REQUESTID")) {
+            return RUN_MODE.QUERY_REQUESTID;
+        } else if (debugModeValue.equalsIgnoreCase("DUMP_REQUESTID")) {
+            return RUN_MODE.DUMP_REQUESTID;
+        }
+        return RUN_MODE.NORMAL;
+    }
+
+    private String getDumpRequestIdFilePath() {
+        final String dumpRequestIdFile = "DUMP_REQUESTID_FILE";
+        String dumpFilePath = System.getenv(dumpRequestIdFile);
+        if (dumpFilePath == null) {
+            String errMsg = "env " + dumpRequestIdFile + " is null";
+            System.err.println(errMsg);
+            log.error(errMsg);
+        }
+        return dumpFilePath;
+    }
+
+    private String getQueryKey() {
+        final String queryKey = "QUERY_REQUESTID_KEY";
+        String queryKeyValue = System.getenv(queryKey);
+        if (queryKeyValue == null) {
+            String errMsg = "env " + queryKey + " is null";
+            System.err.println(errMsg);
+            log.error(errMsg);
+        }
+        return queryKeyValue;
+    }
 
     public void run() {
         if (!initRecord()) {
@@ -104,7 +153,21 @@ public abstract class TaskExecutor {
             System.err.println(errMsg);
             return;
         }
-        buildTask();
+
+        RUN_MODE runMode = getRunMode();
+        if (runMode.equals(RUN_MODE.NORMAL)) {
+            buildTask();
+        } else if (runMode.equals(RUN_MODE.DUMP_REQUESTID)) {
+            String dumpFilePath = getDumpRequestIdFilePath();
+            if (dumpFilePath != null) {
+                recordDb.dumpRequestId(dumpFilePath);
+            }
+        } else if (runMode.equals(RUN_MODE.QUERY_REQUESTID)) {
+            String queryKey = getQueryKey();
+            if (queryKey != null) {
+                recordDb.queryRequestId(queryKey);
+            }
+        }
     }
 
     public void waitTaskOver() {
@@ -115,7 +178,9 @@ public abstract class TaskExecutor {
             this.smallFileTransferManager.shutdownNow();
             this.bigFileTransferManager.shutdownNow();
             this.cosClient.shutdown();
-            printTaskStaticsInfo();
+            if (getRunMode().equals(RUN_MODE.NORMAL)) {
+                printTaskStaticsInfo();
+            }
         } catch (InterruptedException e) {
             log.error("waitTaskOver is interrupted!", e);
             System.err.println("waitTaskOver is interrupted!");
@@ -147,7 +212,8 @@ public abstract class TaskExecutor {
         printStr = String.format("%30s : %d", "migrate_skip", TaskStatics.instance.getSkipCnt());
         System.out.println(printStr);
         log.info(printStr);
-        printStr = String.format("%30s : %d", "migrate_condition_not_match", TaskStatics.instance.getConditionNotMatchCnt());
+        printStr = String.format("%30s : %d", "migrate_condition_not_match",
+                TaskStatics.instance.getConditionNotMatchCnt());
         System.out.println(printStr);
         log.info(printStr);
         printStr = String.format("%30s : %s", "start_time", TaskStatics.instance.getStartTimeStr());

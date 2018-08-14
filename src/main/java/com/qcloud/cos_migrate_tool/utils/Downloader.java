@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -47,6 +48,7 @@ public class Downloader {
         this.connectionManager.setValidateAfterInactivity(1);
         HttpClientBuilder httpClientBuilder =
                 HttpClients.custom().setConnectionManager(connectionManager);
+
         this.httpClient = httpClientBuilder.build();
         this.requestConfig = RequestConfig.custom().setConnectionRequestTimeout(30 * 1000)
                 .setConnectTimeout(30 * 1000).setSocketTimeout(30 * 1000).build();
@@ -63,30 +65,29 @@ public class Downloader {
         while (retry < maxRetryCount) {
             HttpHead httpHead = null;
             try {
-            	StringBuffer urlBuffer = new StringBuffer();
+                StringBuffer urlBuffer = new StringBuffer();
                 URL encodeUrl = new URL(url);
-                
+
                 urlBuffer.append(encodeUrl.getProtocol()).append("://").append(encodeUrl.getHost());
 
                 if (encodeUrl.getPath().startsWith("/")) {
-                	urlBuffer.append("/").append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath()).substring(1).replaceAll("/", "%2f"));
+                    urlBuffer.append("/")
+                            .append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath())
+                                    .substring(1).replaceAll("/", "%2f"));
                 } else {
-                	urlBuffer.append("/").append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath()).replaceAll("/", "%2f"));
+                    urlBuffer.append("/").append(UrlEncoderUtils
+                            .encodeEscapeDelimiter(encodeUrl.getPath()).replaceAll("/", "%2f"));
                 }
-                
+
                 if (encodeUrl.getQuery() != null) {
-                	urlBuffer.append("?").append(URLEncoder.encode(encodeUrl.getQuery(),"UTF-8"));
+                    urlBuffer.append("?").append(encodeUrl.getQuery());
                 }
-                
-                
+
                 httpHead = new HttpHead(urlBuffer.toString());
             } catch (MalformedURLException e) {
                 log.error("headFile url fail,url:{},msg:{}", url, e.getMessage());
                 return null;
-            } catch (UnsupportedEncodingException e) {
-            	log.error("urlencode fail str:{}", url);
-				return null;
-			}
+            }
 
             httpHead.setConfig(requestConfig);
             httpHead.setHeader("Accept", "*/*");
@@ -125,20 +126,24 @@ public class Downloader {
                     Header header = httpResponse.getFirstHeader("Last-Modified");
                     headAttr.lastModify = header.getValue();
                 }
-                
+
                 Header[] allHeaders = httpResponse.getAllHeaders();
                 final String ossUserMetaPrefix = "x-oss-meta-";
                 final String awsUserMetaPrefix = "x-amz-meta-";
                 for (Header headerElement : allHeaders) {
                     String headerName = headerElement.getName();
                     String headerValue = headerElement.getValue();
-                    if (headerName.startsWith(ossUserMetaPrefix) && !headerName.equals(ossUserMetaPrefix)) {
-                        headAttr.userMetaMap.put(headerName.substring(ossUserMetaPrefix.length()), headerValue);
-                    } else if (headerName.startsWith(awsUserMetaPrefix) && !headerName.equals(awsUserMetaPrefix)) {
-                        headAttr.userMetaMap.put(headerName.substring(awsUserMetaPrefix.length()), headerValue);
+                    if (headerName.startsWith(ossUserMetaPrefix)
+                            && !headerName.equals(ossUserMetaPrefix)) {
+                        headAttr.userMetaMap.put(headerName.substring(ossUserMetaPrefix.length()),
+                                headerValue);
+                    } else if (headerName.startsWith(awsUserMetaPrefix)
+                            && !headerName.equals(awsUserMetaPrefix)) {
+                        headAttr.userMetaMap.put(headerName.substring(awsUserMetaPrefix.length()),
+                                headerValue);
                     }
                 }
-                
+
                 return headAttr;
             } catch (Exception e) {
                 log.error("head file attr fail, url: {}, retry: {}/{}, exception: {}", url, retry,
@@ -172,30 +177,30 @@ public class Downloader {
         while (retry < maxRetryCount) {
             HttpGet httpGet = null;
             try {
-            	StringBuffer urlBuffer = new StringBuffer();
+                StringBuffer urlBuffer = new StringBuffer();
                 URL encodeUrl = new URL(url);
-                
+
                 urlBuffer.append(encodeUrl.getProtocol()).append("://").append(encodeUrl.getHost());
 
                 if (encodeUrl.getPath().startsWith("/")) {
-                	urlBuffer.append("/").append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath()).substring(1).replaceAll("/", "%2f"));
+                    urlBuffer.append("/")
+                            .append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath())
+                                    .substring(1).replaceAll("/", "%2f"));
                 } else {
-                	urlBuffer.append("/").append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath()).replaceAll("/", "%2f"));
+                    urlBuffer.append("/").append(UrlEncoderUtils
+                            .encodeEscapeDelimiter(encodeUrl.getPath()).replaceAll("/", "%2f"));
                 }
-                
+
                 if (encodeUrl.getQuery() != null) {
-                	urlBuffer.append("?").append(URLEncoder.encode(encodeUrl.getQuery(),"UTF-8"));
+                    urlBuffer.append("?").append(encodeUrl.getQuery());
                 }
-                
+
                 httpGet = new HttpGet(urlBuffer.toString());
-                
+
             } catch (MalformedURLException e) {
                 log.error("downFile url fail, url:{}, msg:{}", url, e.getMessage());
                 return false;
-            } catch (UnsupportedEncodingException e) {
-            	log.error("urlencode fail str:{}", url);
-				return false;
-			}
+            }
 
             httpGet.setConfig(requestConfig);
             httpGet.setHeader("Accept", "*/*");

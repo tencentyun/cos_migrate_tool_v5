@@ -135,7 +135,7 @@ public class MigrateAwsTask extends Task {
         // 下载object到文件
         String localPath = config.getTempFolderPath() + UUID.randomUUID().toString();
         File localFile = new File(localPath);
-        Map<String , String> userMetaMap;
+        Map<String, String> userMetaMap;
         try {
             GetObjectProgressListener getObjectProgressListener =
                     new GetObjectProgressListener(srcKey);
@@ -154,7 +154,7 @@ public class MigrateAwsTask extends Task {
                 TaskStatics.instance.addFailCnt();
                 return;
             }
-            
+
             userMetaMap = objectMetadata.getUserMetadata();
             if (localFile.length() != this.fileSize) {
                 String printMsg =
@@ -187,11 +187,12 @@ public class MigrateAwsTask extends Task {
 
         // upload file
         try {
-            uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-                    config.isEntireFileMd5Attached(), userMetaMap);
+            String requestId = uploadFile(config.getBucketName(), cosPath, localFile,
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), userMetaMap);
             saveRecord(awsRecordElement);
+            saveRequestId(cosPath, requestId);
             TaskStatics.instance.addSuccessCnt();
-            String printMsg = String.format("[ok] task_info: %s", awsRecordElement.buildKey());
+            String printMsg = String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, awsRecordElement.buildKey());
             System.out.println(printMsg);
             log.info(printMsg);
         } catch (Exception e) {

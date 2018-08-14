@@ -73,11 +73,12 @@ public class MigrateLocalTask extends Task {
         }
 
         try {
-            uploadFile(bucketName, cosPath, localFile, storageClass, entireMd5Attached, null);
+            String requestId = uploadFile(bucketName, cosPath, localFile, storageClass, entireMd5Attached, null);
             saveRecord(migrateLocalRecordElement);
+            saveRequestId(cosPath, requestId);
             TaskStatics.instance.addSuccessCnt();
             String printMsg =
-                    String.format("[ok] task_info: %s", migrateLocalRecordElement.buildKey());
+                    String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, migrateLocalRecordElement.buildKey());
             System.out.println(printMsg);
             log.info(printMsg);
         } catch (Exception e) {

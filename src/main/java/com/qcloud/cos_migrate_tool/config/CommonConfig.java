@@ -30,6 +30,8 @@ public class CommonConfig {
     private int timeWindowBegin = 0;
     private int timeWindowEnd = 24;
     private String endpointSuffix = null;
+    private String cosProxyHost = "";
+    private int cosProxyPort = -1;
 
     public String getTempFolderPath() {
         return tempFolderPath;
@@ -313,5 +315,21 @@ public class CommonConfig {
 
     public int getTimeWindowEnd() {
         return timeWindowEnd;
+    }
+    
+    public void setProxyHost(String host) {
+        this.cosProxyHost = host;
+    }
+    
+    public void setProxyPort(int port) {
+        this.cosProxyPort = port;
+    }
+    
+    public String getProxyHost() {
+        return this.cosProxyHost;
+    }
+    
+    public int getProxyPort() {
+        return this.cosProxyPort;
     }
 }

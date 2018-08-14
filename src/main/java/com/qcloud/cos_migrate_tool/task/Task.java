@@ -9,13 +9,12 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.qcloud.cos.COSClient;
 import com.qcloud.cos.exception.CosServiceException;
-import com.qcloud.cos.model.ListMultipartUploadsRequest;
 import com.qcloud.cos.model.ListPartsRequest;
 import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.StorageClass;
+import com.qcloud.cos.model.UploadResult;
 import com.qcloud.cos.transfer.PersistableUpload;
 import com.qcloud.cos.transfer.Transfer.TransferState;
 import com.qcloud.cos.transfer.TransferManager;
@@ -36,6 +35,7 @@ public abstract class Task implements Runnable {
     protected long smallFileThreshold;
     private RecordDb recordDb;
     protected CommonConfig config;
+    
 
     public Task(Semaphore semaphore, CommonConfig config, TransferManager smallFileTransfer,
             TransferManager bigFileTransfer, RecordDb recordDb) {
@@ -62,6 +62,10 @@ public abstract class Task implements Runnable {
     public void saveRecord(RecordElement recordElement) {
         recordDb.saveRecord(recordElement);
     }
+    
+    public void saveRequestId(String key, String requestId) {
+        recordDb.saveRequestId(key, requestId);
+    }
 
     private void printTransferProgress(TransferProgress progress, String key) {
         long byteSent = progress.getBytesTransferred();
@@ -77,18 +81,14 @@ public abstract class Task implements Runnable {
         System.out.println(printMsg);
     }
 
-    public void showTransferProgress(Upload upload, boolean multipart, String key, long mtime)
-            throws InterruptedException {
+    public String showTransferProgressAndGetRequestId(Upload upload, boolean multipart, String key,
+            long mtime) throws InterruptedException {
         boolean pointSaveFlag = false;
         long printCount = 0;
         TransferProgress progress = upload.getProgress();
         do {
             ++printCount;
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                return;
-            }
+            Thread.sleep(100);
 
             long byteSent = progress.getBytesTransferred();
             if (printCount % 20 == 0) {
@@ -140,7 +140,8 @@ public abstract class Task implements Runnable {
                 }
             }
         }
-        upload.waitForUploadResult();
+        UploadResult uploadResult = upload.waitForUploadResult();
+        return uploadResult.getRequestId();
     }
 
     private boolean isMultipartUploadIdValid(String bucketName, String cosKey, String uploadId) {
@@ -154,7 +155,7 @@ public abstract class Task implements Runnable {
 
     }
 
-    private void uploadBigFile(PutObjectRequest putObjectRequest) throws InterruptedException {
+    private String uploadBigFile(PutObjectRequest putObjectRequest) throws InterruptedException {
         String bucketName = putObjectRequest.getBucketName();
         String cosKey = putObjectRequest.getKey();
         String localPath = putObjectRequest.getFile().getAbsolutePath();
@@ -174,19 +175,19 @@ public abstract class Task implements Runnable {
         } else {
             upload = this.bigFileTransfer.upload(putObjectRequest);
         }
-        showTransferProgress(upload, true, cosKey, mtime);
+        return showTransferProgressAndGetRequestId(upload, true, cosKey, mtime);
     }
 
 
 
-    private void uploadSmallFile(PutObjectRequest putObjectRequest) throws InterruptedException {
+    private String uploadSmallFile(PutObjectRequest putObjectRequest) throws InterruptedException {
         Upload upload = smallFileTransfer.upload(putObjectRequest);
-        showTransferProgress(upload, false, putObjectRequest.getKey(),
+        return showTransferProgressAndGetRequestId(upload, false, putObjectRequest.getKey(),
                 putObjectRequest.getFile().lastModified());
     }
 
 
-    public void uploadFile(String bucketName, String cosPath, File localFile,
+    public String uploadFile(String bucketName, String cosPath, File localFile,
             StorageClass storageClass, boolean entireMd5Attached, Map<String, String> userMetaMap)
                     throws Exception {
         PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
@@ -209,11 +210,10 @@ public abstract class Task implements Runnable {
         while (retryTime < maxRetry) {
             try {
                 if (localFile.length() >= smallFileThreshold) {
-                    uploadBigFile(putObjectRequest);
+                    return uploadBigFile(putObjectRequest);
                 } else {
-                    uploadSmallFile(putObjectRequest);
+                    return uploadSmallFile(putObjectRequest);
                 }
-                return;
             } catch (Exception e) {
                 log.warn("upload failed, ready to retry. retryTime:" + retryTime, e);
                 ++retryTime;
@@ -224,6 +224,7 @@ public abstract class Task implements Runnable {
                 }
             }
         }
+        return null;
     }
 
     public abstract void doTask();

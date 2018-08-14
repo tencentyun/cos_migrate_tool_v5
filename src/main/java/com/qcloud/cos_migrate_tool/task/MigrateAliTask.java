@@ -43,7 +43,7 @@ public class MigrateAliTask extends Task {
     }
 
     private String buildCOSPath() {
-        String srcPrefix = ((CopyFromAliConfig)config).getSrcPrefix();
+        String srcPrefix = ((CopyFromAliConfig) config).getSrcPrefix();
         int lastDelimiter = srcPrefix.lastIndexOf("/");
         String keyName = srcKey.substring(lastDelimiter + 1);
         String cosPrefix = config.getCosPath();
@@ -134,7 +134,7 @@ public class MigrateAliTask extends Task {
             TaskStatics.instance.addSkipCnt();
             return;
         }
-        
+
         Map<String, String> userMetaMap = null;
         try {
             // download
@@ -142,7 +142,7 @@ public class MigrateAliTask extends Task {
             GetObjectProgressListener downloadProgressListener =
                     new GetObjectProgressListener(srcKey);
             ObjectMetadata objMeta = ossClient.getObject(
-                    new GetObjectRequest(((CopyFromAliConfig)config).getSrcBucket(), srcKey)
+                    new GetObjectRequest(((CopyFromAliConfig) config).getSrcBucket(), srcKey)
                             .<GetObjectRequest>withProgressListener(downloadProgressListener),
                     new File(localPath));
             if (!downloadProgressListener.isSucceed()) {
@@ -211,11 +211,12 @@ public class MigrateAliTask extends Task {
         }
 
         try {
-            uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-                    config.isEntireFileMd5Attached(), userMetaMap);
+            String requestId = uploadFile(config.getBucketName(), cosPath, localFile,
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), userMetaMap);
             saveRecord(ossRecordElement);
+            saveRequestId(cosPath, requestId);
             TaskStatics.instance.addSuccessCnt();
-            String printMsg = String.format("[ok] task_info: %s", ossRecordElement.buildKey());
+            String printMsg = String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, ossRecordElement.buildKey());
             System.out.println(printMsg);
             log.info(printMsg);
         } catch (Exception e) {

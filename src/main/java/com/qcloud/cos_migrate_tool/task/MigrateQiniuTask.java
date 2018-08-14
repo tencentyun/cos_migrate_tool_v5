@@ -99,11 +99,12 @@ public class MigrateQiniuTask extends Task {
 
 		try {
 			
-			uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
+			String requestId = uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
 					config.isEntireFileMd5Attached(), null);
 			saveRecord(qiniuRecordElement);
+			saveRequestId(cosPath, requestId);
 			TaskStatics.instance.addSuccessCnt();
-			String printMsg = String.format("[ok] task_info: %s", qiniuRecordElement.buildKey());
+			String printMsg = String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, qiniuRecordElement.buildKey());
 			System.out.println(printMsg);
 			log.info(printMsg);
 		} catch (Exception e) {
