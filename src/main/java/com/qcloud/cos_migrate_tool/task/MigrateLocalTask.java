@@ -6,6 +6,7 @@ import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
@@ -73,7 +74,7 @@ public class MigrateLocalTask extends Task {
         }
 
         try {
-            String requestId = uploadFile(bucketName, cosPath, localFile, storageClass, entireMd5Attached, null);
+            String requestId = uploadFile(bucketName, cosPath, localFile, storageClass, entireMd5Attached, new ObjectMetadata());
             saveRecord(migrateLocalRecordElement);
             saveRequestId(cosPath, requestId);
             TaskStatics.instance.addSuccessCnt();
