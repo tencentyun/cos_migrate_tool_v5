@@ -1,7 +1,6 @@
 package com.qcloud.cos_migrate_tool.task;
 
 import java.io.File;
-import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -27,7 +26,7 @@ import com.qcloud.cos_migrate_tool.record.RecordElement;
 
 public abstract class Task implements Runnable {
     private Semaphore semaphore;
-    public static final Logger log = LoggerFactory.getLogger(MigrateLocalTask.class);
+    public static final Logger log = LoggerFactory.getLogger(Task.class);
 
 
     protected TransferManager smallFileTransfer;
@@ -35,7 +34,7 @@ public abstract class Task implements Runnable {
     protected long smallFileThreshold;
     private RecordDb recordDb;
     protected CommonConfig config;
-    
+
 
     public Task(Semaphore semaphore, CommonConfig config, TransferManager smallFileTransfer,
             TransferManager bigFileTransfer, RecordDb recordDb) {
@@ -62,7 +61,7 @@ public abstract class Task implements Runnable {
     public void saveRecord(RecordElement recordElement) {
         recordDb.saveRecord(recordElement);
     }
-    
+
     public void saveRequestId(String key, String requestId) {
         recordDb.saveRequestId(key, requestId);
     }
@@ -188,14 +187,10 @@ public abstract class Task implements Runnable {
 
 
     public String uploadFile(String bucketName, String cosPath, File localFile,
-            StorageClass storageClass, boolean entireMd5Attached, Map<String, String> userMetaMap)
+            StorageClass storageClass, boolean entireMd5Attached, ObjectMetadata objectMetadata)
                     throws Exception {
         PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
         putObjectRequest.setStorageClass(storageClass);
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        if (userMetaMap != null) {
-            objectMetadata.setUserMetadata(userMetaMap);
-        }
 
         if (entireMd5Attached) {
             String md5 = Md5Utils.md5Hex(localFile);
@@ -203,7 +198,6 @@ public abstract class Task implements Runnable {
         }
 
         putObjectRequest.setMetadata(objectMetadata);
-
         int retryTime = 0;
         final int maxRetry = 5;
 

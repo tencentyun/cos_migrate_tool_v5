@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyFromQiniuConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
@@ -11,6 +12,7 @@ import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCompetitorRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.Downloader;
+import com.qcloud.cos_migrate_tool.utils.HeadAttr;
 import com.qiniu.util.Auth;
 
 public class MigrateQiniuTask extends Task {
@@ -65,9 +67,9 @@ public class MigrateQiniuTask extends Task {
 		File localFile = new File(localPath);
 
 		// download
-		boolean downloadSucc = false;
+		HeadAttr headAttr = null;
 		try {
-			downloadSucc = Downloader.instance.downFile(url, localFile);
+		    headAttr = Downloader.instance.downFile(url, localFile);
 		} catch (Exception e) {
 			TaskStatics.instance.addFailCnt();
 			log.error("download fail url:{} msg:{}", url, e.getMessage());
@@ -75,7 +77,7 @@ public class MigrateQiniuTask extends Task {
 			return;
 		}
 
-		if (!downloadSucc) {
+		if (headAttr == null) {
 			log.error("download fail url:{}", url);
 			TaskStatics.instance.addFailCnt();
 			return;
@@ -98,9 +100,13 @@ public class MigrateQiniuTask extends Task {
 		}
 
 		try {
-			
+		    com.qcloud.cos.model.ObjectMetadata objectMetadata = new com.qcloud.cos.model.ObjectMetadata();
+		    if (headAttr.userMetaMap.containsKey("ETag")) {
+		        objectMetadata.addUserMetadata("qiniu-etag", headAttr.userMetaMap.get("ETag"));
+		    }
+		    
 			String requestId = uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-					config.isEntireFileMd5Attached(), null);
+					config.isEntireFileMd5Attached(), objectMetadata);
 			saveRecord(qiniuRecordElement);
 			saveRequestId(cosPath, requestId);
 			TaskStatics.instance.addSuccessCnt();

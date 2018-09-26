@@ -135,45 +135,47 @@ public class MigrateAliTask extends Task {
             return;
         }
 
-        Map<String, String> userMetaMap = null;
+        ObjectMetadata aliMetaData = null;
         try {
             // download
             // 下载object到文件
             GetObjectProgressListener downloadProgressListener =
                     new GetObjectProgressListener(srcKey);
-            ObjectMetadata objMeta = ossClient.getObject(
+            aliMetaData = ossClient.getObject(
                     new GetObjectRequest(((CopyFromAliConfig) config).getSrcBucket(), srcKey)
                             .<GetObjectRequest>withProgressListener(downloadProgressListener),
                     new File(localPath));
             if (!downloadProgressListener.isSucceed()) {
                 throw new Exception("download from ali failed");
             }
-            String serverChecksum =
-                    objMeta.getRawMetadata().get("x-oss-hash-crc64ecma").toString().trim();
-            userMetaMap = objMeta.getUserMetadata();
 
-            if ((serverChecksum != null) && !serverChecksum.isEmpty()) {
-                FileInputStream stream = new FileInputStream(new File(localPath));
-                CRC64 crc = new CRC64();
-                byte[] b = new byte[65536];
-                int len = 0;
+            if (aliMetaData.getRawMetadata().get("x-oss-hash-crc64ecma") != null) {
+                String serverChecksum =
+                        aliMetaData.getRawMetadata().get("x-oss-hash-crc64ecma").toString().trim();
 
-                while ((len = stream.read(b)) != -1) {
-                    crc.update(b, len);
-                }
-                stream.close();
-                BigInteger serverCrcNum = new BigInteger(serverChecksum);
-                BigInteger localCrcNum = new BigInteger(1, crc.getBytes());
+                if ((serverChecksum != null) && !serverChecksum.isEmpty()) {
+                    FileInputStream stream = new FileInputStream(new File(localPath));
+                    CRC64 crc = new CRC64();
+                    byte[] b = new byte[65536];
+                    int len = 0;
 
-                if (!localCrcNum.equals(serverCrcNum)) {
-                    String errMsg = String.format(
-                            "[fail] taskInfo: %s, crc check fail, local crc: %s, server crc: %s",
-                            ossRecordElement.buildKey(), localCrcNum.toString(),
-                            serverCrcNum.toString());
-                    System.err.println(errMsg);
-                    log.error(errMsg);
-                    TaskStatics.instance.addFailCnt();
-                    return;
+                    while ((len = stream.read(b)) != -1) {
+                        crc.update(b, len);
+                    }
+                    stream.close();
+                    BigInteger serverCrcNum = new BigInteger(serverChecksum);
+                    BigInteger localCrcNum = new BigInteger(1, crc.getBytes());
+
+                    if (!localCrcNum.equals(serverCrcNum)) {
+                        String errMsg = String.format(
+                                "[fail] taskInfo: %s, crc check fail, local crc: %s, server crc: %s",
+                                ossRecordElement.buildKey(), localCrcNum.toString(),
+                                serverCrcNum.toString());
+                        System.err.println(errMsg);
+                        log.error(errMsg);
+                        TaskStatics.instance.addFailCnt();
+                        return;
+                    }
                 }
             }
 
@@ -211,12 +213,33 @@ public class MigrateAliTask extends Task {
         }
 
         try {
+            com.qcloud.cos.model.ObjectMetadata cosMetadata =
+                    new com.qcloud.cos.model.ObjectMetadata();
+            if (aliMetaData.getUserMetadata() != null) {
+                cosMetadata.setUserMetadata(aliMetaData.getUserMetadata());
+            }
+            if (aliMetaData.getCacheControl() != null) {
+                cosMetadata.setCacheControl(aliMetaData.getCacheControl());
+            }
+            if (aliMetaData.getContentDisposition() != null) {
+                cosMetadata.setContentDisposition(aliMetaData.getContentDisposition());
+            }
+            if (aliMetaData.getContentEncoding() != null) {
+                cosMetadata.setContentEncoding(aliMetaData.getContentEncoding());
+            }
+            if (aliMetaData.getContentType() != null) {
+                cosMetadata.setContentType(aliMetaData.getContentType());
+            }
+            if (aliMetaData.getETag() != null) {
+                cosMetadata.addUserMetadata("oss-etag", aliMetaData.getETag());
+            }
             String requestId = uploadFile(config.getBucketName(), cosPath, localFile,
-                    config.getStorageClass(), config.isEntireFileMd5Attached(), userMetaMap);
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata);
             saveRecord(ossRecordElement);
             saveRequestId(cosPath, requestId);
             TaskStatics.instance.addSuccessCnt();
-            String printMsg = String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, ossRecordElement.buildKey());
+            String printMsg = String.format("[ok] [requestid: %s], task_info: %s",
+                    requestId == null ? "NULL" : requestId, ossRecordElement.buildKey());
             System.out.println(printMsg);
             log.info(printMsg);
         } catch (Exception e) {

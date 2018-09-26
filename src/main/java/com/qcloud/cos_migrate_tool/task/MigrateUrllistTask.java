@@ -68,9 +68,9 @@ public class MigrateUrllistTask extends Task {
         }
 
         File localFile = new File(localPath);
-        boolean downloadSucc = false;
+         
         try {
-            downloadSucc = Downloader.instance.downFile(url, localFile);
+            headAttr = Downloader.instance.downFile(url, localFile);
         } catch (Exception e) {
             String printMsg =
                     String.format("[fail] task_info: %s", urllistRecordElement.buildKey());
@@ -81,7 +81,7 @@ public class MigrateUrllistTask extends Task {
             return;
         }
 
-        if (!downloadSucc) {
+        if (headAttr == null) {
             String printMsg =
                     String.format("[fail] task_info: %s", urllistRecordElement.buildKey());
             System.err.println(printMsg);
@@ -102,8 +102,10 @@ public class MigrateUrllistTask extends Task {
         }
 
         try {
+            com.qcloud.cos.model.ObjectMetadata cosMetadata = new com.qcloud.cos.model.ObjectMetadata();
+            cosMetadata.setUserMetadata(headAttr.userMetaMap);
             String requestId = uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-                    config.isEntireFileMd5Attached(), headAttr.userMetaMap);
+                    config.isEntireFileMd5Attached(), cosMetadata);
             saveRecord(urllistRecordElement);
             saveRequestId(cosPath, requestId);
             TaskStatics.instance.addSuccessCnt();

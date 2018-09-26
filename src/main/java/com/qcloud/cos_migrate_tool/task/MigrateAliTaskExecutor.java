@@ -91,12 +91,12 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
         try {
             do {
                 objectListing = ossClient.listObjects(new ListObjectsRequest(this.srcBucket)
-                        .withPrefix(keyPrefix).withMarker(nextMarker).withMaxKeys(maxKeys));
+                        .withPrefix(keyPrefix).withMarker(nextMarker).withMaxKeys(maxKeys).withEncodingType("url"));
                 log.info("list next marker: " + nextMarker);
                 List<OSSObjectSummary> sums = objectListing.getObjectSummaries();
                 for (OSSObjectSummary s : sums) {
                     // AddTask
-                    MigrateAliTask task = new MigrateAliTask(config, ossClient, s.getKey(),
+                    MigrateAliTask task = new MigrateAliTask(config, ossClient, com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(s.getKey()),
                             s.getSize(), s.getETag(), smallFileTransferManager,
                             bigFileTransferManager, recordDb, semaphore);
                     try {
@@ -105,11 +105,12 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
                         log.error(e.getMessage());
                     }
                 }
-                nextMarker = objectListing.getNextMarker();
+                nextMarker = com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(objectListing.getNextMarker());
             } while (objectListing.isTruncated());
         } catch (OSSException e) {
             log.error("list fail msg: {}", e.getMessage());
         }
+        
     }
 
     @Override

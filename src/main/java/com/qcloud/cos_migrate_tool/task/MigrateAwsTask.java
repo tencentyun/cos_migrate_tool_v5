@@ -135,11 +135,11 @@ public class MigrateAwsTask extends Task {
         // 下载object到文件
         String localPath = config.getTempFolderPath() + UUID.randomUUID().toString();
         File localFile = new File(localPath);
-        Map<String, String> userMetaMap;
+        ObjectMetadata awsMetaData = null;
         try {
             GetObjectProgressListener getObjectProgressListener =
                     new GetObjectProgressListener(srcKey);
-            ObjectMetadata objectMetadata = s3Client.getObject(
+            awsMetaData = s3Client.getObject(
                     new GetObjectRequest(((CopyFromAwsConfig) config).getSrcBucket(), srcKey)
                             .<GetObjectRequest>withGeneralProgressListener(
                                     getObjectProgressListener),
@@ -155,7 +155,6 @@ public class MigrateAwsTask extends Task {
                 return;
             }
 
-            userMetaMap = objectMetadata.getUserMetadata();
             if (localFile.length() != this.fileSize) {
                 String printMsg =
                         String.format("[fail] [task_info: %s]", awsRecordElement.buildKey());
@@ -187,8 +186,30 @@ public class MigrateAwsTask extends Task {
 
         // upload file
         try {
+            com.qcloud.cos.model.ObjectMetadata cosMetadata = new com.qcloud.cos.model.ObjectMetadata();
+            if (awsMetaData.getUserMetadata() != null) {
+                cosMetadata.setUserMetadata(awsMetaData.getUserMetadata());
+            }
+            if (awsMetaData.getCacheControl() != null) {
+                cosMetadata.setCacheControl(awsMetaData.getCacheControl());
+            }
+            if (awsMetaData.getContentDisposition() != null) {
+                cosMetadata.setContentDisposition(awsMetaData.getContentDisposition());
+            }
+            if (awsMetaData.getContentEncoding() != null) {
+                cosMetadata.setContentEncoding(awsMetaData.getContentEncoding());
+            }
+            if (awsMetaData.getContentLanguage() != null) {
+                cosMetadata.setContentLanguage(awsMetaData.getContentLanguage());
+            }
+            if (awsMetaData.getContentType() != null) {
+                cosMetadata.setContentType(awsMetaData.getContentType());
+            }
+            if (awsMetaData.getETag() != null) {
+                cosMetadata.addUserMetadata("s3-etag", awsMetaData.getETag());
+            }
             String requestId = uploadFile(config.getBucketName(), cosPath, localFile,
-                    config.getStorageClass(), config.isEntireFileMd5Attached(), userMetaMap);
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata);
             saveRecord(awsRecordElement);
             saveRequestId(cosPath, requestId);
             TaskStatics.instance.addSuccessCnt();

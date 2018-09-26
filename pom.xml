@@ -53,12 +53,6 @@
 			<version>1.7.25</version>
 		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.iq80.leveldb</groupId> -->
-<!-- 			<artifactId>leveldb</artifactId> -->
-<!-- 			<version>0.9</version> -->
-<!-- 		</dependency> -->
-
 		<dependency>
 			<groupId>org.rocksdb</groupId>
 			<artifactId>rocksdbjni</artifactId>
@@ -93,7 +87,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-s3</artifactId>
-			<version>1.11.271</version>
+			<version>1.11.376</version>
 			<exclusions>
 				<exclusion>
 					<groupId>com.fasterxml.jackson.core</groupId>

@@ -4,7 +4,6 @@ import java.util.concurrent.Semaphore;
 
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.CopyObjectRequest;
-import com.qcloud.cos.model.CopyObjectResult;
 import com.qcloud.cos.model.CopyResult;
 import com.qcloud.cos.region.Region;
 import com.qcloud.cos.transfer.Copy;
@@ -55,7 +54,7 @@ public class MigrateCopyBucketTask extends Task {
         }
         CopyObjectRequest copyObjectRequest = new CopyObjectRequest(new Region(srcRegion),
                 srcBucketName, srcKey, destBucketName, destKey);
-  //      copyObjectRequest.setSourceEndpointSuffix(srcEndpointSuffx);
+        copyObjectRequest.setSourceEndpointSuffix(srcEndpointSuffx);
         try {
             Copy copy = smallFileTransfer.copy(copyObjectRequest, srcCOSClient, null);
             CopyResult copyResult = copy.waitForCopyResult();

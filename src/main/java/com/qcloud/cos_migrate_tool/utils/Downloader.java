@@ -62,6 +62,7 @@ public class Downloader {
         int retry = 0;
         int maxRetryCount = 5;
         HeadAttr headAttr = new HeadAttr();
+        
         while (retry < maxRetryCount) {
             HttpHead httpHead = null;
             try {
@@ -171,7 +172,9 @@ public class Downloader {
         log.info(printMsg);
     }
 
-    public boolean downFile(String url, File localFile) {
+    public HeadAttr downFile(String url, File localFile) {
+        HeadAttr headAttr = new HeadAttr();
+        boolean finished = false;
         int retry = 0;
         int maxRetryCount = 5;
         while (retry < maxRetryCount) {
@@ -199,7 +202,7 @@ public class Downloader {
 
             } catch (MalformedURLException e) {
                 log.error("downFile url fail, url:{}, msg:{}", url, e.getMessage());
-                return false;
+                return null;
             }
 
             httpGet.setConfig(requestConfig);
@@ -243,12 +246,44 @@ public class Downloader {
                     }
                     showDownloadProgress(url, contentLength, byteDownloadSoFar);
                     httpGet.releaseConnection();
-                    return true;
+                    finished = true;
                 } finally {
                     try {
                         bis.close();
                         bos.close();
+                        
+                        // check file size
+                        if (finished) {
+                            if ((contentLength >= 0) && (localFile.length() != contentLength)) {
+                                log.error("rsp content length:{}, local file length:{}",
+                                        contentLength, localFile.length());
+                                return null;
+                            }
+                            Header[] allHeaders = httpResponse.getAllHeaders();
+                            final String ossUserMetaPrefix = "x-oss-meta-";
+                            final String awsUserMetaPrefix = "x-amz-meta-";
+                            final String etag = "ETag";
+                            for (Header headerElement : allHeaders) {
+                                String headerName = headerElement.getName();
+                                String headerValue = headerElement.getValue();
+                                if (headerName.startsWith(ossUserMetaPrefix)
+                                        && !headerName.equals(ossUserMetaPrefix)) {
+                                    headAttr.userMetaMap.put(headerName.substring(ossUserMetaPrefix.length()),
+                                            headerValue);
+                                } else if (headerName.startsWith(awsUserMetaPrefix)
+                                        && !headerName.equals(awsUserMetaPrefix)) {
+                                    headAttr.userMetaMap.put(headerName.substring(awsUserMetaPrefix.length()),
+                                            headerValue);
+                                } else if (headerName.equals(etag)) {
+                                    headAttr.userMetaMap.put(headerName,
+                                            headerValue);
+                                }
+                            }
+                            return headAttr;
+                        } 
+
                     } catch (IOException e) {
+
                     }
                 }
             } catch (Exception e) {
@@ -259,7 +294,7 @@ public class Downloader {
             }
             ++retry;
         }
-        return false;
+        return null;
     }
 
     public void shutdown() {

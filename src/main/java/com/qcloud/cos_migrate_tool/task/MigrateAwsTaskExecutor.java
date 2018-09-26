@@ -16,8 +16,8 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.ListObjectsV2Request;
-import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class MigrateAwsTaskExecutor extends TaskExecutor {
@@ -91,18 +91,19 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
     public void buildTask() {
 
         try {
-
-            ListObjectsV2Request req =
-                    new ListObjectsV2Request().withBucketName(srcBucket).withPrefix(srcPrefix);
-            ListObjectsV2Result result;
+            ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
+            listObjectsRequest.setBucketName(srcBucket);
+            listObjectsRequest.setPrefix(srcPrefix);
+            ObjectListing objectListing = null;
             do {
-                result = s3Client.listObjectsV2(req);
-                for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+                objectListing = s3Client.listObjects(listObjectsRequest);
+                for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
                     // AddTask
                     MigrateAwsTask task = new MigrateAwsTask(config, s3Client,
                             objectSummary.getKey(), objectSummary.getSize(),
                             objectSummary.getETag(), smallFileTransferManager,
                             bigFileTransferManager, recordDb, semaphore);
+                    log.info("list key: {}, size: {}, etag: {}", objectSummary.getKey(), objectSummary.getSize(), objectSummary.getETag());
 
                     try {
                         AddTask(task);
@@ -111,8 +112,8 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
                     }
 
                 }
-                req.setContinuationToken(result.getNextContinuationToken());
-            } while (result.isTruncated());
+                listObjectsRequest.setMarker(objectListing.getNextMarker());
+            } while (objectListing.isTruncated());
         } catch (AmazonServiceException ase) {
             log.error("list fail AmazonServiceException errorcode: {}, msg: {}", ase.getErrorCode(),
                     ase.getMessage());
