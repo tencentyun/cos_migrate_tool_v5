@@ -22,6 +22,7 @@ import com.qcloud.cos.transfer.Upload;
 import com.qcloud.cos.utils.Md5Utils;
 import com.qcloud.cos_migrate_tool.config.CommonConfig;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
+import com.qcloud.cos_migrate_tool.record.RecordDb.QUERY_RESULT;
 import com.qcloud.cos_migrate_tool.record.RecordElement;
 
 public abstract class Task implements Runnable {
@@ -34,6 +35,7 @@ public abstract class Task implements Runnable {
     protected long smallFileThreshold;
     private RecordDb recordDb;
     protected CommonConfig config;
+    QUERY_RESULT query_result;
 
 
     public Task(Semaphore semaphore, CommonConfig config, TransferManager smallFileTransfer,
@@ -48,13 +50,15 @@ public abstract class Task implements Runnable {
     }
 
     public boolean isExist(RecordElement recordElement) {
-        if (recordDb.queryRecord(recordElement)) {
+        query_result = recordDb.queryRecord(recordElement);
+        if (query_result == RecordDb.QUERY_RESULT.ALL_EQ) {
             String printMsg = String.format("[skip] task_info: %s", recordElement.buildKey());
             System.out.println(printMsg);
             log.info("skip! task_info: [key: {}], [value: {}]", recordElement.buildKey(),
                     recordElement.buildValue());
             return true;
         }
+        
         return false;
     }
 

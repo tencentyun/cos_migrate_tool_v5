@@ -185,6 +185,11 @@ public class MigrateAliTask extends Task {
             System.err.println(errMsg);
             log.error(errMsg);
             TaskStatics.instance.addFailCnt();
+            File localFile;
+            localFile = new File(localPath);
+            if (localFile.exists()) {
+                localFile.delete();
+            }
             return;
         }
 
@@ -237,7 +242,11 @@ public class MigrateAliTask extends Task {
                     config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata);
             saveRecord(ossRecordElement);
             saveRequestId(cosPath, requestId);
-            TaskStatics.instance.addSuccessCnt();
+            if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {
+                TaskStatics.instance.addSuccessCnt();
+            } else {
+                TaskStatics.instance.addUpdateCnt();
+            }
             String printMsg = String.format("[ok] [requestid: %s], task_info: %s",
                     requestId == null ? "NULL" : requestId, ossRecordElement.buildKey());
             System.out.println(printMsg);

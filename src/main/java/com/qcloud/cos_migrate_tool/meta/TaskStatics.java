@@ -20,8 +20,17 @@ public class TaskStatics {
     private AtomicLong failCnt = new AtomicLong(0L);
     private AtomicLong skipCnt = new AtomicLong(0L);
     private AtomicLong conditionNotMatchCnt = new AtomicLong(0L);
+    private AtomicLong updateCnt = new AtomicLong(0L);
 
     private TaskStatics() {}
+    
+    public void addUpdateCnt() {
+        this.updateCnt.incrementAndGet();
+    }
+    
+    public long getUpdateCnt() {
+        return this.updateCnt.get();
+    }
 
     public void addSuccessCnt() {
         this.successCnt.incrementAndGet();

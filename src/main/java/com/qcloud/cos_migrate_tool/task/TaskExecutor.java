@@ -199,7 +199,10 @@ public abstract class TaskExecutor {
         printStr = String.format("%30s : %s", "op_status", opStatus);
         System.out.println(printStr);
         log.info(printStr);
-        printStr = String.format("%30s : %d", "migrate_ok", TaskStatics.instance.getSuccessCnt());
+        printStr = String.format("%30s : %d", "migrate_new", TaskStatics.instance.getSuccessCnt());
+        System.out.println(printStr);
+        log.info(printStr);
+        printStr = String.format("%30s : %d", "migrate_update", TaskStatics.instance.getUpdateCnt());
         System.out.println(printStr);
         log.info(printStr);
         printStr = String.format("%30s : %d", "migrate_fail", TaskStatics.instance.getFailCnt());

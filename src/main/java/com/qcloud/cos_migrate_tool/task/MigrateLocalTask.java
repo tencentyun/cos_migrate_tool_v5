@@ -73,10 +73,15 @@ public class MigrateLocalTask extends Task {
         }
 
         try {
-            String requestId = uploadFile(bucketName, cosPath, localFile, storageClass, entireMd5Attached, null);
+            com.qcloud.cos.model.ObjectMetadata objectMetadata = new com.qcloud.cos.model.ObjectMetadata();
+            String requestId = uploadFile(bucketName, cosPath, localFile, storageClass, entireMd5Attached, objectMetadata);
             saveRecord(migrateLocalRecordElement);
             saveRequestId(cosPath, requestId);
-            TaskStatics.instance.addSuccessCnt();
+            if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {
+                TaskStatics.instance.addSuccessCnt();
+            } else {
+                TaskStatics.instance.addUpdateCnt();
+            }
             String printMsg =
                     String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, migrateLocalRecordElement.buildKey());
             System.out.println(printMsg);

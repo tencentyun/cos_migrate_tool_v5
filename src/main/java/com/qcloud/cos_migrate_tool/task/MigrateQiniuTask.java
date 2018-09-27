@@ -109,7 +109,11 @@ public class MigrateQiniuTask extends Task {
 					config.isEntireFileMd5Attached(), objectMetadata);
 			saveRecord(qiniuRecordElement);
 			saveRequestId(cosPath, requestId);
-			TaskStatics.instance.addSuccessCnt();
+            if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {
+                TaskStatics.instance.addSuccessCnt();
+            } else {
+                TaskStatics.instance.addUpdateCnt();
+            }
 			String printMsg = String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, qiniuRecordElement.buildKey());
 			System.out.println(printMsg);
 			log.info(printMsg);

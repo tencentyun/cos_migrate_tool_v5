@@ -61,7 +61,11 @@ public class MigrateCopyBucketTask extends Task {
             String requestId = copyResult.getRequestId();
             saveRecord(migrateCopyBucketRecordElement);
             saveRequestId(destKey, requestId);
-            TaskStatics.instance.addSuccessCnt();
+            if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {
+                TaskStatics.instance.addSuccessCnt();
+            } else {
+                TaskStatics.instance.addUpdateCnt();
+            }
             String printMsg =
                     String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, migrateCopyBucketRecordElement.buildKey());
             System.out.println(printMsg);

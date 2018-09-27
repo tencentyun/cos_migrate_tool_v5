@@ -108,7 +108,11 @@ public class MigrateUrllistTask extends Task {
                     config.isEntireFileMd5Attached(), cosMetadata);
             saveRecord(urllistRecordElement);
             saveRequestId(cosPath, requestId);
-            TaskStatics.instance.addSuccessCnt();
+            if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {
+                TaskStatics.instance.addSuccessCnt();
+            } else {
+                TaskStatics.instance.addUpdateCnt();
+            }
             String printMsg = String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, urllistRecordElement.buildKey());
             System.out.println(printMsg);
             log.info(printMsg);

@@ -27,6 +27,10 @@ import com.qcloud.cos.utils.IOUtils;
 
 public class RecordDb {
 
+    public enum QUERY_RESULT {
+        KEY_NOT_EXIST, VALUE_NOT_EQ, ALL_EQ;
+    }
+    
     public static final Logger log = LoggerFactory.getLogger(RecordDb.class);
 
     private static final String ENCODING_TYPE = "UTF-8";
@@ -130,6 +134,7 @@ public class RecordDb {
         log.info(infoMsg);
     }
 
+    
     public String buildMultipartUploadSavePointKey(String bucketName, String cosKey,
             String localFilePath, long mtime, long partSize, long mutlipartUploadThreshold) {
         String key = String.format(
@@ -161,20 +166,26 @@ public class RecordDb {
 
     }
 
-    public boolean queryRecord(RecordElement recordElement) {
+    public QUERY_RESULT queryRecord(RecordElement recordElement) {
         String key = recordElement.buildKey();
         String value = null;
         try {
             value = queryKV(key);
         } catch (Exception e) {
             log.error("query kv occur a exception: ", e);
-            return false;
+            return QUERY_RESULT.KEY_NOT_EXIST;
         }
         if (value == null) {
-            return false;
+            return QUERY_RESULT.KEY_NOT_EXIST;
         }
+        
         String recordElementValue = recordElement.buildValue();
-        return recordElementValue.equals(value);
+        if (recordElementValue.equals(value)) {
+            return QUERY_RESULT.ALL_EQ;
+        }
+
+        log.info("obj had update,old_value:{} current_value:{}", value, recordElementValue);
+        return QUERY_RESULT.VALUE_NOT_EQ;
     }
 
     private String queryKV(String key) {
