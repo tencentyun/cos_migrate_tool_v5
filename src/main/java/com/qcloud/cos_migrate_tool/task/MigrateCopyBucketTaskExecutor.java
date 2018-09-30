@@ -17,6 +17,7 @@ import com.qcloud.cos.model.ObjectListing;
 import com.qcloud.cos.region.Region;
 import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
+import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 
 public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
@@ -38,6 +39,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
         if (config.getSrcEndpointSuffix() != null) {
             clientConfig.setEndPointSuffix(config.getSrcEndpointSuffix());
         }
+
         clientConfig.setUserAgent("cos-migrate-tool-v1.0");
         this.srcCosClient = new COSClient(srcCred, clientConfig);
         this.srcRegion = config.getSrcRegion();
@@ -73,32 +75,46 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                 new ListObjectsRequest(srcBucketName, srcCosPath, null, null, 1000);
 
         int lastDelimiter = srcCosPath.lastIndexOf("/");
+        ObjectListing objectListing;
+        int retry_num = 0;
 
-        try {
-            while (true) {
-                ObjectListing objectListing = srcCosClient.listObjects(listObjectsRequest);
-                List<COSObjectSummary> cosObjectSummaries = objectListing.getObjectSummaries();
-                for (COSObjectSummary cosObjectSummary : cosObjectSummaries) {
-                    String srcKey = cosObjectSummary.getKey();
-                    String srcEtag = cosObjectSummary.getETag();
-                    long srcSize = cosObjectSummary.getSize();
-                    String keyName = srcKey.substring(lastDelimiter);
-                    String copyDestKey = config.getCosPath() + keyName;
+        do {
+            try {
+                while (true) {
+                    objectListing = srcCosClient.listObjects(listObjectsRequest);
+                    List<COSObjectSummary> cosObjectSummaries = objectListing.getObjectSummaries();
+                    for (COSObjectSummary cosObjectSummary : cosObjectSummaries) {
+                        String srcKey = cosObjectSummary.getKey();
+                        String srcEtag = cosObjectSummary.getETag();
+                        long srcSize = cosObjectSummary.getSize();
+                        String keyName = srcKey.substring(lastDelimiter);
+                        String copyDestKey = config.getCosPath() + keyName;
 
-                    MigrateCopyBucketTask task =
-                            new MigrateCopyBucketTask(semaphore, (CopyBucketConfig) config,
-                                    smallFileTransferManager, bigFileTransferManager, recordDb,
-                                    srcCosClient, srcKey, srcSize, srcEtag, copyDestKey);
-                    AddTask(task);
+                        MigrateCopyBucketTask task =
+                                new MigrateCopyBucketTask(semaphore, (CopyBucketConfig) config,
+                                        smallFileTransferManager, bigFileTransferManager, recordDb,
+                                        srcCosClient, srcKey, srcSize, srcEtag, copyDestKey);
+                        AddTask(task);
+                    }
+                    if (!objectListing.isTruncated()) {
+                        break;
+                    }
+                    listObjectsRequest.setMarker(objectListing.getNextMarker());
                 }
-                if (!objectListing.isTruncated()) {
-                    break;
-                }
-                listObjectsRequest.setMarker(objectListing.getNextMarker());
+
+                TaskStatics.instance.setListFinished(true);
+                
+                return;
+
+            } catch (Exception e) {
+                log.error("List cos bucket occur a exception", e);
+                TaskStatics.instance.setListFinished(false);
             }
-        } catch (Exception e) {
-            log.error("List cos bucket occur a exception", e);
-        }
+            
+            ++retry_num;
+            
+        } while (retry_num < 5);
+
     }
 
     @Override

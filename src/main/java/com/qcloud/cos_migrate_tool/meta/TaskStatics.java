@@ -21,8 +21,17 @@ public class TaskStatics {
     private AtomicLong skipCnt = new AtomicLong(0L);
     private AtomicLong conditionNotMatchCnt = new AtomicLong(0L);
     private AtomicLong updateCnt = new AtomicLong(0L);
-
+    private boolean list_finished = false;
+    
     private TaskStatics() {}
+    
+    public void setListFinished(boolean is_finished) {
+        this.list_finished = true;
+    }
+    
+    public boolean getListFinished() {
+        return this.list_finished;
+    }
     
     public void addUpdateCnt() {
         this.updateCnt.incrementAndGet();
@@ -79,5 +88,9 @@ public class TaskStatics {
         this.successCnt.set(0);
         this.failCnt.set(0);
         this.skipCnt.set(0);
+        this.updateCnt.set(0);
+        this.conditionNotMatchCnt.set(0);
+        this.list_finished = false;
+        
     }
 }

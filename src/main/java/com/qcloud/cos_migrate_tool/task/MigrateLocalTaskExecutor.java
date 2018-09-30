@@ -106,7 +106,11 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
         log.info("ready to scan folder: " + localFolder);
         try {
             java.nio.file.Files.walkFileTree(Paths.get(localFolder), finder);
+            
+            TaskStatics.instance.setListFinished(true);
+            
         } catch (IOException e) {
+            TaskStatics.instance.setListFinished(false);
             log.error("walk file tree error", e);
         }
     }

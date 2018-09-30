@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.qcloud.cos_migrate_tool.config.CopyFromQiniuConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
+import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 import com.qiniu.common.Zone;
 import com.qiniu.http.ProxyConfiguration;
@@ -94,9 +95,16 @@ public class MigrateQiniuTaskExecutor extends TaskExecutor {
                     }
                 }
             }
+
+            TaskStatics.instance.setListFinished(true);
+            return;
+
         } catch (Exception e) {
             log.error("list fail msg:{}", e.getMessage());
+            TaskStatics.instance.setListFinished(false);
         }
+
+
     }
 
     @Override

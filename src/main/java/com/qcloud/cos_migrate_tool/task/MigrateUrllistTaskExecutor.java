@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qcloud.cos_migrate_tool.config.CopyFromUrllistConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
+import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 
 public class MigrateUrllistTaskExecutor extends TaskExecutor {
@@ -93,8 +94,12 @@ public class MigrateUrllistTaskExecutor extends TaskExecutor {
 							log.error("add task fail,msg:{}", e.getMessage());
 						}
 					}
+					
+					TaskStatics.instance.setListFinished(true);
+					
 				} catch (IOException e) {
 					log.error("read line fail,msg:{}", e.getMessage());
+					TaskStatics.instance.setListFinished(false);
 				}
 
 				try {

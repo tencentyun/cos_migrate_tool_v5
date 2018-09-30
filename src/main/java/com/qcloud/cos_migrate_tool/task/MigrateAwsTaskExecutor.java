@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qcloud.cos_migrate_tool.config.CopyFromAwsConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
+import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -114,11 +115,16 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
                 }
                 listObjectsRequest.setMarker(objectListing.getNextMarker());
             } while (objectListing.isTruncated());
+            
+            TaskStatics.instance.setListFinished(true);
+            
         } catch (AmazonServiceException ase) {
             log.error("list fail AmazonServiceException errorcode: {}, msg: {}", ase.getErrorCode(),
                     ase.getMessage());
+            TaskStatics.instance.setListFinished(false);
         } catch (AmazonClientException ace) {
             log.error("list fail AmazonClientException msg: {}", ace.getMessage().toString());
+            TaskStatics.instance.setListFinished(false);
         }
 
     }

@@ -36,7 +36,7 @@ public abstract class TaskExecutor {
     protected COSClient cosClient;
     protected TransferManager smallFileTransferManager;
     protected TransferManager bigFileTransferManager;
-
+    
     enum RUN_MODE {
         NORMAL, DUMP_REQUESTID, QUERY_REQUESTID;
     }
@@ -185,9 +185,9 @@ public abstract class TaskExecutor {
 
     public void printTaskStaticsInfo() {
         String opStatus = "";
-        if (TaskStatics.instance.getFailCnt() == 0) {
+        if (TaskStatics.instance.getListFinished() && TaskStatics.instance.getFailCnt() == 0) {
             opStatus = "ALL_OK";
-        } else if (TaskStatics.instance.getSuccessCnt() == 0) {
+        } else if (TaskStatics.instance.getSuccessCnt() == 0 && TaskStatics.instance.getUpdateCnt() == 0) {
             opStatus = "ALL_FAIL";
         } else {
             opStatus = "PART_OK";

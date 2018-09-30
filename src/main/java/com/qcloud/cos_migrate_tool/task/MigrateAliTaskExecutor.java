@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.qcloud.cos_migrate_tool.config.CopyFromAliConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
+import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 
 import com.aliyun.oss.*;
@@ -107,8 +108,12 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
                 }
                 nextMarker = com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(objectListing.getNextMarker());
             } while (objectListing.isTruncated());
+            
+            TaskStatics.instance.setListFinished(true);
+            
         } catch (OSSException e) {
             log.error("list fail msg: {}", e.getMessage());
+            TaskStatics.instance.setListFinished(false);
         }
         
     }
