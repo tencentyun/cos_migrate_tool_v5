@@ -89,36 +89,44 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
         String nextMarker = "";
         ObjectListing objectListing;
 
-        try {
-            do {
-                objectListing = ossClient.listObjects(new ListObjectsRequest(this.srcBucket)
-                        .withPrefix(keyPrefix).withMarker(nextMarker).withMaxKeys(maxKeys).withEncodingType("url"));
-                log.info("list next marker: " + nextMarker);
-                List<OSSObjectSummary> sums = objectListing.getObjectSummaries();
-                for (OSSObjectSummary s : sums) {
-                    // AddTask
-                    MigrateAliTask task = new MigrateAliTask(config, ossClient, com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(s.getKey()),
-                            s.getSize(), s.getETag(), smallFileTransferManager,
-                            bigFileTransferManager, recordDb, semaphore);
-                    try {
-                        AddTask(task);
-                    } catch (InterruptedException e) {
-                        log.error(e.getMessage());
+        int retry_num = 0;
+
+        do {
+            try {
+                do {
+                    objectListing = ossClient.listObjects(new ListObjectsRequest(this.srcBucket)
+                            .withPrefix(keyPrefix).withMarker(nextMarker).withMaxKeys(maxKeys)
+                            .withEncodingType("url"));
+                    log.info("list next marker: " + nextMarker);
+                    List<OSSObjectSummary> sums = objectListing.getObjectSummaries();
+                    for (OSSObjectSummary s : sums) {
+                        // AddTask
+                        MigrateAliTask task = new MigrateAliTask(config, ossClient,
+                                com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(s.getKey()),
+                                s.getSize(), s.getETag(), smallFileTransferManager,
+                                bigFileTransferManager, recordDb, semaphore);
+                        try {
+                            AddTask(task);
+                        } catch (InterruptedException e) {
+                            log.error(e.getMessage());
+                        }
                     }
-                }
-                nextMarker = com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(objectListing.getNextMarker());
-            } while (objectListing.isTruncated());
-            
-            TaskStatics.instance.setListFinished(true);
-            
-        } catch (OSSException e) {
-            log.error("list fail msg: {}", e.getMessage());
-            TaskStatics.instance.setListFinished(false);
-        } catch (ClientException e) {
-            log.error("list fail msg: {}", e.getMessage());
-            TaskStatics.instance.setListFinished(false);
-        }
-        
+                    nextMarker = com.qcloud.cos.utils.UrlEncoderUtils
+                            .urlDecode(objectListing.getNextMarker());
+                } while (objectListing.isTruncated());
+
+                TaskStatics.instance.setListFinished(true);
+                return;
+
+            } catch (OSSException e) {
+                log.error("list fail msg: {}", e.getMessage());
+                TaskStatics.instance.setListFinished(false);
+            } catch (ClientException e) {
+                log.error("list fail msg: {}", e.getMessage());
+                TaskStatics.instance.setListFinished(false);
+            }
+        } while (retry_num < 20);
+
     }
 
     @Override
