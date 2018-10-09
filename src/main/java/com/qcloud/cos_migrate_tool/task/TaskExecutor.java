@@ -193,9 +193,14 @@ public abstract class TaskExecutor {
             opStatus = "PART_OK";
         }
 
-        String printStr = String.format("\n\n%s over! op statistics:", migrateType.toString());
+        String printStr = String.format("\n\nlist finished:%s", TaskStatics.instance.getListFinished());
         System.out.println(printStr);
         log.info(printStr);
+        
+        printStr = String.format("%s over! op statistics:", migrateType.toString());
+        System.out.println(printStr);
+        log.info(printStr);
+        
         printStr = String.format("%30s : %s", "op_status", opStatus);
         System.out.println(printStr);
         log.info(printStr);

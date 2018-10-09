@@ -48,7 +48,7 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
 
         ClientConfiguration ossConf = new ClientConfiguration();
         ossConf.setConnectionTimeout(5000);
-        ossConf.setMaxErrorRetry(5);
+        ossConf.setMaxErrorRetry(20);
         ossConf.setSocketTimeout(10000);
         ossConf.setMaxConnections(1024);
         ossConf.setProtocol(Protocol.HTTP);
@@ -112,6 +112,9 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
             TaskStatics.instance.setListFinished(true);
             
         } catch (OSSException e) {
+            log.error("list fail msg: {}", e.getMessage());
+            TaskStatics.instance.setListFinished(false);
+        } catch (ClientException e) {
             log.error("list fail msg: {}", e.getMessage());
             TaskStatics.instance.setListFinished(false);
         }

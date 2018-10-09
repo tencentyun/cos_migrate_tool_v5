@@ -39,6 +39,8 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
         if (config.getSrcEndpointSuffix() != null) {
             clientConfig.setEndPointSuffix(config.getSrcEndpointSuffix());
         }
+        clientConfig.setConnectionTimeout(5000);
+        clientConfig.setSocketTimeout(5000);
 
         clientConfig.setUserAgent("cos-migrate-tool-v1.0");
         this.srcCosClient = new COSClient(srcCred, clientConfig);
@@ -89,7 +91,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                         long srcSize = cosObjectSummary.getSize();
                         String keyName = srcKey.substring(lastDelimiter);
                         String copyDestKey = config.getCosPath() + keyName;
-
+           
                         MigrateCopyBucketTask task =
                                 new MigrateCopyBucketTask(semaphore, (CopyBucketConfig) config,
                                         smallFileTransferManager, bigFileTransferManager, recordDb,
@@ -113,7 +115,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
             
             ++retry_num;
             
-        } while (retry_num < 5);
+        } while (retry_num < 20);
 
     }
 
