@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.EnumSet;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
@@ -16,6 +17,8 @@ import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
+
+import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 
 public class MigrateLocalTaskExecutor extends TaskExecutor {
 
@@ -105,7 +108,8 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
 
         log.info("ready to scan folder: " + localFolder);
         try {
-            java.nio.file.Files.walkFileTree(Paths.get(localFolder), finder);
+            java.nio.file.Files.walkFileTree(Paths.get(localFolder), 
+                    EnumSet.of(FOLLOW_LINKS), Integer.MAX_VALUE, finder);
             
             TaskStatics.instance.setListFinished(true);
             
