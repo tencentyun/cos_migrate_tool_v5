@@ -43,7 +43,7 @@ public class MigrateUrllistTask extends Task {
         String localPath = config.getTempFolderPath() + ThreadLocalRandom.current().nextLong(Long.MAX_VALUE) + "_" + Thread.currentThread().getName();
         HeadAttr headAttr = null;
         try {
-            headAttr = Downloader.instance.headFile(url);
+            headAttr = Downloader.instance.headFile(url, false);
         } catch (Exception e) {
             String printMsg = String.format("head url attr fail, url: %s", url);
             System.err.println(printMsg);
@@ -70,7 +70,7 @@ public class MigrateUrllistTask extends Task {
         File localFile = new File(localPath);
          
         try {
-            headAttr = Downloader.instance.downFile(url, localFile);
+            headAttr = Downloader.instance.downFile(url, localFile, false);
         } catch (Exception e) {
             String printMsg =
                     String.format("[fail] task_info: %s", urllistRecordElement.buildKey());

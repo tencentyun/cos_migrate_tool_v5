@@ -69,7 +69,7 @@ public class MigrateQiniuTask extends Task {
 		// download
 		HeadAttr headAttr = null;
 		try {
-		    headAttr = Downloader.instance.downFile(url, localFile);
+		    headAttr = Downloader.instance.downFile(url, localFile, true);
 		} catch (Exception e) {
 			TaskStatics.instance.addFailCnt();
 			log.error("download fail url:{} msg:{}", url, e.getMessage());

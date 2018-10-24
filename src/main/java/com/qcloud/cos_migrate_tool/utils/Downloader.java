@@ -6,14 +6,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -57,7 +54,7 @@ public class Downloader {
         this.idleConnectionMonitor.start();
     }
 
-    public HeadAttr headFile(String url) {
+    public HeadAttr headFile(String url, boolean qiniuDownLoadFlag) {
 
         int retry = 0;
         int maxRetryCount = 5;
@@ -71,14 +68,17 @@ public class Downloader {
 
                 urlBuffer.append(encodeUrl.getProtocol()).append("://").append(encodeUrl.getHost());
 
+                String encodeUrlStr = "";
                 if (encodeUrl.getPath().startsWith("/")) {
-                    urlBuffer.append("/")
-                            .append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath())
-                                    .substring(1).replaceAll("/", "%2f"));
+                    encodeUrlStr = encodeUrl.getPath().substring(1); 
                 } else {
-                    urlBuffer.append("/").append(UrlEncoderUtils
-                            .encodeEscapeDelimiter(encodeUrl.getPath()).replaceAll("/", "%2f"));
+                    encodeUrlStr = encodeUrl.getPath();
                 }
+                encodeUrlStr = UrlEncoderUtils.encodeEscapeDelimiter(encodeUrlStr);
+                if (qiniuDownLoadFlag) {
+                    encodeUrlStr = encodeUrlStr.replaceAll("/", "%2f");
+                }
+                urlBuffer.append("/").append(encodeUrlStr);
 
                 if (encodeUrl.getQuery() != null) {
                     urlBuffer.append("?").append(encodeUrl.getQuery());
@@ -98,13 +98,13 @@ public class Downloader {
             try {
                 HttpResponse httpResponse = httpClient.execute(httpHead);
                 int http_statuscode = httpResponse.getStatusLine().getStatusCode();
-                if (http_statuscode < 200 || http_statuscode > 500) {
+                if (http_statuscode < 200 || http_statuscode > 299) {
                     String errMsg = String.format(
                             "head failed, url: %s, httpResponse: %s, response_statuscode: %d", url,
                             httpResponse.toString(), http_statuscode);
                     throw new Exception(errMsg);
                 }
-
+                
                 if (httpResponse.containsHeader("content-length")) {
                     Header header = httpResponse.getFirstHeader("content-length");
                     long contentLength = -1;
@@ -172,7 +172,7 @@ public class Downloader {
         log.info(printMsg);
     }
 
-    public HeadAttr downFile(String url, File localFile) {
+    public HeadAttr downFile(String url, File localFile, boolean qiniuDownLoadFlag) {
         HeadAttr headAttr = new HeadAttr();
         boolean finished = false;
         int retry = 0;
@@ -184,15 +184,18 @@ public class Downloader {
                 URL encodeUrl = new URL(url);
 
                 urlBuffer.append(encodeUrl.getProtocol()).append("://").append(encodeUrl.getHost());
-
+                
+                String encodeUrlStr = "";
                 if (encodeUrl.getPath().startsWith("/")) {
-                    urlBuffer.append("/")
-                            .append(UrlEncoderUtils.encodeEscapeDelimiter(encodeUrl.getPath())
-                                    .substring(1).replaceAll("/", "%2f"));
+                    encodeUrlStr = encodeUrl.getPath().substring(1); 
                 } else {
-                    urlBuffer.append("/").append(UrlEncoderUtils
-                            .encodeEscapeDelimiter(encodeUrl.getPath()).replaceAll("/", "%2f"));
+                    encodeUrlStr = encodeUrl.getPath();
                 }
+                encodeUrlStr = UrlEncoderUtils.encodeEscapeDelimiter(encodeUrlStr);
+                if (qiniuDownLoadFlag) {
+                    encodeUrlStr = encodeUrlStr.replaceAll("/", "%2f");
+                }
+                urlBuffer.append("/").append(encodeUrlStr);
 
                 if (encodeUrl.getQuery() != null) {
                     urlBuffer.append("?").append(encodeUrl.getQuery());

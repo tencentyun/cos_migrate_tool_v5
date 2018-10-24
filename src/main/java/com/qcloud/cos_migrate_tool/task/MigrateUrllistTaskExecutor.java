@@ -83,6 +83,7 @@ public class MigrateUrllistTaskExecutor extends TaskExecutor {
 							url_path = url.getPath();
 						} catch (Exception e) {
 							log.error("parse url fail,line:{} msg:{}", line, e.getMessage());
+							TaskStatics.instance.addFailCnt();
 							continue;
 						}
 
