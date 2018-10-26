@@ -59,7 +59,7 @@ public class Downloader {
         int retry = 0;
         int maxRetryCount = 5;
         HeadAttr headAttr = new HeadAttr();
-        
+
         while (retry < maxRetryCount) {
             HttpHead httpHead = null;
             try {
@@ -70,7 +70,7 @@ public class Downloader {
 
                 String encodeUrlStr = "";
                 if (encodeUrl.getPath().startsWith("/")) {
-                    encodeUrlStr = encodeUrl.getPath().substring(1); 
+                    encodeUrlStr = encodeUrl.getPath().substring(1);
                 } else {
                     encodeUrlStr = encodeUrl.getPath();
                 }
@@ -104,7 +104,7 @@ public class Downloader {
                             httpResponse.toString(), http_statuscode);
                     throw new Exception(errMsg);
                 }
-                
+
                 if (httpResponse.containsHeader("content-length")) {
                     Header header = httpResponse.getFirstHeader("content-length");
                     long contentLength = -1;
@@ -184,10 +184,10 @@ public class Downloader {
                 URL encodeUrl = new URL(url);
 
                 urlBuffer.append(encodeUrl.getProtocol()).append("://").append(encodeUrl.getHost());
-                
+
                 String encodeUrlStr = "";
                 if (encodeUrl.getPath().startsWith("/")) {
-                    encodeUrlStr = encodeUrl.getPath().substring(1); 
+                    encodeUrlStr = encodeUrl.getPath().substring(1);
                 } else {
                     encodeUrlStr = encodeUrl.getPath();
                 }
@@ -252,9 +252,13 @@ public class Downloader {
                     finished = true;
                 } finally {
                     try {
-                        bis.close();
-                        bos.close();
-                        
+                        if (bis != null) {
+                            bis.close();
+                        }
+                        if (bos != null) {
+                            bos.close();
+                        }
+
                         // check file size
                         if (finished) {
                             if ((contentLength >= 0) && (localFile.length() != contentLength)) {
@@ -271,19 +275,20 @@ public class Downloader {
                                 String headerValue = headerElement.getValue();
                                 if (headerName.startsWith(ossUserMetaPrefix)
                                         && !headerName.equals(ossUserMetaPrefix)) {
-                                    headAttr.userMetaMap.put(headerName.substring(ossUserMetaPrefix.length()),
+                                    headAttr.userMetaMap.put(
+                                            headerName.substring(ossUserMetaPrefix.length()),
                                             headerValue);
                                 } else if (headerName.startsWith(awsUserMetaPrefix)
                                         && !headerName.equals(awsUserMetaPrefix)) {
-                                    headAttr.userMetaMap.put(headerName.substring(awsUserMetaPrefix.length()),
+                                    headAttr.userMetaMap.put(
+                                            headerName.substring(awsUserMetaPrefix.length()),
                                             headerValue);
                                 } else if (headerName.equals(etag)) {
-                                    headAttr.userMetaMap.put(headerName,
-                                            headerValue);
+                                    headAttr.userMetaMap.put(headerName, headerValue);
                                 }
                             }
                             return headAttr;
-                        } 
+                        }
 
                     } catch (IOException e) {
 

@@ -24,7 +24,7 @@ public class CopyFromLocalConfig extends CommonConfig {
     }
 
     public void setExcludes(String excludePath) throws IllegalArgumentException {
-        excludePath.trim();
+        excludePath = excludePath.trim();
         String[] exludePathArray = excludePath.split(";");
         for (String excludePathElement : exludePathArray) {
             File tempFile = new File(excludePathElement);

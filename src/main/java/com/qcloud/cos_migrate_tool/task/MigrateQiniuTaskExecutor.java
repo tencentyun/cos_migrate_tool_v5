@@ -59,7 +59,7 @@ public class MigrateQiniuTaskExecutor extends TaskExecutor {
         String comment = String.format(
                 "[time: %s], [srcBucketName: %s] [cosFolder: %s], [endPoint: %s], [srcPrefix: %s]",
                 SystemUtils.getCurrentDateTime(), config.getSrcBucket(), cosFolder,
-                config.getSrcEndpoint(), config.getSrcEndpoint(), config.getSrcPrefix());
+                config.getSrcEndpoint(), config.getSrcPrefix());
         return comment;
     }
 
