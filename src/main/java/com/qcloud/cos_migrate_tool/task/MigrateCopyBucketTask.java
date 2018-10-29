@@ -1,10 +1,15 @@
 package com.qcloud.cos_migrate_tool.task;
 
+import java.io.File;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.qcloud.cos.COSClient;
+import com.qcloud.cos.exception.CosServiceException;
 import com.qcloud.cos.model.CopyObjectRequest;
 import com.qcloud.cos.model.CopyResult;
+import com.qcloud.cos.model.GetObjectRequest;
+import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.region.Region;
 import com.qcloud.cos.transfer.Copy;
 import com.qcloud.cos.transfer.TransferManager;
@@ -42,6 +47,38 @@ public class MigrateCopyBucketTask extends Task {
     }
 
 
+    private void transferFileForNotAllowedCopyObject(MigrateCopyBucketRecordElement copyElement) {
+        String downloadTempPath =
+                config.getTempFolderPath() + ThreadLocalRandom.current().nextLong();
+        File downloadTempFile = new File(downloadTempPath);
+        try {
+            ObjectMetadata objectMetadata = srcCOSClient
+                    .getObject(new GetObjectRequest(srcBucketName, srcKey), downloadTempFile);
+            String requestId = uploadFile(destBucketName, destKey, downloadTempFile,
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), objectMetadata);
+            saveRecord(copyElement);
+            saveRequestId(destKey, requestId);
+            if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {
+                TaskStatics.instance.addSuccessCnt();
+            } else {
+                TaskStatics.instance.addUpdateCnt();
+            }
+            String printMsg = String.format("[ok] [requestid: %s], task_info: %s",
+                    requestId == null ? "NULL" : requestId,
+                    copyElement.buildKey());
+            System.out.println(printMsg);
+            log.info(printMsg);
+        } catch (Exception e) {
+            String printMsg = String.format("[fail] task_info: %s",
+                    copyElement.buildKey());
+            System.out.println(printMsg);
+            log.error("fail! task_info: [key: {}], [value: {}], exception: {}",
+                    copyElement.buildKey(),
+                    copyElement.buildValue(), e.toString());
+            TaskStatics.instance.addFailCnt();
+        }
+    }
+
 
     @Override
     public void doTask() {
@@ -66,11 +103,22 @@ public class MigrateCopyBucketTask extends Task {
             } else {
                 TaskStatics.instance.addUpdateCnt();
             }
-            String printMsg =
-                    String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, migrateCopyBucketRecordElement.buildKey());
+            String printMsg = String.format("[ok] [requestid: %s], task_info: %s",
+                    requestId == null ? "NULL" : requestId,
+                    migrateCopyBucketRecordElement.buildKey());
             System.out.println(printMsg);
             log.info(printMsg);
         } catch (Exception e) {
+            if (e instanceof CosServiceException) {
+                if (((CosServiceException) e).getStatusCode() == 405) {
+                    log.info(
+                            "try to transfer file for not allowed copy object, task_info: [key: {}], [value: {}], exception: {}",
+                            migrateCopyBucketRecordElement.buildKey(),
+                            migrateCopyBucketRecordElement.buildValue(), e.toString());
+                    transferFileForNotAllowedCopyObject(migrateCopyBucketRecordElement);
+                    return;
+                }
+            }
             String printMsg = String.format("[fail] task_info: %s",
                     migrateCopyBucketRecordElement.buildKey());
             System.out.println(printMsg);
