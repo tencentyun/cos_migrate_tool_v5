@@ -13,9 +13,9 @@
 - linux或windows环境, 推荐linux
 
 # 使用范例
-1 配置全部通过配置文件读入
+1. 配置全部通过配置文件读入
 sh start_migrate.sh
-2 指定部分配置项以命令行为主.
+2. 指定部分配置项以命令行为主.
 sh start_migrate.sh -DmigrateLocal.localPath=/test_data/aaa/ -Dcommon.cosPath=/aaa
 sh start_migrate.sh -DmigrateAws.prefix=/test_data/bbb/ -Dcommon.cosPath=/bbb
 
