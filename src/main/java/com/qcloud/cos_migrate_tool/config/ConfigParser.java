@@ -52,6 +52,7 @@ public class ConfigParser {
     private static final String ALI_SECTION_NAME = "migrateAli";
     private static final String AWS_SECTION_NAME = "migrateAws";
     private static final String QINIU_SECTION_NAME = "migrateQiniu";
+    private static final String UPYUN_SECTION_NAME = "migrateUpyun";
     private static final String OSS_BUCKET = "bucket";
     private static final String OSS_AK = "accessKeyId";
     private static final String OSS_SK = "accessKeySecret";
@@ -216,6 +217,16 @@ public class ConfigParser {
             }
             config = new CopyFromQiniuConfig();
             if (!initCopyFromQiniuConfig(prefs, (CopyFromQiniuConfig) config)) {
+                return false;
+            }
+
+        } else if (migrateType.equals(MigrateType.MIGRATE_FROM_UPYUN)) {
+            // qiniu copy
+            if (!checkMigrateCompetitorConfig(prefs, MigrateType.MIGRATE_FROM_UPYUN)) {
+                return false;
+            }
+            config = new CopyFromUpyunConfig();
+            if (!initCopyFromUpyunConfig(prefs, (CopyFromUpyunConfig) config)) {
                 return false;
             }
 
@@ -515,6 +526,18 @@ public class ConfigParser {
         return true;
     }
 
+    private boolean initCopyFromUpyunConfig(Preferences prefs, CopyFromUpyunConfig copyUpyunConfig) {
+        if (!initCommonConfig(prefs, copyUpyunConfig)) {
+            return false;
+        }
+
+        if (!initCopyFromCompetitorConfig(prefs, copyUpyunConfig)) {
+            return false;
+        }
+
+        return true;
+    }
+
     private boolean initCopyFromQiniuConfig(Preferences prefs,
             CopyFromQiniuConfig copyQiniuConfig) {
         if (!initCommonConfig(prefs, copyQiniuConfig)) {
@@ -582,6 +605,8 @@ public class ConfigParser {
                 sectionName = AWS_SECTION_NAME;
             } else if (this.migrateType == MigrateType.MIGRATE_FROM_QINIU) {
                 sectionName = QINIU_SECTION_NAME;
+            } else if (this.migrateType == MigrateType.MIGRATE_FROM_UPYUN) {
+                sectionName = UPYUN_SECTION_NAME;
             } else {
                 log.error("unknow migrate type %s", migrateType.toString());
                 return false;
