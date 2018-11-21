@@ -91,6 +91,13 @@ public class MigrateCopyBucketTask extends Task {
         }
         CopyObjectRequest copyObjectRequest = new CopyObjectRequest(new Region(srcRegion),
                 srcBucketName, srcKey, destBucketName, destKey);
+        
+        if (srcBucketName.equals(destBucketName) && ( destKey.equals("/" + srcKey) || srcKey.equals(destKey)) ) {
+            ObjectMetadata newObjectMetadata = new ObjectMetadata();
+            newObjectMetadata.addUserMetadata("x-cos-metadata-directive", "Replaced");
+            copyObjectRequest.setNewObjectMetadata(newObjectMetadata);
+        }
+        
         copyObjectRequest.setSourceEndpointSuffix(srcEndpointSuffx);
         try {
             Copy copy = smallFileTransfer.copy(copyObjectRequest, srcCOSClient, null);

@@ -28,7 +28,7 @@ import com.qcloud.cos_migrate_tool.record.RecordElement;
 public abstract class Task implements Runnable {
     private Semaphore semaphore;
     public static final Logger log = LoggerFactory.getLogger(Task.class);
-
+    protected static Semaphore mutex = new Semaphore(1);
 
     protected TransferManager smallFileTransfer;
     protected TransferManager bigFileTransfer;
@@ -36,6 +36,7 @@ public abstract class Task implements Runnable {
     private RecordDb recordDb;
     protected CommonConfig config;
     QUERY_RESULT query_result;
+
 
 
     public Task(Semaphore semaphore, CommonConfig config, TransferManager smallFileTransfer,
@@ -58,7 +59,7 @@ public abstract class Task implements Runnable {
                     recordElement.buildValue());
             return true;
         }
-        
+
         return false;
     }
 
@@ -192,7 +193,7 @@ public abstract class Task implements Runnable {
 
     public String uploadFile(String bucketName, String cosPath, File localFile,
             StorageClass storageClass, boolean entireMd5Attached, ObjectMetadata objectMetadata)
-                    throws Exception {
+            throws Exception {
         PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
         putObjectRequest.setStorageClass(storageClass);
 
@@ -236,13 +237,21 @@ public abstract class Task implements Runnable {
             if (minuteOfDay >= timeWindowBegin && minuteOfDay <= timeWindowEnd) {
                 return;
             }
-            String printTips =
-                    String.format("currentTime %s, wait next time window [%02d:%02d, %02d:%02d]",
-                            dateTime.toString("yyyy-MM-dd HH:mm:ss"), timeWindowBegin / 60,
-                            timeWindowBegin % 60, timeWindowEnd / 60, timeWindowEnd % 60);
-            System.out.println(printTips);
-            log.info(printTips);
-            Thread.sleep(60000);
+
+            if (mutex.tryAcquire()) {
+                String printTips = String.format(
+                        "currentTime %s, wait next time window [%02d:%02d, %02d:%02d]",
+                        dateTime.toString("yyyy-MM-dd HH:mm:ss"), timeWindowBegin / 60,
+                        timeWindowBegin % 60, timeWindowEnd / 60, timeWindowEnd % 60);
+                System.out.println(printTips);
+                System.out.println(
+                        "---------------------------------------------------------------------");
+                log.info(printTips);
+                Thread.sleep(60000);
+                mutex.release();
+            } else {
+                Thread.sleep(60000);
+            }
         }
     }
 

@@ -106,12 +106,7 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
                             bigFileTransferManager, recordDb, semaphore);
                     log.info("list key: {}, size: {}, etag: {}", objectSummary.getKey(), objectSummary.getSize(), objectSummary.getETag());
 
-                    try {
                         AddTask(task);
-                    } catch (InterruptedException e) {
-                        log.error(e.getMessage());
-                    }
-
                 }
                 listObjectsRequest.setMarker(objectListing.getNextMarker());
             } while (objectListing.isTruncated());
@@ -125,6 +120,9 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
         } catch (AmazonClientException ace) {
             log.error("list fail AmazonClientException msg: {}", ace.getMessage().toString());
             TaskStatics.instance.setListFinished(false);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            TaskStatics.instance.setListFinished(false);     
         }
 
     }

@@ -100,8 +100,8 @@ public class Downloader {
                 int http_statuscode = httpResponse.getStatusLine().getStatusCode();
                 if (http_statuscode < 200 || http_statuscode > 299) {
                     String errMsg = String.format(
-                            "head failed, url: %s, httpResponse: %s, response_statuscode: %d", url,
-                            httpResponse.toString(), http_statuscode);
+                            "head failed, response_statuscode: %d, url: %s, httpResponse: %s, ", http_statuscode, url,
+                            httpResponse.toString());
                     throw new Exception(errMsg);
                 }
 

@@ -36,6 +36,8 @@ public abstract class TaskExecutor {
     protected COSClient cosClient;
     protected TransferManager smallFileTransferManager;
     protected TransferManager bigFileTransferManager;
+
+   
     
     enum RUN_MODE {
         NORMAL, DUMP_REQUESTID, QUERY_REQUESTID;

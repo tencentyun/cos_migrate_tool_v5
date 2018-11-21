@@ -46,8 +46,8 @@ public class MigrateUrllistTask extends Task {
             headAttr = Downloader.instance.headFile(url, false);
         } catch (Exception e) {
             String printMsg = String.format("head url attr fail, url: %s", url);
-            System.err.println(printMsg);
-            log.error(printMsg, e);
+            System.err.println(e.toString());
+            log.error(e.toString(), printMsg);
             TaskStatics.instance.addFailCnt();
             return;
         }

@@ -88,11 +88,7 @@ public class MigrateQiniuTaskExecutor extends TaskExecutor {
                             item.hash, smallFileTransferManager, bigFileTransferManager, recordDb,
                             semaphore);
 
-                    try {
                         AddTask(task);
-                    } catch (InterruptedException e) {
-                        log.error("add task fail,msg:{}", e.getMessage());
-                    }
                 }
             }
 

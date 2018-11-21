@@ -89,11 +89,9 @@ public class MigrateUrllistTaskExecutor extends TaskExecutor {
 
 						MigrateUrllistTask task = new MigrateUrllistTask(config, line, url_path,
 								smallFileTransferManager, bigFileTransferManager, recordDb, semaphore);
-						try {
-							AddTask(task);
-						} catch (InterruptedException e) {
-							log.error("add task fail,msg:{}", e.getMessage());
-						}
+							
+						AddTask(task);
+	
 					}
 					
 					TaskStatics.instance.setListFinished(true);
@@ -101,6 +99,9 @@ public class MigrateUrllistTaskExecutor extends TaskExecutor {
 				} catch (IOException e) {
 					log.error("read line fail,msg:{}", e.getMessage());
 					TaskStatics.instance.setListFinished(false);
+				} catch (Exception e) {
+				    log.error(e.getMessage());
+				    TaskStatics.instance.setListFinished(false);
 				}
 
 				try {

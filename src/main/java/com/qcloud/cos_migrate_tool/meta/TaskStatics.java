@@ -26,7 +26,7 @@ public class TaskStatics {
     private TaskStatics() {}
     
     public void setListFinished(boolean is_finished) {
-        this.list_finished = true;
+        this.list_finished = is_finished;
     }
     
     public boolean getListFinished() {

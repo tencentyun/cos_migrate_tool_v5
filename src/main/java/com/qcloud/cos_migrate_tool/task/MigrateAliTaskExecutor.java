@@ -105,11 +105,8 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
                                 com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(s.getKey()),
                                 s.getSize(), s.getETag(), smallFileTransferManager,
                                 bigFileTransferManager, recordDb, semaphore);
-                        try {
+
                             AddTask(task);
-                        } catch (InterruptedException e) {
-                            log.error(e.getMessage());
-                        }
                     }
                     nextMarker = com.qcloud.cos.utils.UrlEncoderUtils
                             .urlDecode(objectListing.getNextMarker());
@@ -121,10 +118,22 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
             } catch (OSSException e) {
                 log.error("list fail msg: {}", e.getMessage());
                 TaskStatics.instance.setListFinished(false);
+                if (e.getErrorCode().equalsIgnoreCase("AccessDenied")) {
+                    System.out.println(e.getMessage());
+                    break;
+                }
             } catch (ClientException e) {
                 log.error("list fail msg: {}", e.getMessage());
                 TaskStatics.instance.setListFinished(false);
+                if (e.getErrorCode().equalsIgnoreCase("AccessDenied")) {
+                    System.out.println(e.getMessage());
+                    break;
+                }
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                TaskStatics.instance.setListFinished(false);
             }
+            retry_num++;
         } while (retry_num < 20);
 
     }
