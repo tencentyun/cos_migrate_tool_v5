@@ -5,6 +5,7 @@ public enum MigrateType {
     MIGRATE_FROM_ALI("migrateAli"), 
     MIGRATE_FROM_QINIU("migrateQiniu"), 
     MIGRATE_FROM_AWS("migrateAws"),
+    MIGRATE_FROM_UPYUN("migrateUpyun"),
     MIGRATE_FROM_URLLIST("migrateUrl"),
     MIGRATE_FROM_COS_BUCKET_COPY("migrateBucketCopy");
 
