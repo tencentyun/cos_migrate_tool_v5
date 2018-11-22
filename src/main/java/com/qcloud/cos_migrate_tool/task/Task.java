@@ -199,6 +199,12 @@ public abstract class Task implements Runnable {
         if (entireMd5Attached) {
             String md5 = Md5Utils.md5Hex(localFile);
             objectMetadata.addUserMetadata("md5", md5);
+
+            if (objectMetadata.getUserMetaDataOf("upyun-etag") != null) {
+                if (!md5.equals(objectMetadata.getUserMetaDataOf("upyun-etag"))) {
+                    throw new Exception("md5 is not match");
+                }
+            }
         }
 
         putObjectRequest.setMetadata(objectMetadata);

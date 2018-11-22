@@ -265,7 +265,7 @@ public class ConfigParser {
             String errMsg = String.format("invalid config. section:%s, key:%s",
                     MIGRATE_TYPE_SECTION_NAME, MIGRATE_TYPE);
             System.err.println(errMsg);
-            log.error(errMsg);
+            log.error(errMsg, e);
             return false;
         }
         return true;
