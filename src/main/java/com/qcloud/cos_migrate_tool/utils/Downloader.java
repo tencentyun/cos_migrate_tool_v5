@@ -54,7 +54,7 @@ public class Downloader {
         this.idleConnectionMonitor.start();
     }
 
-    public HeadAttr headFile(String url, boolean qiniuDownLoadFlag) {
+    public HeadAttr headFile(String url, boolean qiniuDownLoadFlag) throws Exception {
 
         int retry = 0;
         int maxRetryCount = 5;
@@ -95,8 +95,16 @@ public class Downloader {
             httpHead.setHeader("Connection", "Keep-Alive");
             httpHead.setHeader("User-Agent", "cos-migrate-tool");
 
+            HttpResponse httpResponse = null;
             try {
-                HttpResponse httpResponse = httpClient.execute(httpHead);
+                 httpResponse = httpClient.execute(httpHead);
+            } catch (Exception e) {
+                log.error("head file attr fail, url: {}, retry: {}/{}, exception: {}", url, retry,
+                        maxRetryCount, e.toString());
+                httpHead.abort();
+                ++retry;
+            }
+        
                 int http_statuscode = httpResponse.getStatusLine().getStatusCode();
                 if (http_statuscode < 200 || http_statuscode > 299) {
                     String errMsg = String.format(
@@ -146,14 +154,9 @@ public class Downloader {
                 }
 
                 return headAttr;
-            } catch (Exception e) {
-                log.error("head file attr fail, url: {}, retry: {}/{}, exception: {}", url, retry,
-                        maxRetryCount, e.toString());
-                httpHead.abort();
-                ++retry;
-            }
         }
         return null;
+
     }
 
     private void showDownloadProgress(String url, long byteTotal, long byteDownloadSofar) {

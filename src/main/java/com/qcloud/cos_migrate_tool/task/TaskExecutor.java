@@ -58,7 +58,7 @@ public abstract class TaskExecutor {
         if (config.getEndpointSuffix() != null) {
             clientConfig.setEndPointSuffix(config.getEndpointSuffix());
         }
-        clientConfig.setUserAgent("cos-migrate-tool-v1.0");
+        clientConfig.setUserAgent("cos-migrate-tool-v1.2.5");
 
         if (!config.getProxyHost().isEmpty() && config.getProxyPort() > 0) {
             clientConfig.setHttpProxyIp(config.getProxyHost());
