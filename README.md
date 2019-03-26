@@ -9,7 +9,7 @@
 - COS的bucket数据相互复制, 支持跨账号跨地域的数据复制
 
 ## 运行依赖
-- JDK1.7或以上, 有关JDK的安装请参考[JAVA安装与配置](https://cloud.tencent.com/document/product/436/10865)
+- JDK1.8或以上, 有关JDK的安装请参考[JAVA安装与配置](https://cloud.tencent.com/document/product/436/10865)
 - linux或windows环境, 推荐linux
 
 # 使用范例
