@@ -32,7 +32,20 @@ public class CommonConfig {
     private String endpointSuffix = null;
     private String cosProxyHost = "";
     private int cosProxyPort = -1;
+    private String encryptionType = "";
 
+    public void setEncryptionType(String encryptionType) {
+        if (!encryptionType.equals("sse-cos")) {
+            throw new IllegalArgumentException("Not support encryptionType:" + encryptionType);
+        }
+        
+        this.encryptionType = encryptionType.trim();
+    }
+    
+    public String getEncryptionType() {
+        return encryptionType;
+    }
+    
     public String getTempFolderPath() {
         return tempFolderPath;
     }

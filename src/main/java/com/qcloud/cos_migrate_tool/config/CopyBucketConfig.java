@@ -1,8 +1,10 @@
 package com.qcloud.cos_migrate_tool.config;
 
+import java.io.File;
 import java.util.regex.Pattern;
 
 import com.qcloud.cos_migrate_tool.utils.PathUtils;
+import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 
 public class CopyBucketConfig extends CommonConfig {
     private String srcRegion;
@@ -11,7 +13,20 @@ public class CopyBucketConfig extends CommonConfig {
     private String srcSk;
     private String srcCosPath;
     private String srcEndpointSuffix;
+    private String srcFileList = "";
+    
+    public void setSrcFileList(String srcFileList) {
+        File localPathFile = new File(srcFileList);
+        if (!localPathFile.exists()) {
+            throw new IllegalArgumentException("copy file list:[" + srcFileList + "not exist!");
+        }
+        this.srcFileList = SystemUtils.formatLocalPath(srcFileList);
+    }
 
+    public String getSrcFileList() {
+        return srcFileList;
+    }
+    
     public String getSrcBucket() {
         return srcBucket;
     }

@@ -202,6 +202,10 @@ public abstract class Task implements Runnable {
             objectMetadata.addUserMetadata("md5", md5);
         }
 
+        if (config.getEncryptionType().equals("sse-cos")) {
+            objectMetadata.setServerSideEncryption("AES256");
+        }
+        
         putObjectRequest.setMetadata(objectMetadata);
         int retryTime = 0;
         final int maxRetry = 5;

@@ -43,6 +43,8 @@ public class ConfigParser {
     private static final String COMMON_EXECUTE_TIME_WINDOW = "executeTimeWindow";
     private static final String COMMON_PROXY_HOST = "proxyHost";
     private static final String COMMON_PROXY_PORT = "proxyPort";
+    private static final String COMMOM_ENCRYPTION_TYPE = "encryptionType";
+    private static final String COMMON_THREAD_NUM = "threadNum";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -69,9 +71,12 @@ public class ConfigParser {
     private static final String COPY_SRC_SECRETKEY = "srcSecretKey";
     private static final String COPY_SRC_COSPATH = "srcCosPath";
     private static final String COPY_SRC_ENDPOINT_SUFFIX = "srcEndPointSuffix";
+    private static final String COPY_SRC_FILE_LIST = "srcFileList";
 
     private static final String URLLIST_SECTION_NAME = "migrateUrl";
     private static final String URLLIST_PATH = "urllistPath";
+    
+
 
     private CommonConfig config;
 
@@ -446,6 +451,11 @@ public class ConfigParser {
                 commonConfig.setProxyHost(proxyHost);
             }
             
+            String encryptionType = getConfigValue(prefs, COMMON_SECTION_NAME, COMMOM_ENCRYPTION_TYPE);
+            if (encryptionType!= null && !encryptionType.trim().isEmpty()) {
+                commonConfig.setEncryptionType(encryptionType);
+            }
+            
             int port = -1;
             String portStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_PROXY_PORT);
 
@@ -456,6 +466,11 @@ public class ConfigParser {
                 } else {
                     throw new Exception("invalid cos proxy port");
                 }
+            }
+            
+            String taskExecutorNumberStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_THREAD_NUM);
+            if (taskExecutorNumberStr != null && !taskExecutorNumberStr.isEmpty()) {
+                commonConfig.setTaskExecutorNumberStr(taskExecutorNumberStr);
             }
 
 
@@ -667,6 +682,11 @@ public class ConfigParser {
                 copyBucketConfig.setSrcEndpointSuffix(srcEndpointSuffix);
             }
 
+            String fileList = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_FILE_LIST);
+            if (fileList != null && !fileList.isEmpty()) {
+                copyBucketConfig.setSrcFileList(fileList);
+            }
+                
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());

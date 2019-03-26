@@ -1,5 +1,11 @@
 package com.qcloud.cos_migrate_tool.task;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -15,6 +21,7 @@ import com.qcloud.cos.model.COSObjectSummary;
 import com.qcloud.cos.model.ListObjectsRequest;
 import com.qcloud.cos.model.ObjectListing;
 import com.qcloud.cos.region.Region;
+import com.qcloud.cos.utils.UrlEncoderUtils;
 import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
@@ -27,6 +34,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
     private String srcRegion;
     private String srcBucketName;
     private String srcCosPath;
+    private String srcFileList;
 
     public MigrateCopyBucketTaskExecutor(CopyBucketConfig config) {
         super(MigrateType.MIGRATE_FROM_COS_BUCKET_COPY, config);
@@ -42,19 +50,20 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
         clientConfig.setConnectionTimeout(5000);
         clientConfig.setSocketTimeout(5000);
 
-        clientConfig.setUserAgent("cos-migrate-tool-v1.0");
+        clientConfig.setUserAgent("cos-migrate-tool-v1.3.0");
         this.srcCosClient = new COSClient(srcCred, clientConfig);
         this.srcRegion = config.getSrcRegion();
         this.srcBucketName = config.getSrcBucket();
         this.srcCosPath = config.getSrcCosPath();
+        this.srcFileList = config.getSrcFileList();
     }
 
     @Override
     protected String buildTaskDbComment() {
         String comment = String.format(
-                "[time: %s], [destRegion: %s], [destBucketName: %s], [destCosFolder: %s], [srcRegion: %s], [srcBucketName: %s], [srcFolder: %s], [smallTaskExecutor: %d]\n",
+                "[time: %s], [destRegion: %s], [destBucketName: %s], [destCosFolder: %s], [srcRegion: %s], [srcFileList:%s], [srcBucketName: %s], [srcFolder: %s], [smallTaskExecutor: %d]\n",
                 SystemUtils.getCurrentDateTime(), config.getRegion(), config.getBucketName(),
-                config.getCosPath(), srcRegion, srcBucketName, srcCosPath,
+                config.getCosPath(), srcRegion, srcFileList, srcBucketName, srcCosPath,
                 this.smallFileUploadExecutorNum);
         return comment;
     }
@@ -73,49 +82,124 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
 
     @Override
     public void buildTask() {
-        ListObjectsRequest listObjectsRequest =
-                new ListObjectsRequest(srcBucketName, srcCosPath, null, null, 1000);
 
         int lastDelimiter = srcCosPath.lastIndexOf("/");
-        ObjectListing objectListing;
-        int retry_num = 0;
 
-        do {
+        if (!srcFileList.isEmpty()) {
+            File file = new File(srcFileList);
+            if (!file.isFile() || !file.exists()) {
+                String printMsg = String.format("file[%s] not exist or not file", srcFileList);
+                log.error(printMsg);
+                System.out.println(printMsg);
+            }
+
+            InputStreamReader read = null;
             try {
-                while (true) {
-                    objectListing = srcCosClient.listObjects(listObjectsRequest);
-                    List<COSObjectSummary> cosObjectSummaries = objectListing.getObjectSummaries();
-                    for (COSObjectSummary cosObjectSummary : cosObjectSummaries) {
-                        String srcKey = cosObjectSummary.getKey();
-                        String srcEtag = cosObjectSummary.getETag();
-                        long srcSize = cosObjectSummary.getSize();
-                        String keyName = srcKey.substring(lastDelimiter);
-                        String copyDestKey = config.getCosPath() + keyName;
-           
-                        MigrateCopyBucketTask task =
-                                new MigrateCopyBucketTask(semaphore, (CopyBucketConfig) config,
-                                        smallFileTransferManager, bigFileTransferManager, recordDb,
-                                        srcCosClient, srcKey, srcSize, srcEtag, copyDestKey);
-                        AddTask(task);
-                    }
-                    if (!objectListing.isTruncated()) {
-                        break;
-                    }
-                    listObjectsRequest.setMarker(objectListing.getNextMarker());
-                }
+                read = new InputStreamReader(new FileInputStream(file));
+            } catch (FileNotFoundException e1) {
+                e1.printStackTrace();
+                return;
+            }
+            
+            BufferedReader bufferedReader = new BufferedReader(read);
+            String srcKey = null;
 
+            try {
+                while ((srcKey = bufferedReader.readLine()) != null){
+                    
+                    srcKey = UrlEncoderUtils.urlDecode(srcKey);
+
+                    String copyDestKey = null;
+                    if (srcKey.startsWith("/")) {
+                        copyDestKey = config.getCosPath() + srcKey.substring(1);
+                        srcKey = srcKey.substring(1);
+                    } else {
+                        copyDestKey = config.getCosPath() + srcKey;
+                    }
+                    
+                    MigrateCopyBucketTask task = new MigrateCopyBucketTask(semaphore,
+                            (CopyBucketConfig) config, smallFileTransferManager,
+                            bigFileTransferManager, recordDb, srcCosClient, srcKey, 0,
+                            "", copyDestKey);
+                    
+                        AddTask(task);
+    
+                }
+                
                 TaskStatics.instance.setListFinished(true);
                 
-                return;
-
+            } catch (IOException e) {
+                log.error(e.toString());
+                TaskStatics.instance.setListFinished(false);
+                e.printStackTrace();
             } catch (Exception e) {
-                log.error("List cos bucket occur a exception", e);
+                log.error(e.toString());
+                e.printStackTrace();
                 TaskStatics.instance.setListFinished(false);
             }
             
-            ++retry_num;
-            
-        } while (retry_num < 20);
+            try {
+                bufferedReader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                read.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+      
+
+        } else {
+
+            ListObjectsRequest listObjectsRequest =
+                    new ListObjectsRequest(srcBucketName, srcCosPath, null, null, 1000);
+
+            ObjectListing objectListing;
+            int retry_num = 0;
+
+            do {
+                try {
+                    while (true) {
+                        objectListing = srcCosClient.listObjects(listObjectsRequest);
+                        List<COSObjectSummary> cosObjectSummaries =
+                                objectListing.getObjectSummaries();
+                        
+                        for (COSObjectSummary cosObjectSummary : cosObjectSummaries) {
+                            String srcKey = cosObjectSummary.getKey();
+                            String srcEtag = cosObjectSummary.getETag();
+                            long srcSize = cosObjectSummary.getSize();
+                            String keyName = srcKey.substring(lastDelimiter);
+                            String copyDestKey = config.getCosPath() + keyName;
+                          
+                            MigrateCopyBucketTask task = new MigrateCopyBucketTask(semaphore,
+                                    (CopyBucketConfig) config, smallFileTransferManager,
+                                    bigFileTransferManager, recordDb, srcCosClient, srcKey, srcSize,
+                                    srcEtag, copyDestKey);
+                            
+                            AddTask(task);
+                        }
+                        
+                        if (!objectListing.isTruncated()) {
+                            break;
+                        }
+                        
+                        listObjectsRequest.setMarker(objectListing.getNextMarker());
+                    }
+
+                    TaskStatics.instance.setListFinished(true);
+
+                    return;
+
+                } catch (Exception e) {
+                    log.error("List cos bucket occur a exception:{}", e.toString());
+                    TaskStatics.instance.setListFinished(false);
+                }
+
+                ++retry_num;
+
+            } while (retry_num < 20);
+        }
 
     }
 

@@ -5,6 +5,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.qcloud.cos.COSClient;
+import com.qcloud.cos.endpoint.SuffixEndpointBuilder;
 import com.qcloud.cos.exception.CosServiceException;
 import com.qcloud.cos.model.CopyObjectRequest;
 import com.qcloud.cos.model.CopyResult;
@@ -27,8 +28,8 @@ public class MigrateCopyBucketTask extends Task {
     private final String srcEndpointSuffx;
     private final String srcBucketName;
     private final String srcKey;
-    private final long srcSize;
-    private final String srcEtag;
+    private  long srcSize;
+    private  String srcEtag;
 
     public MigrateCopyBucketTask(Semaphore semaphore, CopyBucketConfig config,
             TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
@@ -82,6 +83,13 @@ public class MigrateCopyBucketTask extends Task {
 
     @Override
     public void doTask() {
+        
+        if (srcEtag.isEmpty()) {
+            ObjectMetadata objectMetadata = srcCOSClient.getObjectMetadata(srcBucketName, srcKey);
+            srcEtag = objectMetadata.getETag();
+            this.srcSize = objectMetadata.getContentLength();
+        }
+ 
         MigrateCopyBucketRecordElement migrateCopyBucketRecordElement =
                 new MigrateCopyBucketRecordElement(destRegion, destBucketName, destKey, srcRegion,
                         srcBucketName, srcKey, srcSize, srcEtag);
@@ -98,7 +106,13 @@ public class MigrateCopyBucketTask extends Task {
             copyObjectRequest.setNewObjectMetadata(newObjectMetadata);
         }
         
-        copyObjectRequest.setSourceEndpointSuffix(srcEndpointSuffx);
+        if (srcEndpointSuffx != null && !srcEndpointSuffx.isEmpty()) {
+            SuffixEndpointBuilder sourceEndpointBuilder = new SuffixEndpointBuilder(srcEndpointSuffx);
+            copyObjectRequest.setSourceEndpointBuilder(sourceEndpointBuilder);
+        }
+        
+        copyObjectRequest.setStorageClass(this.config.getStorageClass());
+        
         try {
             Copy copy = smallFileTransfer.copy(copyObjectRequest, srcCOSClient, null);
             CopyResult copyResult = copy.waitForCopyResult();

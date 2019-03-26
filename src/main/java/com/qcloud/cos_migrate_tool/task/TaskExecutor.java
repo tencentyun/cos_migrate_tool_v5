@@ -55,10 +55,11 @@ public abstract class TaskExecutor {
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
         }
+        
         if (config.getEndpointSuffix() != null) {
             clientConfig.setEndPointSuffix(config.getEndpointSuffix());
         }
-        clientConfig.setUserAgent("cos-migrate-tool-v1.2.5");
+        clientConfig.setUserAgent("cos-migrate-tool-v1.3.0");
 
         if (!config.getProxyHost().isEmpty() && config.getProxyPort() > 0) {
             clientConfig.setHttpProxyIp(config.getProxyHost());
