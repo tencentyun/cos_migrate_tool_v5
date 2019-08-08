@@ -11,6 +11,7 @@ import java.net.URL;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -84,6 +85,8 @@ public class Downloader {
                     urlBuffer.append("?").append(encodeUrl.getQuery());
                 }
 
+                System.out.println("head:" + urlBuffer.toString());
+
                 httpHead = new HttpHead(urlBuffer.toString());
             } catch (MalformedURLException e) {
                 log.error("headFile url fail,url:{},msg:{}", url, e.getMessage());
@@ -97,63 +100,63 @@ public class Downloader {
 
             HttpResponse httpResponse = null;
             try {
-                 httpResponse = httpClient.execute(httpHead);
+                httpResponse = httpClient.execute(httpHead);
             } catch (Exception e) {
                 log.error("head file attr fail, url: {}, retry: {}/{}, exception: {}", url, retry,
                         maxRetryCount, e.toString());
                 httpHead.abort();
                 ++retry;
             }
-        
-                int http_statuscode = httpResponse.getStatusLine().getStatusCode();
-                if (http_statuscode < 200 || http_statuscode > 299) {
-                    String errMsg = String.format(
-                            "head failed, response_statuscode: %d, url: %s, httpResponse: %s, ", http_statuscode, url,
-                            httpResponse.toString());
-                    throw new Exception(errMsg);
-                }
 
-                if (httpResponse.containsHeader("content-length")) {
-                    Header header = httpResponse.getFirstHeader("content-length");
-                    long contentLength = -1;
-                    try {
-                        contentLength = Long.valueOf(header.getValue());
-                        if (contentLength < 0) {
-                            log.error("invalid contentlength, url {}, contentLength {}", url,
-                                    header.getValue());
-                            return null;
-                        }
-                        headAttr.fileSize = contentLength;
-                    } catch (NumberFormatException e) {
+            int http_statuscode = httpResponse.getStatusLine().getStatusCode();
+            if (http_statuscode < 200 || http_statuscode > 299) {
+                String errMsg = String.format(
+                        "head failed, response_statuscode: %d, url: %s, httpResponse: %s, ",
+                        http_statuscode, url, httpResponse.toString());
+                throw new Exception(errMsg);
+            }
+
+            if (httpResponse.containsHeader("content-length")) {
+                Header header = httpResponse.getFirstHeader("content-length");
+                long contentLength = -1;
+                try {
+                    contentLength = Long.valueOf(header.getValue());
+                    if (contentLength < 0) {
                         log.error("invalid contentlength, url {}, contentLength {}", url,
                                 header.getValue());
                         return null;
                     }
+                    headAttr.fileSize = contentLength;
+                } catch (NumberFormatException e) {
+                    log.error("invalid contentlength, url {}, contentLength {}", url,
+                            header.getValue());
+                    return null;
                 }
+            }
 
-                if (httpResponse.containsHeader("Last-Modified")) {
-                    Header header = httpResponse.getFirstHeader("Last-Modified");
-                    headAttr.lastModify = header.getValue();
+            if (httpResponse.containsHeader("Last-Modified")) {
+                Header header = httpResponse.getFirstHeader("Last-Modified");
+                headAttr.lastModify = header.getValue();
+            }
+
+            Header[] allHeaders = httpResponse.getAllHeaders();
+            final String ossUserMetaPrefix = "x-oss-meta-";
+            final String awsUserMetaPrefix = "x-amz-meta-";
+            for (Header headerElement : allHeaders) {
+                String headerName = headerElement.getName();
+                String headerValue = headerElement.getValue();
+                if (headerName.startsWith(ossUserMetaPrefix)
+                        && !headerName.equals(ossUserMetaPrefix)) {
+                    headAttr.userMetaMap.put(headerName.substring(ossUserMetaPrefix.length()),
+                            headerValue);
+                } else if (headerName.startsWith(awsUserMetaPrefix)
+                        && !headerName.equals(awsUserMetaPrefix)) {
+                    headAttr.userMetaMap.put(headerName.substring(awsUserMetaPrefix.length()),
+                            headerValue);
                 }
+            }
 
-                Header[] allHeaders = httpResponse.getAllHeaders();
-                final String ossUserMetaPrefix = "x-oss-meta-";
-                final String awsUserMetaPrefix = "x-amz-meta-";
-                for (Header headerElement : allHeaders) {
-                    String headerName = headerElement.getName();
-                    String headerValue = headerElement.getValue();
-                    if (headerName.startsWith(ossUserMetaPrefix)
-                            && !headerName.equals(ossUserMetaPrefix)) {
-                        headAttr.userMetaMap.put(headerName.substring(ossUserMetaPrefix.length()),
-                                headerValue);
-                    } else if (headerName.startsWith(awsUserMetaPrefix)
-                            && !headerName.equals(awsUserMetaPrefix)) {
-                        headAttr.userMetaMap.put(headerName.substring(awsUserMetaPrefix.length()),
-                                headerValue);
-                    }
-                }
-
-                return headAttr;
+            return headAttr;
         }
         return null;
 
@@ -203,6 +206,8 @@ public class Downloader {
                 if (encodeUrl.getQuery() != null) {
                     urlBuffer.append("?").append(encodeUrl.getQuery());
                 }
+
+                // System.out.println(urlBuffer.toString());
 
                 httpGet = new HttpGet(urlBuffer.toString());
 

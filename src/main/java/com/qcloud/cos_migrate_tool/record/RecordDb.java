@@ -86,8 +86,8 @@ public class RecordDb {
         } else {
             return saveKV(dbKey, requestId);
         }
-    }
-
+    }    
+    
     public void dumpRequestId(String saveFilePath) {
         ReadOptions readOptions = null;
         RocksIterator rocksIterator = null;
@@ -122,6 +122,8 @@ public class RecordDb {
         }
     }
 
+
+    
     public void queryRequestId(String cosKey) {
         String dbKey = requestIdPrefix + cosKey;
         String requestIdValue = queryKV(dbKey);

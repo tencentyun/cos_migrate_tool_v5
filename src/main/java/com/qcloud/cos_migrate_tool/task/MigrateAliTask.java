@@ -3,9 +3,11 @@ package com.qcloud.cos_migrate_tool.task;
 import java.io.File;
 import java.io.FileInputStream;
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Logger;
 
 import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.common.utils.CRC64;
@@ -14,6 +16,9 @@ import com.aliyun.oss.event.ProgressEventType;
 import com.aliyun.oss.event.ProgressListener;
 import com.aliyun.oss.model.GetObjectRequest;
 import com.aliyun.oss.model.ObjectMetadata;
+import com.qcloud.cos.COSClient;
+import com.qcloud.cos.exception.CosClientException;
+import com.qcloud.cos.exception.CosServiceException;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyFromAliConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
@@ -27,15 +32,17 @@ public class MigrateAliTask extends Task {
     private String srcKey;
     private long fileSize;
     private String etag;
+    private Date lastModify;
 
     public MigrateAliTask(CopyFromAliConfig config, OSSClient ossClient, String srcKey,
-            long fileSize, String etag, TransferManager smallFileTransfer,
+            long fileSize, String etag, Date lastModify, TransferManager smallFileTransfer,
             TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore) {
         super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
         this.ossClient = ossClient;
         this.srcKey = srcKey;
         this.fileSize = fileSize;
         this.etag = etag;
+        this.lastModify = lastModify;
         if (srcKey.startsWith("/")) {
             this.srcKey = srcKey.substring(1);
         }
@@ -130,7 +137,40 @@ public class MigrateAliTask extends Task {
 
         MigrateCompetitorRecordElement ossRecordElement = new MigrateCompetitorRecordElement(
                 MigrateType.MIGRATE_FROM_ALI, config.getBucketName(), cosPath, etag, fileSize);
-        if (isExist(ossRecordElement)) {
+
+        if (config.getRealTimeCompare()) {
+            // head
+            try {
+                com.qcloud.cos.model.ObjectMetadata dstMeta = this.smallFileTransfer.getCOSClient()
+                        .getObjectMetadata(config.getBucketName(), cosPath);
+
+                if (dstMeta.getLastModified().after(lastModify)) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
+            } catch (CosServiceException e) {
+                if (e.getStatusCode() != 404) {
+                    log.error("[fail] task_info: {}, exception: {}", ossRecordElement.buildKey(),
+                            e.toString());
+                    TaskStatics.instance.addFailCnt();
+                    if (e.getStatusCode() == 503) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        }
+                    }
+                    return;
+                }
+            } catch (Exception e) {
+                log.error("[fail] task_info: {}, exception: {}", ossRecordElement.buildKey(),
+                        e.toString());
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
+
+        } else if (isExist(ossRecordElement, true)) {
             TaskStatics.instance.addSkipCnt();
             return;
         }
@@ -173,6 +213,11 @@ public class MigrateAliTask extends Task {
                                 serverCrcNum.toString());
                         System.err.println(errMsg);
                         log.error(errMsg);
+                        File localFile;
+                        localFile = new File(localPath);
+                        if (localFile.exists()) {
+                            localFile.delete();
+                        }
                         TaskStatics.instance.addFailCnt();
                         return;
                     }
@@ -239,7 +284,7 @@ public class MigrateAliTask extends Task {
                 cosMetadata.addUserMetadata("oss-etag", aliMetaData.getETag());
             }
             String requestId = uploadFile(config.getBucketName(), cosPath, localFile,
-                    config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata);
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata, null);
             saveRecord(ossRecordElement);
             saveRequestId(cosPath, requestId);
             if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {

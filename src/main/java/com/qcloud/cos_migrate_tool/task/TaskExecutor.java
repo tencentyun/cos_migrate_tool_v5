@@ -1,6 +1,10 @@
 package com.qcloud.cos_migrate_tool.task;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -37,8 +41,8 @@ public abstract class TaskExecutor {
     protected TransferManager smallFileTransferManager;
     protected TransferManager bigFileTransferManager;
 
-   
-    
+
+
     enum RUN_MODE {
         NORMAL, DUMP_REQUESTID, QUERY_REQUESTID;
     }
@@ -47,6 +51,9 @@ public abstract class TaskExecutor {
         this.migrateType = migrateType;
         this.config = config;
         this.threadPool = Executors.newFixedThreadPool(config.getTaskExecutorNumber());
+        
+        log.info("threadNum:{}", config.getTaskExecutorNumber());
+        
         this.smallFileUploadExecutorNum = config.getSmallFileExecutorNumber();
         this.bigFileUploadExecutorNum = config.getBigFileExecutorNum();
 
@@ -55,8 +62,9 @@ public abstract class TaskExecutor {
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
         }
-        
+
         if (config.getEndpointSuffix() != null) {
+            System.out.println(config.getEndpointSuffix());
             clientConfig.setEndPointSuffix(config.getEndpointSuffix());
         }
         clientConfig.setUserAgent("cos-migrate-tool-v1.3.0");
@@ -65,15 +73,18 @@ public abstract class TaskExecutor {
             clientConfig.setHttpProxyIp(config.getProxyHost());
             clientConfig.setHttpProxyPort(config.getProxyPort());
         }
-        
+
         this.cosClient = new COSClient(cred, clientConfig);
 
         this.smallFileTransferManager = new TransferManager(this.cosClient,
                 Executors.newFixedThreadPool(config.getSmallFileExecutorNumber()));
+        
         this.smallFileTransferManager.getConfiguration()
                 .setMultipartUploadThreshold(config.getSmallFileThreshold());
+        
         this.bigFileTransferManager = new TransferManager(this.cosClient,
                 Executors.newFixedThreadPool(config.getBigFileExecutorNum()));
+        
         this.bigFileTransferManager.getConfiguration()
                 .setMultipartUploadThreshold(config.getSmallFileThreshold());
     }
@@ -190,49 +201,55 @@ public abstract class TaskExecutor {
         String opStatus = "";
         if (TaskStatics.instance.getListFinished() && TaskStatics.instance.getFailCnt() == 0) {
             opStatus = "ALL_OK";
-        } else if (TaskStatics.instance.getSuccessCnt() == 0 && TaskStatics.instance.getUpdateCnt() == 0) {
+        } else if (TaskStatics.instance.getSuccessCnt() == 0
+                && TaskStatics.instance.getUpdateCnt() == 0) {
             opStatus = "ALL_FAIL";
         } else {
             opStatus = "PART_OK";
         }
 
-        String printStr = String.format("\n\nlist finished:%s", TaskStatics.instance.getListFinished());
-        System.out.println(printStr);
-        log.info(printStr);
-        
-        printStr = String.format("%s over! op statistics:", migrateType.toString());
-        System.out.println(printStr);
-        log.info(printStr);
-        
-        printStr = String.format("%30s : %s", "op_status", opStatus);
-        System.out.println(printStr);
-        log.info(printStr);
-        printStr = String.format("%30s : %d", "migrate_new", TaskStatics.instance.getSuccessCnt());
-        System.out.println(printStr);
-        log.info(printStr);
-        printStr = String.format("%30s : %d", "migrate_update", TaskStatics.instance.getUpdateCnt());
-        System.out.println(printStr);
-        log.info(printStr);
-        printStr = String.format("%30s : %d", "migrate_fail", TaskStatics.instance.getFailCnt());
-        System.out.println(printStr);
-        log.info(printStr);
-        printStr = String.format("%30s : %d", "migrate_skip", TaskStatics.instance.getSkipCnt());
-        System.out.println(printStr);
-        log.info(printStr);
-        printStr = String.format("%30s : %d", "migrate_condition_not_match",
+        String printStr = String.format("\n\nbucket:%s, list finished:%s, status:%s\n",
+                config.getBucketName(), TaskStatics.instance.getListFinished(), opStatus);
+
+
+        printStr += String.format("%s over! op statistics:\n", migrateType.toString());
+
+        printStr +=
+                String.format("%30s : %d\n", "migrate_new", TaskStatics.instance.getSuccessCnt());
+
+        printStr +=
+                String.format("%30s : %d\n", "migrate_update", TaskStatics.instance.getUpdateCnt());
+
+        printStr += String.format("%30s : %d\n", "migrate_fail", TaskStatics.instance.getFailCnt());
+
+        printStr += String.format("%30s : %d\n", "migrate_skip", TaskStatics.instance.getSkipCnt());
+
+        printStr += String.format("%30s : %d\n", "migrate_condition_not_match",
                 TaskStatics.instance.getConditionNotMatchCnt());
-        System.out.println(printStr);
-        log.info(printStr);
-        printStr = String.format("%30s : %s", "start_time", TaskStatics.instance.getStartTimeStr());
-        System.out.println(printStr);
-        log.info(printStr);
-        printStr = String.format("%30s : %s", "end_time", SystemUtils.getCurrentDateTime());
-        System.out.println(printStr);
-        log.info(printStr);
-        printStr = String.format("%30s : %d s", "used_time",
+
+        printStr +=
+                String.format("%30s : %s\n", "start_time", TaskStatics.instance.getStartTimeStr());
+
+        printStr += String.format("%30s : %s\n", "end_time", SystemUtils.getCurrentDateTime());
+
+        printStr += String.format("%30s : %d s\n", "used_time",
                 TaskStatics.instance.getUsedTimeSeconds());
+
         System.out.println(printStr);
         log.info(printStr);
+
+        String resultFile = "db/result.out";
+        try {
+            BufferedOutputStream bos =
+                    new BufferedOutputStream(new FileOutputStream(resultFile, true));
+            bos.write(printStr.getBytes());
+            bos.close();
+        } catch (FileNotFoundException e) {
+            log.error("write result fail,result \n" + printStr + e.toString());
+        } catch (IOException e) {
+            log.error("write result fail,result \n" + printStr + e.toString());
+        }
+
     }
 
 }

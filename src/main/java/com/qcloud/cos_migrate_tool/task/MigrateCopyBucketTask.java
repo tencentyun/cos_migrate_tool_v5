@@ -56,7 +56,7 @@ public class MigrateCopyBucketTask extends Task {
             ObjectMetadata objectMetadata = srcCOSClient
                     .getObject(new GetObjectRequest(srcBucketName, srcKey), downloadTempFile);
             String requestId = uploadFile(destBucketName, destKey, downloadTempFile,
-                    config.getStorageClass(), config.isEntireFileMd5Attached(), objectMetadata);
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), objectMetadata, null);
             saveRecord(copyElement);
             saveRequestId(destKey, requestId);
             if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {
@@ -93,7 +93,7 @@ public class MigrateCopyBucketTask extends Task {
         MigrateCopyBucketRecordElement migrateCopyBucketRecordElement =
                 new MigrateCopyBucketRecordElement(destRegion, destBucketName, destKey, srcRegion,
                         srcBucketName, srcKey, srcSize, srcEtag);
-        if (isExist(migrateCopyBucketRecordElement)) {
+        if (isExist(migrateCopyBucketRecordElement, true)) {
             TaskStatics.instance.addSkipCnt();
             return;
         }

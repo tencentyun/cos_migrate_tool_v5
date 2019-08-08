@@ -1,6 +1,7 @@
 package com.qcloud.cos_migrate_tool.config;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,7 +11,42 @@ public class CopyFromLocalConfig extends CommonConfig {
     private String localPath;
     private Set<String> excludes = new HashSet<String>();
     private long ignoreModifiedTimeLessThan = -1;
+    private Set<String> ignoreSuffixs = new HashSet<String>();
+    boolean ignoreEmptyFile = false;
 
+    public void setIgnoreEmptyFile(boolean ignoreEmptyFile) {
+        this.ignoreEmptyFile = ignoreEmptyFile;
+    }
+    
+    public void setIgnoreSuffix(String ignore) {
+        ignore = ignore.trim();
+        String[] ignoreArray = ignore.split(";");
+        for (String ignoreElement : ignoreArray) {
+            this.ignoreSuffixs.add(ignoreElement);
+        }
+    }
+    
+    public String needToMigrate(Path file, String localPath) {
+        if (isExcludes(localPath)) {
+            return "excludes";
+        }
+        
+        for (String suffix:ignoreSuffixs) {
+            if(localPath.endsWith(suffix)) {
+                return "suffix";
+            }
+        }
+        
+        if (ignoreEmptyFile) {
+            File localFile = new File(file.toString());
+            if (localFile.length() == 0) {
+                return "empty file";
+            }
+        }
+        
+        return "";
+    }
+    
     public String getLocalPath() {
         return localPath;
     }

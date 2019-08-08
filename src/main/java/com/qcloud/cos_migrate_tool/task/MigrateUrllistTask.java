@@ -31,47 +31,58 @@ public class MigrateUrllistTask extends Task {
 
     private String buildCOSPath() {
         String cosPrefix = config.getCosPath();
-        String cosPath = cosPrefix + "/" + srcKey; 
-		cosPath = cosPath.replaceAll("/{2,}", "/");
-		return cosPath;
+        String cosPath = cosPrefix + "/" + srcKey;
+        cosPath = cosPath.replaceAll("/{2,}", "/");
+        return cosPath;
     }
 
     @Override
     public void doTask() {
 
         String cosPath = buildCOSPath();
-        String localPath = config.getTempFolderPath() + ThreadLocalRandom.current().nextLong(Long.MAX_VALUE) + "_" + Thread.currentThread().getName();
+        String localPath =
+                config.getTempFolderPath() + ThreadLocalRandom.current().nextLong(Long.MAX_VALUE)
+                        + "_" + Thread.currentThread().getName();
         HeadAttr headAttr = null;
-        try {
-            headAttr = Downloader.instance.headFile(url, false);
-        } catch (Exception e) {
-            String printMsg = String.format("head url attr fail, url: %s", url);
-            System.err.println(e.toString());
-            log.error(e.toString(), printMsg);
-            TaskStatics.instance.addFailCnt();
-            return;
-        }
-        
-        if (headAttr == null) {
-            String printMsg = String.format("head url attr fail, url: %s", url);
-            System.err.println(printMsg);
-            log.error(printMsg);
-            TaskStatics.instance.addFailCnt();
-            return;
+
+        if (!((CopyFromUrllistConfig) config).IsSkipHead()) {
+
+            try {
+                headAttr = Downloader.instance.headFile(url, false);
+                
+            } catch (Exception e) {
+                String printMsg = String.format("head url attr fail, url: %s %s", url, e.toString());
+                System.err.println(e.toString());
+                log.error(printMsg);
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
+
+            if (headAttr == null) {
+                String printMsg = String.format("head url attr fail, url: %s", url);
+                System.err.println(printMsg);
+                log.error(printMsg);
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
         }
 
         MigrateUrllistRecordElement urllistRecordElement = new MigrateUrllistRecordElement(
                 MigrateType.MIGRATE_FROM_URLLIST, config.getBucketName(), cosPath, url, headAttr);
-        if (isExist(urllistRecordElement)) {
+
+        
+        if (isExist(urllistRecordElement, ((CopyFromUrllistConfig) config).IsSkipHead())) {
             TaskStatics.instance.addSkipCnt();
             return;
         }
+        
 
         File localFile = new File(localPath);
-         
+
         try {
             headAttr = Downloader.instance.downFile(url, localFile, false);
         } catch (Exception e) {
+            
             String printMsg =
                     String.format("[fail] task_info: %s", urllistRecordElement.buildKey());
             System.err.println(printMsg);
@@ -90,6 +101,8 @@ public class MigrateUrllistTask extends Task {
             localFile.deleteOnExit();
             return;
         }
+        
+        urllistRecordElement.setHeadAttr(headAttr);
 
         // upload
         if (!localFile.exists()) {
@@ -102,10 +115,11 @@ public class MigrateUrllistTask extends Task {
         }
 
         try {
-            com.qcloud.cos.model.ObjectMetadata cosMetadata = new com.qcloud.cos.model.ObjectMetadata();
+            com.qcloud.cos.model.ObjectMetadata cosMetadata =
+                    new com.qcloud.cos.model.ObjectMetadata();
             cosMetadata.setUserMetadata(headAttr.userMetaMap);
-            String requestId = uploadFile(config.getBucketName(), cosPath, localFile, config.getStorageClass(),
-                    config.isEntireFileMd5Attached(), cosMetadata);
+            String requestId = uploadFile(config.getBucketName(), cosPath, localFile,
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata, null);
             saveRecord(urllistRecordElement);
             saveRequestId(cosPath, requestId);
             if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {
@@ -113,7 +127,8 @@ public class MigrateUrllistTask extends Task {
             } else {
                 TaskStatics.instance.addUpdateCnt();
             }
-            String printMsg = String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, urllistRecordElement.buildKey());
+            String printMsg = String.format("[ok] [requestid: %s], task_info: %s",
+                    requestId == null ? "NULL" : requestId, urllistRecordElement.buildKey());
             System.out.println(printMsg);
             log.info(printMsg);
         } catch (Exception e) {

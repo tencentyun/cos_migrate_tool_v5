@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qcloud.cos.exception.CosServiceException;
+import com.qcloud.cos.model.AccessControlList;
 import com.qcloud.cos.model.ListPartsRequest;
 import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
@@ -50,13 +51,22 @@ public abstract class Task implements Runnable {
         this.recordDb = recordDb;
     }
 
-    public boolean isExist(RecordElement recordElement) {
+    public boolean isExist(RecordElement recordElement, boolean isCompareValue) {
+        
         query_result = recordDb.queryRecord(recordElement);
         if (query_result == RecordDb.QUERY_RESULT.ALL_EQ) {
             String printMsg = String.format("[skip] task_info: %s", recordElement.buildKey());
             System.out.println(printMsg);
             log.info("skip! task_info: [key: {}], [value: {}]", recordElement.buildKey(),
                     recordElement.buildValue());
+            return true;
+        }
+
+        if (!isCompareValue && query_result == RecordDb.QUERY_RESULT.VALUE_NOT_EQ) {
+            String printMsg = String.format("[skip] task_info: %s", recordElement.buildKey());
+            System.out.println(printMsg);
+            log.info("skip! not compare value, task_info: [key: {}], [value: {}]",
+                    recordElement.buildKey(), recordElement.buildValue());
             return true;
         }
 
@@ -192,10 +202,14 @@ public abstract class Task implements Runnable {
 
 
     public String uploadFile(String bucketName, String cosPath, File localFile,
-            StorageClass storageClass, boolean entireMd5Attached, ObjectMetadata objectMetadata)
-            throws Exception {
+            StorageClass storageClass, boolean entireMd5Attached, ObjectMetadata objectMetadata,
+            AccessControlList acl) throws Exception {
         PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
         putObjectRequest.setStorageClass(storageClass);
+
+        if (acl != null) {
+            putObjectRequest.setAccessControlList(acl);
+        }
 
         if (entireMd5Attached) {
             String md5 = Md5Utils.md5Hex(localFile);
@@ -205,7 +219,7 @@ public abstract class Task implements Runnable {
         if (config.getEncryptionType().equals("sse-cos")) {
             objectMetadata.setServerSideEncryption("AES256");
         }
-        
+
         putObjectRequest.setMetadata(objectMetadata);
         int retryTime = 0;
         final int maxRetry = 5;

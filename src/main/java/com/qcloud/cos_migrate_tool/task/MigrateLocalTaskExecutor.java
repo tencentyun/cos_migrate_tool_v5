@@ -84,15 +84,17 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
                     return super.visitFile(file, attrs);
                 }
                 try {
-                    if (!((CopyFromLocalConfig) config).isExcludes(localPath)) {
+                    String reason = ((CopyFromLocalConfig) config).needToMigrate(file, localPath);
+                    if (reason.isEmpty()) {
                         File localFile = new File(file.toString());
+                      
                         MigrateLocalTask migrateLocalTask = new MigrateLocalTask(semaphore,
                                 ((CopyFromLocalConfig) config), smallFileTransferManager,
                                 bigFileTransferManager, recordDb, localFile);
                         AddTask(migrateLocalTask);
                     } else {
                         String printMsg = String.format(
-                                "[condition_not_match] [reason: excludes]  [local_file: %s]",
+                                "[condition_not_match] [reason: %s]  [local_file: %s]", reason,
                                 file.toString());
                         System.out.println(printMsg);
                         log.info(printMsg);

@@ -20,7 +20,7 @@ public class CommonConfig {
     private String cosPath;
     private boolean enableHttps;
     private boolean entireFileMd5Attached;
-    private int taskExecutorNumber = 64;
+    private int taskExecutorNumber = 68;
     private StorageClass storageClass = StorageClass.Standard;
     private int smallFileExecutorNumber = 64;
     private int bigFileExecutorNum = 4;
@@ -33,6 +33,30 @@ public class CommonConfig {
     private String cosProxyHost = "";
     private int cosProxyPort = -1;
     private String encryptionType = "";
+    private String batchTaskPath = "";    
+    private boolean realTimeCompare = false;
+    
+    public void setRealTimeCompare(String realTimeCompare)  throws IllegalArgumentException {
+        if (realTimeCompare.equalsIgnoreCase("on")) {
+            this.realTimeCompare = true;
+        } else if (realTimeCompare.equalsIgnoreCase("off")) {
+            this.realTimeCompare = false;
+        } else {
+            throw new IllegalArgumentException("invalid realTimeCompare config. only support on/off");
+        }
+    }
+    
+    public boolean getRealTimeCompare() {
+        return this.realTimeCompare;
+    }
+
+    public void setBatchTaskPath(String batchTaskPath) {
+        this.batchTaskPath = batchTaskPath;
+    }
+    
+    public String getBatchTaskPath() {
+        return this.batchTaskPath;  
+    }
 
     public void setEncryptionType(String encryptionType) {
         if (!encryptionType.equals("sse-cos")) {
@@ -71,11 +95,6 @@ public class CommonConfig {
 
     public void setBucketName(String bucketName) {
         bucketName = bucketName.trim();
-        String parrtern = ".*-(125|100|20)[0-9]{3,}$";
-        if (!Pattern.matches(parrtern, bucketName)) {
-            throw new IllegalArgumentException(
-                    "bucketName must contain appid. example: test-1250001000");
-        }
         this.bucketName = bucketName;
     }
 

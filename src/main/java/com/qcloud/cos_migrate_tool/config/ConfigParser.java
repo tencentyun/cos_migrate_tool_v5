@@ -1,7 +1,11 @@
 package com.qcloud.cos_migrate_tool.config;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -45,15 +49,21 @@ public class ConfigParser {
     private static final String COMMON_PROXY_PORT = "proxyPort";
     private static final String COMMOM_ENCRYPTION_TYPE = "encryptionType";
     private static final String COMMON_THREAD_NUM = "threadNum";
+    private static final String COMMON_BATCH_TASK_PATH = "batchTaskPath";
+    private static final String COMMON_REAL_TIME_COMPARE = "realTimeCompare";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
     private static final String LOCAL_EXECLUDE = "exeludes";
-    private static final String IGNORE_MODIFIED_TIME_LESS_THAN = "ignoreModifiedTimeLessThanSeconds";
+    private static final String IGNORE_MODIFIED_TIME_LESS_THAN =
+            "ignoreModifiedTimeLessThanSeconds";
+    private static final String IGNORE_SUFFIX = "ignoreSuffix";
+    private static final String IGNORE_EMPTY_FILE = "ignoreEmptyFile";
 
     private static final String ALI_SECTION_NAME = "migrateAli";
     private static final String AWS_SECTION_NAME = "migrateAws";
     private static final String QINIU_SECTION_NAME = "migrateQiniu";
+    private static final String CSP_SECTION_NAME = "migrateCsp";
     private static final String OSS_BUCKET = "bucket";
     private static final String OSS_AK = "accessKeyId";
     private static final String OSS_SK = "accessKeySecret";
@@ -61,7 +71,8 @@ public class ConfigParser {
     private static final String OSS_END_POINT = "endPoint";
     private static final String OSS_PROXY_HOST = "proxyHost";
     private static final String OSS_PROXY_PORT = "proxyPort";
-    
+    private static final String OSS_URL_LIST = "uriList";
+
     private static final String QINIU_NEED_SIGN = "needSign";
 
     private static final String COPY_BUCKET_SECTION_NAME = "migrateBucketCopy";
@@ -75,7 +86,8 @@ public class ConfigParser {
 
     private static final String URLLIST_SECTION_NAME = "migrateUrl";
     private static final String URLLIST_PATH = "urllistPath";
-    
+    private static final String URLLIST_IS_SKIP_HEAD = "isSkipHead";
+
 
 
     private CommonConfig config;
@@ -90,6 +102,7 @@ public class ConfigParser {
         return config;
     }
 
+    
     private Preferences buildConfigPrefs() {
         File configFile = new File(configFilePath);
         if (!configFile.exists()) {
@@ -239,7 +252,24 @@ public class ConfigParser {
             if (!initCopyFromUrllistConfig(prefs, (CopyFromUrllistConfig) config)) {
                 return false;
             }
+        } else if (migrateType.equals(MigrateType.MIGRATE_FROM_CSP)) {
+            if (!checkMigrateCompetitorConfig(prefs, MigrateType.MIGRATE_FROM_CSP)) {
+                return false;
+            }
+            config = new CopyFromCspConfig();
+            if (!initCopyFromCspConfig(prefs, (CopyFromCspConfig) config)) {
+                return false;
+            }
+            
+            if (!config.getBatchTaskPath().isEmpty() && !((CopyFromCspConfig)config).getUrlList().isEmpty()) {
+                System.out.println("You can't both set batchTaskPath and urlList");
+                return false;
+            }
         }
+        
+        
+
+
         return true;
     }
 
@@ -251,14 +281,14 @@ public class ConfigParser {
     }
 
     private boolean initMigrateType(Preferences prefs) {
-        try {
+        try {   
             String migrateTypeStr = getConfigValue(prefs, MIGRATE_TYPE_SECTION_NAME, MIGRATE_TYPE);
             assert (migrateTypeStr != null);
             migrateType = MigrateType.fromValue(migrateTypeStr);
         } catch (IllegalArgumentException e) {
             String errMsg = String.format("invalid config. section:%s, key:%s",
                     MIGRATE_TYPE_SECTION_NAME, MIGRATE_TYPE);
-            System.err.println(errMsg);
+            System.err.println(errMsg + "  || " + e.toString());
             log.error(errMsg);
             return false;
         }
@@ -373,26 +403,46 @@ public class ConfigParser {
     private boolean initCommonConfig(Preferences prefs, CommonConfig commonConfig) {
 
         try {
-            String region = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_REGION);
-            assert (region != null);
-            commonConfig.setRegion(region);
+            String batchTaskPath =
+                    getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_BATCH_TASK_PATH);
+            
+            if (batchTaskPath != null) {
+                commonConfig.setBatchTaskPath(batchTaskPath);
+            }
+            
+            if ((batchTaskPath == null) || batchTaskPath.isEmpty()) {
+                String region = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_REGION);
+                assert (region != null);
+                commonConfig.setRegion(region);
 
-            String bucketName = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_BUCKETNAME);
-            assert (bucketName != null);
-            commonConfig.setBucketName(bucketName);
+                String bucketName = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_BUCKETNAME);
 
-            String ak = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_AK);
-            assert (ak != null);
-            commonConfig.setAk(ak);
 
-            String sk = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_SK);
-            assert (sk != null);
-            commonConfig.setSk(sk);
+                assert (bucketName != null);
+                commonConfig.setBucketName(bucketName);
 
+
+                String ak = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_AK);
+                assert (ak != null);
+                commonConfig.setAk(ak);
+
+                String sk = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_SK);
+                assert (sk != null);
+                commonConfig.setSk(sk);
+
+
+            }
+            
             String cosPathConfig = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_COSPATH);
             assert (cosPathConfig != null);
             commonConfig.setCosPath(cosPathConfig);
 
+            
+            String realTimeCompare = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_REAL_TIME_COMPARE);
+            if ((realTimeCompare != null) && !realTimeCompare.isEmpty()) {
+                commonConfig.setRealTimeCompare(realTimeCompare);
+            }
+            
             String enableHttpsStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_HTTPS);
             assert (enableHttpsStr != null);
             commonConfig.setEnableHttps(enableHttpsStr);
@@ -440,22 +490,24 @@ public class ConfigParser {
                     getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_EXECUTE_TIME_WINDOW);
             assert (timeWindowStr != null);
             commonConfig.setTimeWindowsStr(timeWindowStr);
-            
-            String endPointSuffixStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_ENDPOINT_SUFFIX);
+
+            String endPointSuffixStr =
+                    getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_ENDPOINT_SUFFIX);
             if (endPointSuffixStr != null && !endPointSuffixStr.trim().isEmpty()) {
                 commonConfig.setEndpointSuffix(endPointSuffixStr);
             }
-            
+
             String proxyHost = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_PROXY_HOST);
             if (proxyHost != null && !proxyHost.trim().isEmpty()) {
                 commonConfig.setProxyHost(proxyHost);
             }
-            
-            String encryptionType = getConfigValue(prefs, COMMON_SECTION_NAME, COMMOM_ENCRYPTION_TYPE);
-            if (encryptionType!= null && !encryptionType.trim().isEmpty()) {
+
+            String encryptionType =
+                    getConfigValue(prefs, COMMON_SECTION_NAME, COMMOM_ENCRYPTION_TYPE);
+            if (encryptionType != null && !encryptionType.trim().isEmpty()) {
                 commonConfig.setEncryptionType(encryptionType);
             }
-            
+
             int port = -1;
             String portStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_PROXY_PORT);
 
@@ -467,8 +519,9 @@ public class ConfigParser {
                     throw new Exception("invalid cos proxy port");
                 }
             }
-            
-            String taskExecutorNumberStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_THREAD_NUM);
+
+            String taskExecutorNumberStr =
+                    getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_THREAD_NUM);
             if (taskExecutorNumberStr != null && !taskExecutorNumberStr.isEmpty()) {
                 commonConfig.setTaskExecutorNumberStr(taskExecutorNumberStr);
             }
@@ -498,10 +551,22 @@ public class ConfigParser {
             if (excludes != null && !excludes.trim().isEmpty()) {
                 copyLocalConfig.setExcludes(excludes);
             }
-            
-            String ignoreModifiedTimeLessThanStr = getConfigValue(prefs, LOCAL_SECTION_NAME, IGNORE_MODIFIED_TIME_LESS_THAN);
-            if (ignoreModifiedTimeLessThanStr != null && !ignoreModifiedTimeLessThanStr.trim().isEmpty()) {
+
+            String ignoreModifiedTimeLessThanStr =
+                    getConfigValue(prefs, LOCAL_SECTION_NAME, IGNORE_MODIFIED_TIME_LESS_THAN);
+            if (ignoreModifiedTimeLessThanStr != null
+                    && !ignoreModifiedTimeLessThanStr.trim().isEmpty()) {
                 copyLocalConfig.setIgnoreModifiedTimeLessThan(ignoreModifiedTimeLessThanStr);
+            }
+            
+            String ignoreSuffix = getConfigValue(prefs, LOCAL_SECTION_NAME, IGNORE_SUFFIX);
+            if (ignoreSuffix != null && !ignoreSuffix.trim().isEmpty()) {
+                copyLocalConfig.setIgnoreSuffix(ignoreSuffix);
+            }
+            
+            String ignoreEmptyFile =  getConfigValue(prefs, LOCAL_SECTION_NAME, IGNORE_EMPTY_FILE);
+            if (ignoreEmptyFile != null && (ignoreEmptyFile.compareToIgnoreCase("on") == 0)) {
+                copyLocalConfig.setIgnoreEmptyFile(true);
             }
 
         } catch (Exception e) {
@@ -522,6 +587,22 @@ public class ConfigParser {
             String urllistPath = getConfigValue(prefs, URLLIST_SECTION_NAME, URLLIST_PATH);
             assert (urllistPath != null);
             copyUrllistConfig.setUrllistPath(urllistPath);
+
+            String isSkipHead = getConfigValue(prefs, URLLIST_SECTION_NAME, URLLIST_IS_SKIP_HEAD);
+            if ((isSkipHead != null) && (isSkipHead.compareToIgnoreCase("on") == 0)) {
+                copyUrllistConfig.setSkipHead(true);
+            }
+            
+            String ak = getConfigValue(prefs, URLLIST_SECTION_NAME, OSS_AK);
+            if (ak != null) {
+                copyUrllistConfig.setSrcAccessKeyId(ak);
+            }
+            
+            String sk = getConfigValue(prefs, URLLIST_SECTION_NAME, OSS_SK);
+            if (sk != null) {
+                copyUrllistConfig.setSrcAccessKeySecret(sk);
+            }
+            
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());
@@ -540,25 +621,24 @@ public class ConfigParser {
             return false;
         }
 
-        String needSignStr =
-                getConfigValue(prefs, QINIU_SECTION_NAME, QINIU_NEED_SIGN);
+        String needSignStr = getConfigValue(prefs, QINIU_SECTION_NAME, QINIU_NEED_SIGN);
         if (needSignStr == null) {
-        	copyQiniuConfig.setIsNeedSign(true);
-        	return true;
+            copyQiniuConfig.setIsNeedSign(true);
+            return true;
         }
-        
+
         needSignStr = needSignStr.trim();
-        if (needSignStr.compareToIgnoreCase("false") == 0) {
-        	copyQiniuConfig.setIsNeedSign(false);
-        } else if (needSignStr.compareToIgnoreCase("true") == 0) {
-        	copyQiniuConfig.setIsNeedSign(true);
+        if (needSignStr.compareToIgnoreCase("off") == 0) {
+            copyQiniuConfig.setIsNeedSign(false);
+        } else if (needSignStr.compareToIgnoreCase("on") == 0) {
+            copyQiniuConfig.setIsNeedSign(true);
         } else {
-        	String errMsg = "qiniu section needSign invalid,need to be \"true\" or \"false\".\n";
-        	System.err.println(errMsg);
-        	log.error(errMsg);
-        	return false;
+            String errMsg = "qiniu section needSign invalid,need to be \"on\" or \"off\".\n";
+            System.err.println(errMsg);
+            log.error(errMsg);
+            return false;
         }
-        
+
         return true;
     }
 
@@ -586,8 +666,21 @@ public class ConfigParser {
         return true;
     }
 
+    private boolean initCopyFromCspConfig(Preferences prefs, CopyFromCspConfig copyCspConfig) {
+        if (!initCommonConfig(prefs, copyCspConfig)) {
+            return false;
+        }
+
+        if (!initCopyFromCompetitorConfig(prefs, copyCspConfig)) {
+            return false;
+        }
+
+        return true;
+    }
+
     private boolean initCopyFromCompetitorConfig(Preferences prefs,
             CopyFromCompetitorConfig copyOssConfig) {
+
 
         try {
             String sectionName;
@@ -597,6 +690,8 @@ public class ConfigParser {
                 sectionName = AWS_SECTION_NAME;
             } else if (this.migrateType == MigrateType.MIGRATE_FROM_QINIU) {
                 sectionName = QINIU_SECTION_NAME;
+            } else if (this.migrateType == MigrateType.MIGRATE_FROM_CSP) {
+                sectionName = CSP_SECTION_NAME;
             } else {
                 log.error("unknow migrate type %s", migrateType.toString());
                 return false;
@@ -633,7 +728,7 @@ public class ConfigParser {
             int port = -1;
             String portStr = getConfigValue(prefs, sectionName, OSS_PROXY_PORT);
 
-            if (!portStr.isEmpty()) {
+            if ((portStr != null) && !portStr.isEmpty()) {
                 port = Integer.valueOf(portStr);
                 if (port > 0) {
                     copyOssConfig.setSrcProxyPort(port);
@@ -642,6 +737,11 @@ public class ConfigParser {
                 }
             }
 
+            String urlList = getConfigValue(prefs, sectionName, OSS_URL_LIST);
+            if ((urlList != null) && !urlList.isEmpty()) {
+                copyOssConfig.setUrlList(urlList);
+            }
+            
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());
@@ -676,8 +776,9 @@ public class ConfigParser {
             String srcCosPath = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_COSPATH);
             assert (srcCosPath != null);
             copyBucketConfig.setSrcCosPath(srcCosPath);
-            
-            String srcEndpointSuffix = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_ENDPOINT_SUFFIX);
+
+            String srcEndpointSuffix =
+                    getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_ENDPOINT_SUFFIX);
             if (srcEndpointSuffix != null && !srcEndpointSuffix.trim().isEmpty()) {
                 copyBucketConfig.setSrcEndpointSuffix(srcEndpointSuffix);
             }
@@ -686,7 +787,7 @@ public class ConfigParser {
             if (fileList != null && !fileList.isEmpty()) {
                 copyBucketConfig.setSrcFileList(fileList);
             }
-                
+
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());

@@ -17,6 +17,10 @@ public class MigrateUrllistRecordElement extends RecordElement {
         this.url = url;
         this.headAttr = headAttr;
     }
+    
+    public void setHeadAttr(HeadAttr headAttr) {
+        this.headAttr = headAttr;
+    }
 
     @Override
     public String buildKey() {

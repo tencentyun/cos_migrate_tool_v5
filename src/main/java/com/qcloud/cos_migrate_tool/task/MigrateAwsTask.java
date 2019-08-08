@@ -126,7 +126,7 @@ public class MigrateAwsTask extends Task {
 
         MigrateCompetitorRecordElement awsRecordElement = new MigrateCompetitorRecordElement(
                 MigrateType.MIGRATE_FROM_AWS, config.getBucketName(), cosPath, etag, fileSize);
-        if (isExist(awsRecordElement)) {
+        if (isExist(awsRecordElement, true)) {
             TaskStatics.instance.addSkipCnt();
             return;
         }
@@ -209,7 +209,7 @@ public class MigrateAwsTask extends Task {
                 cosMetadata.addUserMetadata("s3-etag", awsMetaData.getETag());
             }
             String requestId = uploadFile(config.getBucketName(), cosPath, localFile,
-                    config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata);
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata, null);
             saveRecord(awsRecordElement);
             saveRequestId(cosPath, requestId);
             if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {

@@ -7,9 +7,37 @@ public class CopyFromCompetitorConfig extends CommonConfig {
     private String srcEndpoint;
     private String srcAccessKeyId;
     private String srcAccessKeySecret;
+    private String urlList = "";
     
     private String srcProxyHost = "";
     private int srcProxyPort = -1;
+    
+    public void setUrlList(String urlList) {
+        this.urlList = urlList;
+    }
+    
+    public String getUrlList() {
+        return this.urlList;
+    }
+    
+    public boolean setTask(String[] task) {
+        if (task.length != 8) {
+            return false;
+        }
+        
+        //destSecretId  destSecretKey   destBucket  destEndpoint    srcSecretId srcSecretKey    srcBucket   srcEndpoint
+        
+        setAk(task[0]);
+        setSk(task[1]);
+        setBucketName(task[2]);
+        setEndpointSuffix(task[3]);
+        
+        setSrcAccessKeyId(task[4]);
+        setSrcAccessKeySecret(task[5]);
+        setSrcBucket(task[6]);
+        setEndpoint(task[7]);
+        return true;
+    }
     
     public String getSrcProxyHost() {
     	return srcProxyHost;
