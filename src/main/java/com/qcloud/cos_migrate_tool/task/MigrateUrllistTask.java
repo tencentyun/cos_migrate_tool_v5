@@ -71,7 +71,7 @@ public class MigrateUrllistTask extends Task {
                 MigrateType.MIGRATE_FROM_URLLIST, config.getBucketName(), cosPath, url, headAttr);
 
         
-        if (isExist(urllistRecordElement, ((CopyFromUrllistConfig) config).IsSkipHead())) {
+        if (isExist(urllistRecordElement, !((CopyFromUrllistConfig) config).IsSkipHead())) {
             TaskStatics.instance.addSkipCnt();
             return;
         }
@@ -113,7 +113,8 @@ public class MigrateUrllistTask extends Task {
             TaskStatics.instance.addFailCnt();
             return;
         }
-
+        
+        
         try {
             com.qcloud.cos.model.ObjectMetadata cosMetadata =
                     new com.qcloud.cos.model.ObjectMetadata();

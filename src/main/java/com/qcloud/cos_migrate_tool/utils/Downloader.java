@@ -11,7 +11,6 @@ import java.net.URL;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -96,7 +95,7 @@ public class Downloader {
             httpHead.setConfig(requestConfig);
             httpHead.setHeader("Accept", "*/*");
             httpHead.setHeader("Connection", "Keep-Alive");
-            httpHead.setHeader("User-Agent", "cos-migrate-tool");
+            httpHead.setHeader("User-Agent", "cos-migrate-tool-v1.3.6");
 
             HttpResponse httpResponse = null;
             try {
@@ -219,7 +218,7 @@ public class Downloader {
             httpGet.setConfig(requestConfig);
             httpGet.setHeader("Accept", "*/*");
             httpGet.setHeader("Connection", "Keep-Alive");
-            httpGet.setHeader("User-Agent", "cos-migrate-tool-v1.0");
+            httpGet.setHeader("User-Agent", "cos-migrate-tool-v1.3.6");
             try {
                 HttpResponse httpResponse = httpClient.execute(httpGet);
                 int http_statuscode = httpResponse.getStatusLine().getStatusCode();

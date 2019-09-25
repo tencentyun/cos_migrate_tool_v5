@@ -31,6 +31,10 @@ public class MigrateUrllistRecordElement extends RecordElement {
 
     @Override
     public String buildValue() {
+        if (headAttr == null) {
+            return "no headArrt";
+        }
+        
         String value = String.format("[fileSize: %d], [lastModify: %s]", headAttr.fileSize,
                 headAttr.lastModify);
         return value;

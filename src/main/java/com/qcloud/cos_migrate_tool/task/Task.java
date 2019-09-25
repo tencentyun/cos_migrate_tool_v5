@@ -62,14 +62,14 @@ public abstract class Task implements Runnable {
             return true;
         }
 
-        if (!isCompareValue && query_result == RecordDb.QUERY_RESULT.VALUE_NOT_EQ) {
+        if (!isCompareValue && (query_result == RecordDb.QUERY_RESULT.VALUE_NOT_EQ)) {
             String printMsg = String.format("[skip] task_info: %s", recordElement.buildKey());
             System.out.println(printMsg);
             log.info("skip! not compare value, task_info: [key: {}], [value: {}]",
                     recordElement.buildKey(), recordElement.buildValue());
             return true;
         }
-
+        
         return false;
     }
 
