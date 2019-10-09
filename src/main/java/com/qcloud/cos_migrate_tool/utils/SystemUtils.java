@@ -29,7 +29,8 @@ public class SystemUtils {
         if (SystemUtils.isWindowsSystem()) {
             absolutePath = absolutePath.replace('\\', '/');
         }
-        if (localFile.isDirectory()) {
+
+        if (localFile.isDirectory() && !absolutePath.endsWith("/")) {
             absolutePath += "/";
         }
         return absolutePath;
