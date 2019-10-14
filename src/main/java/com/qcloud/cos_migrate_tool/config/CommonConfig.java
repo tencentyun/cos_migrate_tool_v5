@@ -206,7 +206,7 @@ public class CommonConfig {
         smallFileExecutorNumStr = smallFileExecutorNumStr.trim();
         try {
             int number = Integer.valueOf(smallFileExecutorNumStr);
-            if (number <= 0 && number > 1024) {
+            if (number <= 0 || number > 1024) {
                 throw new IllegalArgumentException("legal smallFileExecutorNum  is [1, 1024] ");
             }
             this.smallFileExecutorNumber = number;
@@ -224,7 +224,7 @@ public class CommonConfig {
         bigFileExecutorNumStr = bigFileExecutorNumStr.trim();
         try {
             int number = Integer.valueOf(bigFileExecutorNumStr);
-            if (number <= 0 && number > 64) {
+            if (number <= 0 || number > 64) {
                 throw new IllegalArgumentException("legal bigFileExecutorNum is [1, 64] ");
             }
             this.bigFileExecutorNum = number;
@@ -240,7 +240,7 @@ public class CommonConfig {
             long number = Long.valueOf(smallFileThresholdStr);
             final long minSmallFile = 5 * 1024 * 1024; // 最小5MB
             final long maxSmallFile = 5 * 1024 * 1024 * 1024; // 最大5GB
-            if (number < minSmallFile && number > maxSmallFile) {
+            if (number < minSmallFile || number > maxSmallFile) {
                 throw new IllegalArgumentException(String.format(
                         "legal smallFileThreshold is [%d, %d], 5MB ~ 5GB", minSmallFile, maxSmallFile));
             }
