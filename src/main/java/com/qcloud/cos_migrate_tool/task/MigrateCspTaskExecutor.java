@@ -125,7 +125,8 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
                     
 
                 }
-
+                
+                TaskStatics.instance.setListFinished(true);
                 inputStream.close();
                 bufferedReader.close();
             } catch (IOException e) {

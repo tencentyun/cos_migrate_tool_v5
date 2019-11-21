@@ -3,6 +3,7 @@ package com.qcloud.cos_migrate_tool.task;
 import java.io.File;
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
@@ -15,13 +16,16 @@ import com.qcloud.cos.http.HttpMethodName;
 import com.qcloud.cos.model.AccessControlList;
 import com.qcloud.cos.model.GeneratePresignedUrlRequest;
 import com.qcloud.cos.model.GetObjectRequest;
+import com.qcloud.cos.model.Grant;
 import com.qcloud.cos.model.ObjectMetadata;
+import com.qcloud.cos.model.Permission;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyFromCspConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCompetitorRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
+import com.qcloud.cos_migrate_tool.utils.TceGrantee;
 
 public class MigrateCspTask extends Task {
 
@@ -40,7 +44,7 @@ public class MigrateCspTask extends Task {
         this.etag = etag;
         if (srcKey.startsWith("/")) {
             this.srcKey = srcKey.substring(1);
-        } 
+        }
     }
 
     private String buildCOSPath() {
@@ -128,15 +132,16 @@ public class MigrateCspTask extends Task {
 
         String cosPath = buildCOSPath();
         ObjectMetadata srcMetaData = null;
-        
+
         if (this.etag.isEmpty()) {
             try {
-                srcMetaData = cosClient.getObjectMetadata(((CopyFromCspConfig)config).getSrcBucket(), srcKey);
+                srcMetaData = cosClient
+                        .getObjectMetadata(((CopyFromCspConfig) config).getSrcBucket(), srcKey);
                 this.etag = srcMetaData.getETag();
                 this.fileSize = srcMetaData.getContentLength();
             } catch (Exception e) {
-                log.error("[fail] [taskInfo: {}] [Head Obj Exception occur, msg {}]",
-                        srcKey, e.getMessage().toString());
+                log.error("[fail] [taskInfo: {}] [Head Obj Exception occur, msg {}]", srcKey,
+                        e.getMessage().toString());
                 TaskStatics.instance.addFailCnt();
                 return;
             }
@@ -161,6 +166,7 @@ public class MigrateCspTask extends Task {
                             .<GetObjectRequest>withGeneralProgressListener(
                                     getObjectProgressListener),
                     localFile);
+           
             if (!localFile.exists()) {
                 String printMsg =
                         String.format("[fail] [task_info: %s]", cspRecordElement.buildKey());
@@ -193,7 +199,7 @@ public class MigrateCspTask extends Task {
             return;
         }
 
-
+        
         AccessControlList acl = null;
         try {
             acl = cosClient.getObjectAcl(((CopyFromCspConfig) config).getSrcBucket(), srcKey);
@@ -205,6 +211,45 @@ public class MigrateCspTask extends Task {
             TaskStatics.instance.addFailCnt();
             localFile.delete();
             return;
+        }
+
+        // acl转换
+        AccessControlList acl2 = new AccessControlList();
+            
+        if (acl != null) {
+           
+            List<Grant> grantList = acl.getGrantsAsList();
+            
+            for (int i = 0; i < grantList.size(); ++i) {
+                if (grantList.get(i).getPermission() == Permission.Write) {
+                    continue;
+                }
+                
+                //System.out.printf("%s %s %s\n",srcKey, grantList.get(i).getGrantee().getTypeIdentifier(), grantList.get(i).getGrantee().getIdentifier());
+                TceGrantee grantee = new TceGrantee();
+                if (grantList.get(i).getGrantee().getTypeIdentifier().equalsIgnoreCase("uri")) {
+               
+                    
+                    if (grantList.get(i).getGrantee().getIdentifier()
+                            .equalsIgnoreCase("http://cam.qcloud.com/groups/global/AllUsers")) {
+                
+
+                        grantee.setIdentifier("qcs::cam::anonymous:anonymous");
+                        
+                    } else if (grantList.get(i).getGrantee().getIdentifier().equalsIgnoreCase(
+                            "http://cam.qcloud.com/groups/global/AuthenticatedUsers")) {
+                        grantee.setIdentifier("authenticated");
+                    }
+                    
+                    grantee.setTypeIdentifier("id");
+
+                } else {
+                    grantee.setTypeIdentifier(grantList.get(i).getGrantee().getTypeIdentifier());
+                    grantee.setIdentifier(grantList.get(i).getGrantee().getIdentifier());
+                }
+                
+                acl2.grantPermission(grantee, grantList.get(i).getPermission());
+            }
         }
 
 
@@ -235,7 +280,7 @@ public class MigrateCspTask extends Task {
             }
 
             String requestId = uploadFile(config.getBucketName(), cosPath, localFile,
-                    config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata, acl);
+                    config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata, acl2);
             saveRecord(cspRecordElement);
             saveRequestId(cosPath, requestId);
             if (this.query_result == RecordDb.QUERY_RESULT.KEY_NOT_EXIST) {

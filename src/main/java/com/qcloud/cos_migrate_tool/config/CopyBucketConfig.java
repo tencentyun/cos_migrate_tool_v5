@@ -33,7 +33,7 @@ public class CopyBucketConfig extends CommonConfig {
 
     public void setSrcBucket(String srcBucket) {
         srcBucket = srcBucket.trim();
-        String parrtern = ".*-(125|100|20)[0-9]{3,}$";
+        String parrtern = ".*-[0-9]{3,}$";
         if (!Pattern.matches(parrtern, srcBucket)) {
             throw new IllegalArgumentException(
                     "SrcBucketName must contain appid. example: test-1250001000");

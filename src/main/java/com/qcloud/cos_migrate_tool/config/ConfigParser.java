@@ -548,8 +548,13 @@ public class ConfigParser {
             copyLocalConfig.setLocalPath(localPathConfig);
 
             String excludes = getConfigValue(prefs, LOCAL_SECTION_NAME, LOCAL_EXECLUDE);
-            if (excludes != null && !excludes.trim().isEmpty()) {
+            if (excludes != null && !excludes.trim().isEmpty()) {  
                 copyLocalConfig.setExcludes(excludes);
+            } else {
+                 excludes = getConfigValue(prefs, LOCAL_SECTION_NAME, "excludes");
+                 if (excludes != null && !excludes.trim().isEmpty()) {  
+                     copyLocalConfig.setExcludes(excludes);
+                 }
             }
 
             String ignoreModifiedTimeLessThanStr =
