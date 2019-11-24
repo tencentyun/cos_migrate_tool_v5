@@ -200,9 +200,14 @@ public class MigrateCspTask extends Task {
         }
 
         
-        AccessControlList acl = null;
+        AccessControlList acl;
         try {
-            acl = cosClient.getObjectAcl(((CopyFromCspConfig) config).getSrcBucket(), srcKey);
+            if(srcKey.endsWith("/") && !((CopyFromCspConfig) config).isMigrateSlashEndObjectAcl()) {
+                // 如果key以'/'结尾, 且不迁移以'/'结尾key的acl, 则不去获取源的acl进行迁移
+                acl = null;
+            } else {
+                acl = cosClient.getObjectAcl(((CopyFromCspConfig) config).getSrcBucket(), srcKey);
+            }
         } catch (Exception e) {
             String printMsg = String.format("[fail] [task_info: %s]", cspRecordElement.buildKey());
             System.out.println(printMsg);

@@ -64,6 +64,7 @@ public class ConfigParser {
     private static final String AWS_SECTION_NAME = "migrateAws";
     private static final String QINIU_SECTION_NAME = "migrateQiniu";
     private static final String CSP_SECTION_NAME = "migrateCsp";
+    private static final String CSP_MIGRATE_SLASH_END_OBJECT_ACL = "migrateSlashEndObjectAcl";
     private static final String OSS_BUCKET = "bucket";
     private static final String OSS_AK = "accessKeyId";
     private static final String OSS_SK = "accessKeySecret";
@@ -679,7 +680,17 @@ public class ConfigParser {
         if (!initCopyFromCompetitorConfig(prefs, copyCspConfig)) {
             return false;
         }
-
+        String migrateSlashEndObjectAcl = getConfigValue(prefs, CSP_SECTION_NAME, CSP_MIGRATE_SLASH_END_OBJECT_ACL);
+        if (migrateSlashEndObjectAcl == null || migrateSlashEndObjectAcl.trim().compareToIgnoreCase("true") == 0) {
+            copyCspConfig.setMigrateSlashEndObjectAcl(true);
+        } else if (migrateSlashEndObjectAcl.trim().compareToIgnoreCase("false") == 0) {
+            copyCspConfig.setMigrateSlashEndObjectAcl(false);
+        } else {
+            String errMsg = "csp section migrateSlashEndObjectAcl invalid,need to be \"true\" or \"false\".\n";
+            System.err.println(errMsg);
+            log.error(errMsg);
+            return false;
+        }
         return true;
     }
 
