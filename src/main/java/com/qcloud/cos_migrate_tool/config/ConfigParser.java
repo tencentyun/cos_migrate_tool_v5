@@ -64,6 +64,8 @@ public class ConfigParser {
     private static final String AWS_SECTION_NAME = "migrateAws";
     private static final String QINIU_SECTION_NAME = "migrateQiniu";
     private static final String CSP_SECTION_NAME = "migrateCsp";
+    private static final String UPYUN_SECTION_NAME = "migrateUpyun";
+    private static final String CSP_MIGRATE_SLASH_END_OBJECT_ACL = "migrateSlashEndObjectAcl";
     private static final String OSS_BUCKET = "bucket";
     private static final String OSS_AK = "accessKeyId";
     private static final String OSS_SK = "accessKeySecret";
@@ -265,6 +267,14 @@ public class ConfigParser {
                 System.out.println("You can't both set batchTaskPath and urlList");
                 return false;
             }
+        } else if (migrateType.equals(MigrateType.MIGRATE_FROM_UPYUN)) {
+            if (!checkMigrateCompetitorConfig(prefs, MigrateType.MIGRATE_FROM_UPYUN)) {
+                return false;
+            }
+            config = new CopyFromUpyunConfig();
+            if (!initCopyFromUpyunConfig(prefs, (CopyFromUpyunConfig) config)) {
+                return false;
+            }
         }
         
         
@@ -394,7 +404,8 @@ public class ConfigParser {
         if (!isKeyExist(prefs, sectionName, OSS_SK)) {
             return false;
         }
-        if (!isKeyExist(prefs, sectionName, OSS_END_POINT)) {
+        
+        if (migrateType != MigrateType.MIGRATE_FROM_UPYUN && !isKeyExist(prefs, sectionName, OSS_END_POINT)) {
             return false;
         }
         return true;
@@ -670,6 +681,18 @@ public class ConfigParser {
 
         return true;
     }
+    
+    private boolean initCopyFromUpyunConfig(Preferences prefs, CopyFromUpyunConfig copyUpyunConfig) {
+        if (!initCommonConfig(prefs, copyUpyunConfig)) {
+            return false;
+        }
+
+        if (!initCopyFromCompetitorConfig(prefs, copyUpyunConfig)) {
+            return false;
+        }
+
+        return true;
+    }
 
     private boolean initCopyFromCspConfig(Preferences prefs, CopyFromCspConfig copyCspConfig) {
         if (!initCommonConfig(prefs, copyCspConfig)) {
@@ -679,7 +702,17 @@ public class ConfigParser {
         if (!initCopyFromCompetitorConfig(prefs, copyCspConfig)) {
             return false;
         }
-
+        String migrateSlashEndObjectAcl = getConfigValue(prefs, CSP_SECTION_NAME, CSP_MIGRATE_SLASH_END_OBJECT_ACL);
+        if (migrateSlashEndObjectAcl == null || migrateSlashEndObjectAcl.trim().compareToIgnoreCase("true") == 0) {
+            copyCspConfig.setMigrateSlashEndObjectAcl(true);
+        } else if (migrateSlashEndObjectAcl.trim().compareToIgnoreCase("false") == 0) {
+            copyCspConfig.setMigrateSlashEndObjectAcl(false);
+        } else {
+            String errMsg = "csp section migrateSlashEndObjectAcl invalid,need to be \"true\" or \"false\".\n";
+            System.err.println(errMsg);
+            log.error(errMsg);
+            return false;
+        }
         return true;
     }
 
@@ -697,6 +730,8 @@ public class ConfigParser {
                 sectionName = QINIU_SECTION_NAME;
             } else if (this.migrateType == MigrateType.MIGRATE_FROM_CSP) {
                 sectionName = CSP_SECTION_NAME;
+            } else if (this.migrateType == MigrateType.MIGRATE_FROM_UPYUN) {
+                sectionName = UPYUN_SECTION_NAME;
             } else {
                 log.error("unknow migrate type %s", migrateType.toString());
                 return false;

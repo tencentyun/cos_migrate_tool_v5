@@ -43,6 +43,9 @@ public class MigrateAwsTask extends Task {
     private String buildCOSPath() {
         String srcPrefix = ((CopyFromAwsConfig) config).getSrcPrefix();
         int lastDelimiter = srcPrefix.lastIndexOf("/");
+        if (lastDelimiter == 0) {
+            lastDelimiter = -1;
+        }
         String keyName = srcKey.substring(lastDelimiter + 1);
         String cosPrefix = config.getCosPath();
         if (cosPrefix.endsWith("/")) {

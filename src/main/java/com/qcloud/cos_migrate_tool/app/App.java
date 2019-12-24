@@ -17,6 +17,7 @@ import com.qcloud.cos_migrate_tool.config.CopyFromAwsConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromCompetitorConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromQiniuConfig;
+import com.qcloud.cos_migrate_tool.config.CopyFromUpyunConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromUrllistConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromCspConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
@@ -27,6 +28,7 @@ import com.qcloud.cos_migrate_tool.task.MigrateCopyBucketTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.MigrateCspTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.MigrateLocalTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.MigrateQiniuTaskExecutor;
+import com.qcloud.cos_migrate_tool.task.MigrateUpyunTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.MigrateUrllistTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.TaskExecutor;
 
@@ -51,6 +53,8 @@ public class App {
             return new MigrateQiniuTaskExecutor((CopyFromQiniuConfig) config);
         } else if (ConfigParser.instance.getMigrateType().equals(MigrateType.MIGRATE_FROM_CSP)) {
             return new MigrateCspTaskExecutor((CopyFromCspConfig) config);
+        } else if (ConfigParser.instance.getMigrateType().equals(MigrateType.MIGRATE_FROM_UPYUN)) {
+            return new MigrateUpyunTaskExecutor((CopyFromUpyunConfig) config);
         } else {
             System.out.println("unknown migrate type");
         }

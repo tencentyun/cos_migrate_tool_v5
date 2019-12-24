@@ -7,7 +7,8 @@ public enum MigrateType {
     MIGRATE_FROM_AWS("migrateAws"),
     MIGRATE_FROM_URLLIST("migrateUrl"),
     MIGRATE_FROM_COS_BUCKET_COPY("migrateBucketCopy"),
-    MIGRATE_FROM_CSP("migrateCsp");
+    MIGRATE_FROM_CSP("migrateCsp"),
+    MIGRATE_FROM_UPYUN("migrateUpyun");
 
     private String migrateType;
 

@@ -52,6 +52,9 @@ public class MigrateAliTask extends Task {
     private String buildCOSPath() {
         String srcPrefix = ((CopyFromAliConfig) config).getSrcPrefix();
         int lastDelimiter = srcPrefix.lastIndexOf("/");
+        if (lastDelimiter == 0) {
+            lastDelimiter = -1;
+        }
         String keyName = srcKey.substring(lastDelimiter + 1);
         String cosPrefix = config.getCosPath();
         if (cosPrefix.endsWith("/")) {
