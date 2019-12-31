@@ -74,6 +74,7 @@ public class ConfigParser {
     private static final String OSS_PROXY_HOST = "proxyHost";
     private static final String OSS_PROXY_PORT = "proxyPort";
     private static final String OSS_URL_LIST = "uriList";
+    private static final String UPYUN_COMPARE_MD5 = "compareMd5";
 
     private static final String QINIU_NEED_SIGN = "needSign";
 
@@ -690,7 +691,23 @@ public class ConfigParser {
         if (!initCopyFromCompetitorConfig(prefs, copyUpyunConfig)) {
             return false;
         }
-
+        
+        
+        
+        String compareMd5 = getConfigValue(prefs, UPYUN_SECTION_NAME, UPYUN_COMPARE_MD5);
+        if (compareMd5 != null) {
+            if (compareMd5.compareToIgnoreCase("off") == 0) {
+                copyUpyunConfig.setCompareMd5(false);
+            } else if (compareMd5.compareToIgnoreCase("on") == 0) {
+                copyUpyunConfig.setCompareMd5(true);
+            } else {
+                String errMsg = "upyun section compareMd5 invalid,need to be \"on\" or \"off\".\n";
+                System.err.println(errMsg);
+                log.error(errMsg);
+                return false;
+            }
+        }
+        
         return true;
     }
 

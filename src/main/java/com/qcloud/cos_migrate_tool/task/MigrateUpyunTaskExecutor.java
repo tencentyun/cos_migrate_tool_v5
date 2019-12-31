@@ -51,7 +51,7 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
         this.upyun = new UpYun(this.srcBucket, this.srcAccessKeyId, this.srcAccessKeySecret);
         upyun.setTimeout(60);
         upyun.setApiDomain(UpYun.ED_AUTO);
-      
+
         if (!config.getSrcProxyHost().isEmpty() && config.getSrcProxyPort() > 0) {
             System.out.println("use proxy");
             System.setProperty("java.net.useSystemProxies", "true");
@@ -80,102 +80,60 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
 
     public void buildTask() {
 
-        try {
-            LinkedList<String> dirList = new LinkedList<String>();
-            dirList.add("");
-            while (!dirList.isEmpty()) {
-                String curDir = dirList.removeFirst();
-                String lastItr = "";
-
-                FolderItemIter folderItemIter;
-                do {
-                    Map<String, String> params = new HashMap<String, String>();
-
-                    params.put("x-list-iter", lastItr);
-                    params.put("x-list-limit", "1000");
-
-                    folderItemIter = upyun.readDirIter(curDir, params);
-                    lastItr = folderItemIter.iter;
-                    for (int i = 0; i < folderItemIter.files.size(); ++i) {
-                        if (folderItemIter.files.get(i).type.equals("folder")) {
-
-                            dirList.add(curDir + "/" + folderItemIter.files.get(i).name);
-                        } else {
-                            MigrateUpyunTask task = new MigrateUpyunTask(config, upyun,
-                                    curDir + "/" + folderItemIter.files.get(i).name,
-                                    folderItemIter.files.get(i).size,
-                                    folderItemIter.files.get(i).date, folderItemIter.files.get(i).type, smallFileTransferManager,
-                                    bigFileTransferManager, recordDb, semaphore);
-
-                            AddTask(task);
-                        }
-                    }
-                } while (folderItemIter.files.size() > 0);
-            }
-
-            TaskStatics.instance.setListFinished(true);
-
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            TaskStatics.instance.setListFinished(false);
-        }
-
-
-
-        /*
-        final int maxKeys = 200;
-        final String keyPrefix = this.srcPrefix;
-        String nextMarker = "";
-        ObjectListing objectListing;
-        
         int retry_num = 0;
+        LinkedList<String> dirList = new LinkedList<String>();
+        dirList.add("");
         
         do {
             try {
-                do {
-                    objectListing = ossClient.listObjects(new ListObjectsRequest(this.srcBucket)
-                            .withPrefix(keyPrefix).withMarker(nextMarker).withMaxKeys(maxKeys)
-                            .withEncodingType("url"));
-                    log.info("list next marker: " + nextMarker);
-                    List<OSSObjectSummary> sums = objectListing.getObjectSummaries();
-                    for (OSSObjectSummary s : sums) {
-                        // AddTask
-                        MigrateAliTask task = new MigrateAliTask(config, ossClient,
-                                com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(s.getKey()),
-                                s.getSize(), s.getETag(), s.getLastModified(), smallFileTransferManager,
-                                bigFileTransferManager, recordDb, semaphore);
-        
-                            AddTask(task);
-                    }
-                    nextMarker = com.qcloud.cos.utils.UrlEncoderUtils
-                            .urlDecode(objectListing.getNextMarker());
-                } while (objectListing.isTruncated());
-        
+                while (!dirList.isEmpty()) {
+                    String curDir = dirList.removeFirst();
+                    String lastItr = "";
+
+                    FolderItemIter folderItemIter;
+                    do {
+                        Map<String, String> params = new HashMap<String, String>();
+
+                        params.put("x-list-iter", lastItr);
+                        params.put("x-list-limit", "1000");
+
+                        folderItemIter = upyun.readDirIter(curDir, params);
+                        lastItr = folderItemIter.iter;
+                        for (int i = 0; i < folderItemIter.files.size(); ++i) {
+                            if (folderItemIter.files.get(i).type.equals("folder")) {
+
+                                dirList.add(curDir + "/" + folderItemIter.files.get(i).name);
+                            } else {
+                                MigrateUpyunTask task = new MigrateUpyunTask(config, null,
+                                        curDir + "/" + folderItemIter.files.get(i).name,
+                                        folderItemIter.files.get(i).size,
+                                        folderItemIter.files.get(i).date,
+                                        folderItemIter.files.get(i).type, smallFileTransferManager,
+                                        bigFileTransferManager, recordDb, semaphore);
+
+                                AddTask(task);
+                            }
+                        }
+                    } while (folderItemIter.files.size() > 0);
+                }
+
                 TaskStatics.instance.setListFinished(true);
                 return;
-        
-            } catch (OSSException e) {
-                log.error("list fail msg: {}", e.getMessage());
-                TaskStatics.instance.setListFinished(false);
-                if (e.getErrorCode().equalsIgnoreCase("AccessDenied")) {
-                    System.out.println(e.getMessage());
-                    break;
-                }
-            } catch (ClientException e) {
-                log.error("list fail msg: {}", e.getMessage());
-                TaskStatics.instance.setListFinished(false);
-                if (e.getErrorCode().equalsIgnoreCase("AccessDenied")) {
-                    System.out.println(e.getMessage());
-                    break;
-                }
+
             } catch (Exception e) {
-                log.error(e.getMessage());
+                log.error("retry_time:{}, Exception:{}", retry_num,e.getMessage());
                 TaskStatics.instance.setListFinished(false);
             }
+            
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            
             retry_num++;
-        } while (retry_num < 20);
-        
-        */
+        } while (retry_num < 300);
 
     }
 

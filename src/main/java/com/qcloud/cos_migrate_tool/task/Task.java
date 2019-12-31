@@ -22,6 +22,8 @@ import com.qcloud.cos.transfer.TransferProgress;
 import com.qcloud.cos.transfer.Upload;
 import com.qcloud.cos.utils.Md5Utils;
 import com.qcloud.cos_migrate_tool.config.CommonConfig;
+import com.qcloud.cos_migrate_tool.config.ConfigParser;
+import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.record.RecordDb.QUERY_RESULT;
 import com.qcloud.cos_migrate_tool.record.RecordElement;
@@ -213,6 +215,15 @@ public abstract class Task implements Runnable {
 
         if (entireMd5Attached) {
             String md5 = Md5Utils.md5Hex(localFile);
+            
+            String upyunTag = objectMetadata.getUserMetaDataOf("upyun-etag");
+            if (upyunTag != null) {
+                if (!md5.equalsIgnoreCase(upyunTag)) {
+                    String exceptionMsg = String.format("md5 is not match upyun[%s] local[%s]",
+                            upyunTag, md5);
+                    throw new Exception(exceptionMsg);
+                }
+            }
             objectMetadata.addUserMetadata("md5", md5);
         }
 

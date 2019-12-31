@@ -36,10 +36,23 @@ public class MigrateUpyunTask extends Task {
     private String contentType;
 
     public MigrateUpyunTask(CopyFromUpyunConfig config, UpYun upyun, String srcKey, long fileSize,
-            Date lastModify, String contentType, TransferManager smallFileTransfer, TransferManager bigFileTransfer,
-            RecordDb recordDb, Semaphore semaphore) {
+            Date lastModify, String contentType, TransferManager smallFileTransfer,
+            TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore) {
         super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
-        this.upyun = upyun;
+        //this.upyun = upyun;
+        
+        //又拍云sdk多线程有坑，headers不对
+        this.upyun = new UpYun(config.getSrcBucket(), config.getSrcAccessKeyId(), config.getSrcAccessKeySecret());
+        this.upyun.setTimeout(60);
+        this.upyun.setApiDomain(UpYun.ED_AUTO);
+
+        if (!config.getSrcProxyHost().isEmpty() && config.getSrcProxyPort() > 0) {
+            System.setProperty("java.net.useSystemProxies", "true");
+            System.setProperty("http.proxyHost", config.getSrcProxyHost());
+            System.setProperty("http.proxyPort", Integer.toString(config.getSrcProxyPort()));
+        }
+        
+        
         this.srcKey = srcKey;
         this.fileSize = fileSize;
         this.contentType = contentType;
@@ -73,7 +86,6 @@ public class MigrateUpyunTask extends Task {
         String cosPath = buildCOSPath();
 
         this.etag = this.lastModify.toString();
-        // System.out.println(this.etag);
 
         MigrateCompetitorRecordElement upyunRecordElement = new MigrateCompetitorRecordElement(
                 MigrateType.MIGRATE_FROM_UPYUN, config.getBucketName(), cosPath, etag, fileSize);
@@ -118,30 +130,73 @@ public class MigrateUpyunTask extends Task {
 
         String localPath = config.getTempFolderPath() + UUID.randomUUID().toString();
         File localFile = new File(localPath);
-        try {
-            boolean success =
-                    upyun.readFile(UrlEncoderUtils.encodeEscapeDelimiter(this.srcKey), localFile);
-            if (!success) {
-                String errMsg = String.format("[fail] taskInfo: %s, No Exception",
-                        upyunRecordElement.buildKey());
-                System.err.println(errMsg);
-                log.error(errMsg);
-                TaskStatics.instance.addFailCnt();
+        int retry_limit = 5;
+        boolean download_success = false;
+        String contentMd5 = "";
+
+        do {
+            try {
+           
+                if (((CopyFromUpyunConfig) config).isCompareMd5()) {
+                    Map<String, String> headers = this.upyun.getFileInfo(UrlEncoderUtils.encodeEscapeDelimiter(this.srcKey));
+                    if (headers == null || !headers.containsKey("Content-MD5")) {
+                        String errMsg = String
+                                .format("[fail] taskInfo: %s, can't get fileinfo or content-md5", upyunRecordElement.buildKey());
+                        System.err.println(errMsg);
+                        log.error(errMsg);
+                        TaskStatics.instance.addFailCnt();
+                        return;
+                    }
+
+                    contentMd5 = headers.get("Content-MD5");
+                }
+
+                download_success = this.upyun
+                        .readFile(UrlEncoderUtils.encodeEscapeDelimiter(this.srcKey), localFile);
+                if (!download_success) {
+                    String errMsg = String.format("[fail] taskInfo: %s, No Exception",
+                            upyunRecordElement.buildKey());
+                    System.err.println(errMsg);
+                    log.error(errMsg);
+                    TaskStatics.instance.addFailCnt();
+                    if (localFile.exists()) {
+                        localFile.delete();
+                    }
+                }
+    
+                    
+            } catch (Exception e) {
+                download_success = false;
+                retry_limit--;
+
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+
+                if (retry_limit == 0) {
+                    String errMsg =
+                            String.format("[fail] taskInfo: %s, Caught an Exception, error msg: %s",
+                                    upyunRecordElement.buildKey(), e.toString());
+                    System.err.println(errMsg);
+                    log.error(errMsg);
+                    TaskStatics.instance.addFailCnt();
+                    if (localFile.exists()) {
+                        localFile.delete();
+                    }
+                    return;
+                }
+
                 if (localFile.exists()) {
                     localFile.delete();
                 }
+
             }
-        } catch (Exception e) {
-            String errMsg = String.format("[fail] taskInfo: %s, Caught an Exception, error msg: %s",
-                    upyunRecordElement.buildKey(), e.toString());
-            System.err.println(errMsg);
-            log.error(errMsg);
-            TaskStatics.instance.addFailCnt();
-            if (localFile.exists()) {
-                localFile.delete();
-            }
-            return;
-        }
+
+
+        } while (!download_success && retry_limit > 0);
 
         // upload
 
@@ -166,8 +221,12 @@ public class MigrateUpyunTask extends Task {
         }
 
         com.qcloud.cos.model.ObjectMetadata cosMetadata = new com.qcloud.cos.model.ObjectMetadata();
-        cosMetadata.setContentType(this.contentType);
-
+        if (((CopyFromUpyunConfig) config).isCompareMd5()) {
+            cosMetadata.addUserMetadata("upyun-etag", contentMd5);
+        }
+        
+        cosMetadata.setContentType(contentType);
+    
         try {
             String requestId = uploadFile(config.getBucketName(), cosPath, localFile,
                     config.getStorageClass(), config.isEntireFileMd5Attached(), cosMetadata, null);
@@ -183,10 +242,9 @@ public class MigrateUpyunTask extends Task {
             System.out.println(printMsg);
             log.info(printMsg);
         } catch (Exception e) {
-            String printMsg = String.format("[fail] task_info: %s", upyunRecordElement.buildKey());
+            String printMsg = String.format("[fail] task_info: %s exception: %s", upyunRecordElement.buildKey(), e.toString());
             System.err.println(printMsg);
-            log.error("[fail] task_info: {}, exception: {}", upyunRecordElement.buildKey(),
-                    e.toString());
+            log.error(printMsg);
             TaskStatics.instance.addFailCnt();
         } finally {
             localFile.delete();
