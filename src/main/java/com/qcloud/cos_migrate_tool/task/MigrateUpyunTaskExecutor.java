@@ -82,20 +82,32 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
 
         int retry_num = 0;
         LinkedList<String> dirList = new LinkedList<String>();
+        LinkedList<String> itrList = new LinkedList<String>();
         dirList.add("");
+	itrList.add("");
         
         do {
+            String curDir = "";
+            String lastItr = "";
             try {
                 while (!dirList.isEmpty()) {
-                    String curDir = dirList.removeFirst();
-                    String lastItr = "";
-
+                    curDir = dirList.removeFirst();
+                    if (itrList.size()>0) {
+		        lastItr = itrList.removeFirst();
+                    } else {
+		        lastItr = "";
+		    }
                     FolderItemIter folderItemIter;
                     do {
                         Map<String, String> params = new HashMap<String, String>();
 
+		        /*
+			if (System.currentTimeMillis() % 3 == 0) {
+				throw new Exception("test timeout");
+			}
+                        */
                         params.put("x-list-iter", lastItr);
-                        params.put("x-list-limit", "1000");
+                        params.put("x-list-limit", "1000"); 
 
                         folderItemIter = upyun.readDirIter(curDir, params);
                         lastItr = folderItemIter.iter;
@@ -121,7 +133,9 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
                 return;
 
             } catch (Exception e) {
-                log.error("retry_time:{}, Exception:{}", retry_num,e.getMessage());
+                dirList.addFirst(curDir);
+                itrList.addFirst(lastItr);
+                log.error("curDir:{},lastItr:{},retry_time:{}, Exception:{}", curDir, lastItr,retry_num,e.getMessage());
                 TaskStatics.instance.setListFinished(false);
             }
             

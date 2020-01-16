@@ -139,7 +139,7 @@ public class MigrateUpyunTask extends Task {
            
                 if (((CopyFromUpyunConfig) config).isCompareMd5()) {
                     Map<String, String> headers = this.upyun.getFileInfo(UrlEncoderUtils.encodeEscapeDelimiter(this.srcKey));
-                    if (headers == null || !headers.containsKey("Content-MD5")) {
+                    if (headers == null || !headers.containsKey("Content-Md5")) {
                         String errMsg = String
                                 .format("[fail] taskInfo: %s, can't get fileinfo or content-md5", upyunRecordElement.buildKey());
                         System.err.println(errMsg);
@@ -148,7 +148,7 @@ public class MigrateUpyunTask extends Task {
                         return;
                     }
 
-                    contentMd5 = headers.get("Content-MD5");
+                    contentMd5 = headers.get("Content-Md5");
                 }
 
                 download_success = this.upyun
