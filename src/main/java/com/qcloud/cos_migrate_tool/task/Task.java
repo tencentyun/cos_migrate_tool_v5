@@ -1,6 +1,12 @@
 package com.qcloud.cos_migrate_tool.task;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -237,11 +243,14 @@ public abstract class Task implements Runnable {
 
         while (retryTime < maxRetry) {
             try {
+                String requestId;
                 if (localFile.length() >= smallFileThreshold) {
-                    return uploadBigFile(putObjectRequest);
+                    requestId = uploadBigFile(putObjectRequest);
                 } else {
-                    return uploadSmallFile(putObjectRequest);
+                    requestId = uploadSmallFile(putObjectRequest);
                 }
+                
+                return requestId;
             } catch (Exception e) {
                 log.warn("upload failed, ready to retry. retryTime:" + retryTime, e);
                 ++retryTime;

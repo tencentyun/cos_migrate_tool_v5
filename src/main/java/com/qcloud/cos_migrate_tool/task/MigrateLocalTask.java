@@ -1,6 +1,12 @@
 package com.qcloud.cos_migrate_tool.task;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.Semaphore;
 
 import org.slf4j.Logger;
@@ -8,7 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos.transfer.TransferManager;
+import com.qcloud.cos_migrate_tool.config.ConfigParser;
 import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
+import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateLocalRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
@@ -82,6 +90,27 @@ public class MigrateLocalTask extends Task {
             } else {
                 TaskStatics.instance.addUpdateCnt();
             }
+            
+            if(!config.getOutputFinishedFilePath().isEmpty()) {
+                //TODO
+                SimpleDateFormat dateFormat= new SimpleDateFormat("YYYY-MM-dd");//设置当前时间的格式，为年-月-日 
+                String file_name = dateFormat.format(new Date()) + ".out";
+                String resultFile = config.getOutputFinishedFilePath() + file_name;
+                try {
+                    BufferedOutputStream bos =
+                            new BufferedOutputStream(new FileOutputStream(resultFile, true));
+                    String recordMsg =
+                            String.format("%s\t%d\t%d\n", localFile.getAbsolutePath(), localFile.length(), localFile.lastModified());
+                    bos.write(recordMsg.getBytes());
+                    bos.close();
+                } catch (FileNotFoundException e) {
+                    log.error("write result fail,result \n" + e.toString());
+                } catch (IOException e) {
+                    log.error("write result fail,result \n"  + e.toString());
+                }
+            }
+            
+            
             String printMsg =
                     String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, migrateLocalRecordElement.buildKey());
             System.out.println(printMsg);

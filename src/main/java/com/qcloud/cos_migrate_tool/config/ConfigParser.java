@@ -51,6 +51,7 @@ public class ConfigParser {
     private static final String COMMON_THREAD_NUM = "threadNum";
     private static final String COMMON_BATCH_TASK_PATH = "batchTaskPath";
     private static final String COMMON_REAL_TIME_COMPARE = "realTimeCompare";
+    private static final String COMMON_OUTPUT_FINISHED_FILE = "outputFinishedFileFolder";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -536,6 +537,12 @@ public class ConfigParser {
                     getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_THREAD_NUM);
             if (taskExecutorNumberStr != null && !taskExecutorNumberStr.isEmpty()) {
                 commonConfig.setTaskExecutorNumberStr(taskExecutorNumberStr);
+            }
+            
+            
+            String finishedFileFolder = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_OUTPUT_FINISHED_FILE);
+            if (finishedFileFolder!=null && !finishedFileFolder.isEmpty()) {
+                commonConfig.setOutputFinishedFilePath(finishedFileFolder);
             }
 
 

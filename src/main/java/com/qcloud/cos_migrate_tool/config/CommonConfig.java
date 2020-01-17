@@ -35,6 +35,7 @@ public class CommonConfig {
     private String encryptionType = "";
     private String batchTaskPath = "";    
     private boolean realTimeCompare = false;
+    private String outputFinishedFilePath = "";
     
     public void setRealTimeCompare(String realTimeCompare)  throws IllegalArgumentException {
         if (realTimeCompare.equalsIgnoreCase("on")) {
@@ -363,5 +364,25 @@ public class CommonConfig {
     
     public int getProxyPort() {
         return this.cosProxyPort;
+    }
+    
+    
+    public void setOutputFinishedFilePath(String path) throws IllegalArgumentException {
+        path = path.trim();
+        File tempFolder = new File(path);
+        if (!tempFolder.exists()) {
+            throw new IllegalArgumentException("tempFolderPath " + path + " not exist!");
+        }
+
+        if (path.endsWith("/") || path.endsWith("\\")) {
+            this.outputFinishedFilePath = path;
+        } else {
+            this.outputFinishedFilePath = path + "/";
+        }
+        this.outputFinishedFilePath = SystemUtils.formatLocalPath(this.outputFinishedFilePath);
+    }
+    
+    public String getOutputFinishedFilePath() {
+        return this.outputFinishedFilePath;
     }
 }
