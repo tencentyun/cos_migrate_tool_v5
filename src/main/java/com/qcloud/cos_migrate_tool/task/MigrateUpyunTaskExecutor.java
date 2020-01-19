@@ -58,6 +58,8 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
             System.setProperty("http.proxyHost", config.getSrcProxyHost());
             System.setProperty("http.proxyPort", Integer.toString(config.getSrcProxyPort()));
         }
+        
+               
     }
 
     @Override
@@ -83,41 +85,44 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
         int retry_num = 0;
         LinkedList<String> dirList = new LinkedList<String>();
         LinkedList<String> itrList = new LinkedList<String>();
-        dirList.add("");
-	itrList.add("");
-        
+        if (this.srcPrefix.isEmpty()) {
+            dirList.add("/");
+        } else {
+            dirList.add(this.srcPrefix);
+        }
+        itrList.add("");
+
         do {
             String curDir = "";
             String lastItr = "";
             try {
                 while (!dirList.isEmpty()) {
                     curDir = dirList.removeFirst();
-                    if (itrList.size()>0) {
-		        lastItr = itrList.removeFirst();
+                    if (itrList.size() > 0) {
+                        lastItr = itrList.removeFirst();
                     } else {
-		        lastItr = "";
-		    }
+                        lastItr = "";
+                    }
                     FolderItemIter folderItemIter;
                     do {
                         Map<String, String> params = new HashMap<String, String>();
 
-		        /*
-			if (System.currentTimeMillis() % 3 == 0) {
-				throw new Exception("test timeout");
-			}
-                        */
                         params.put("x-list-iter", lastItr);
-                        params.put("x-list-limit", "1000"); 
+                        params.put("x-list-limit", "1000");
+                        if (!config.isAscendingOrder()) {
+                            params.put("x-list-order", "desc");
+                        }
 
                         folderItemIter = upyun.readDirIter(curDir, params);
                         lastItr = folderItemIter.iter;
+                        
                         for (int i = 0; i < folderItemIter.files.size(); ++i) {
                             if (folderItemIter.files.get(i).type.equals("folder")) {
 
-                                dirList.add(curDir + "/" + folderItemIter.files.get(i).name);
+                                dirList.add(curDir + folderItemIter.files.get(i).name + "/");
                             } else {
                                 MigrateUpyunTask task = new MigrateUpyunTask(config, null,
-                                        curDir + "/" + folderItemIter.files.get(i).name,
+                                        curDir + folderItemIter.files.get(i).name,
                                         folderItemIter.files.get(i).size,
                                         folderItemIter.files.get(i).date,
                                         folderItemIter.files.get(i).type, smallFileTransferManager,
@@ -135,17 +140,18 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
             } catch (Exception e) {
                 dirList.addFirst(curDir);
                 itrList.addFirst(lastItr);
-                log.error("curDir:{},lastItr:{},retry_time:{}, Exception:{}", curDir, lastItr,retry_num,e.getMessage());
+                log.error("curDir:{},lastItr:{},retry_time:{}, Exception:{}", curDir, lastItr,
+                        retry_num, e.getMessage());
                 TaskStatics.instance.setListFinished(false);
             }
-            
+
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            
+
             retry_num++;
         } while (retry_num < 300);
 

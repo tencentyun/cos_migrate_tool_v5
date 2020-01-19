@@ -92,7 +92,6 @@ public class MigrateLocalTask extends Task {
             }
             
             if(!config.getOutputFinishedFilePath().isEmpty()) {
-                //TODO
                 SimpleDateFormat dateFormat= new SimpleDateFormat("YYYY-MM-dd");//设置当前时间的格式，为年-月-日 
                 String file_name = dateFormat.format(new Date()) + ".out";
                 String resultFile = config.getOutputFinishedFilePath() + file_name;

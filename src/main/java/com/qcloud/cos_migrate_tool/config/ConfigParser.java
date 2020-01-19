@@ -76,6 +76,7 @@ public class ConfigParser {
     private static final String OSS_PROXY_PORT = "proxyPort";
     private static final String OSS_URL_LIST = "uriList";
     private static final String UPYUN_COMPARE_MD5 = "compareMd5";
+    private static final String UPYUN_ASCENDGING_ORDER = "acsendingOrder";
 
     private static final String QINIU_NEED_SIGN = "needSign";
 
@@ -699,7 +700,10 @@ public class ConfigParser {
             return false;
         }
         
-        
+        String isAscendingOrder = getConfigValue(prefs, UPYUN_SECTION_NAME, UPYUN_ASCENDGING_ORDER);
+        if (isAscendingOrder != null && !isAscendingOrder.isEmpty()) {
+            copyUpyunConfig.setAscendingOrder(isAscendingOrder);
+        }
         
         String compareMd5 = getConfigValue(prefs, UPYUN_SECTION_NAME, UPYUN_COMPARE_MD5);
         if (compareMd5 != null) {
