@@ -58,8 +58,8 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
             System.setProperty("http.proxyHost", config.getSrcProxyHost());
             System.setProperty("http.proxyPort", Integer.toString(config.getSrcProxyPort()));
         }
-        
-               
+
+
     }
 
     @Override
@@ -85,12 +85,21 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
         int retry_num = 0;
         LinkedList<String> dirList = new LinkedList<String>();
         LinkedList<String> itrList = new LinkedList<String>();
-        if (this.srcPrefix.isEmpty()) {
-            dirList.add("/");
+
+        LinkedList<String> progress = this.recordDb.getDirProgress();
+        
+        if (config.isResume() && progress!=null) {
+            itrList.add(progress.removeFirst());
+            dirList = progress;
+           
         } else {
-            dirList.add(this.srcPrefix);
+            if (this.srcPrefix.isEmpty()) {
+                dirList.add("/");
+            } else {
+                dirList.add(this.srcPrefix);
+            }
+            itrList.add("");
         }
-        itrList.add("");
 
         do {
             String curDir = "";
@@ -112,13 +121,13 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
                         if (!config.isAscendingOrder()) {
                             params.put("x-list-order", "desc");
                         }
-
+                        
                         folderItemIter = upyun.readDirIter(curDir, params);
                         lastItr = folderItemIter.iter;
                         
-                        for (int i = 0; i < folderItemIter.files.size(); ++i) {
-                            if (folderItemIter.files.get(i).type.equals("folder")) {
 
+                        for (int i = 0; i < folderItemIter.files.size(); ++i) {           
+                            if (folderItemIter.files.get(i).type.equals("folder")) {
                                 dirList.add(curDir + folderItemIter.files.get(i).name + "/");
                             } else {
                                 MigrateUpyunTask task = new MigrateUpyunTask(config, null,
@@ -131,6 +140,9 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
                                 AddTask(task);
                             }
                         }
+                        
+                        this.recordDb.saveDirProgress(curDir, lastItr, dirList);
+                        
                     } while (folderItemIter.files.size() > 0);
                 }
 

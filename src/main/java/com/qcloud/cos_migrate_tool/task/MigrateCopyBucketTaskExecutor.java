@@ -100,13 +100,13 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                 e1.printStackTrace();
                 return;
             }
-            
+
             BufferedReader bufferedReader = new BufferedReader(read);
             String srcKey = null;
 
             try {
-                while ((srcKey = bufferedReader.readLine()) != null){
-                    
+                while ((srcKey = bufferedReader.readLine()) != null) {
+
                     srcKey = UrlEncoderUtils.urlDecode(srcKey);
 
                     String copyDestKey = null;
@@ -116,18 +116,18 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                     } else {
                         copyDestKey = config.getCosPath() + srcKey;
                     }
-                    
-                    MigrateCopyBucketTask task = new MigrateCopyBucketTask(semaphore,
-                            (CopyBucketConfig) config, smallFileTransferManager,
-                            bigFileTransferManager, recordDb, srcCosClient, srcKey, 0,
-                            "", copyDestKey);
-                    
-                        AddTask(task);
-    
+
+                    MigrateCopyBucketTask task =
+                            new MigrateCopyBucketTask(semaphore, (CopyBucketConfig) config,
+                                    smallFileTransferManager, bigFileTransferManager, recordDb,
+                                    srcCosClient, srcKey, 0, "", copyDestKey);
+
+                    AddTask(task);
+
                 }
-                
+
                 TaskStatics.instance.setListFinished(true);
-                
+
             } catch (IOException e) {
                 log.error(e.toString());
                 TaskStatics.instance.setListFinished(false);
@@ -137,7 +137,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                 e.printStackTrace();
                 TaskStatics.instance.setListFinished(false);
             }
-            
+
             try {
                 bufferedReader.close();
             } catch (IOException e) {
@@ -148,12 +148,17 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-      
+
 
         } else {
+            String nextMarker = "";
+            String[] progress = this.recordDb.getListProgress();
+            if (config.isResume() && progress != null) {
+                nextMarker = progress[1];
+            }
 
             ListObjectsRequest listObjectsRequest =
-                    new ListObjectsRequest(srcBucketName, srcCosPath, null, null, 1000);
+                    new ListObjectsRequest(srcBucketName, srcCosPath, nextMarker, null, 1000);
 
             ObjectListing objectListing;
             int retry_num = 0;
@@ -161,30 +166,33 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
             do {
                 try {
                     while (true) {
+                        listObjectsRequest.setMarker(nextMarker);
                         objectListing = srcCosClient.listObjects(listObjectsRequest);
                         List<COSObjectSummary> cosObjectSummaries =
                                 objectListing.getObjectSummaries();
-                        
+
                         for (COSObjectSummary cosObjectSummary : cosObjectSummaries) {
                             String srcKey = cosObjectSummary.getKey();
                             String srcEtag = cosObjectSummary.getETag();
                             long srcSize = cosObjectSummary.getSize();
                             String keyName = srcKey.substring(lastDelimiter);
                             String copyDestKey = config.getCosPath() + keyName;
-                          
+
                             MigrateCopyBucketTask task = new MigrateCopyBucketTask(semaphore,
                                     (CopyBucketConfig) config, smallFileTransferManager,
                                     bigFileTransferManager, recordDb, srcCosClient, srcKey, srcSize,
                                     srcEtag, copyDestKey);
-                            
+
                             AddTask(task);
                         }
-                        
+                        nextMarker = objectListing.getNextMarker();
+                        if (nextMarker != null) {
+                            this.recordDb.saveListProgress(srcCosPath, nextMarker);
+                        }
                         if (!objectListing.isTruncated()) {
                             break;
                         }
-                        
-                        listObjectsRequest.setMarker(objectListing.getNextMarker());
+
                     }
 
                     TaskStatics.instance.setListFinished(true);

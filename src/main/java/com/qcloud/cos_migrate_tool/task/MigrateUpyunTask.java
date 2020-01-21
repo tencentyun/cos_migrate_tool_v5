@@ -82,11 +82,12 @@ public class MigrateUpyunTask extends Task {
 
     @Override
     public void doTask() {
+       
 
         String cosPath = buildCOSPath();
 
         this.etag = this.lastModify.toString();
-
+       
         MigrateCompetitorRecordElement upyunRecordElement = new MigrateCompetitorRecordElement(
                 MigrateType.MIGRATE_FROM_UPYUN, config.getBucketName(), cosPath, etag, fileSize);
 

@@ -84,12 +84,17 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
     }
 
     public void buildTask() {
-        final int maxKeys = 200;
+        final int maxKeys = 1000;
         final String keyPrefix = this.srcPrefix;
         String nextMarker = "";
         ObjectListing objectListing;
 
         int retry_num = 0;
+
+        String[] progress = this.recordDb.getListProgress();
+        if (config.isResume() && progress != null) {
+            nextMarker = progress[1];
+        }
 
         do {
             try {
@@ -103,13 +108,17 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
                         // AddTask
                         MigrateAliTask task = new MigrateAliTask(config, ossClient,
                                 com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(s.getKey()),
-                                s.getSize(), s.getETag(), s.getLastModified(), smallFileTransferManager,
-                                bigFileTransferManager, recordDb, semaphore);
+                                s.getSize(), s.getETag(), s.getLastModified(),
+                                smallFileTransferManager, bigFileTransferManager, recordDb,
+                                semaphore);
 
-                            AddTask(task);
+                        AddTask(task);
                     }
                     nextMarker = com.qcloud.cos.utils.UrlEncoderUtils
                             .urlDecode(objectListing.getNextMarker());
+                    if (nextMarker != null) {
+                        this.recordDb.saveListProgress(keyPrefix, nextMarker);
+                    }
                 } while (objectListing.isTruncated());
 
                 TaskStatics.instance.setListFinished(true);

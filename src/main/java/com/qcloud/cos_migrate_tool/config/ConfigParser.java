@@ -52,6 +52,7 @@ public class ConfigParser {
     private static final String COMMON_BATCH_TASK_PATH = "batchTaskPath";
     private static final String COMMON_REAL_TIME_COMPARE = "realTimeCompare";
     private static final String COMMON_OUTPUT_FINISHED_FILE = "outputFinishedFileFolder";
+    private static final String COMMON_RESUME = "resume";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -546,7 +547,11 @@ public class ConfigParser {
                 commonConfig.setOutputFinishedFilePath(finishedFileFolder);
             }
 
-
+            String resume = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_RESUME);
+            if (resume!=null && !resume.isEmpty()) {
+                commonConfig.setResume(resume);
+            }
+            
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());

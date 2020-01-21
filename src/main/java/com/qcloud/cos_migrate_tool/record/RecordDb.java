@@ -1,10 +1,14 @@
 package com.qcloud.cos_migrate_tool.record;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.LinkedList;
 
 import org.rocksdb.FlushOptions;
 import org.rocksdb.Options;
@@ -38,12 +42,14 @@ public class RecordDb {
     private RocksDB db;
     private Options options;
     private final String requestIdPrefix = "x-cos-requestId-";
+    private String dbFolder;
+   
 
     public RecordDb() {}
 
     public boolean init(String historyDbFolder, String comment) {
-
         try {
+            dbFolder = historyDbFolder;
             options = new Options();
             options.setCreateIfMissing(true);
             options.setWriteBufferSize(16 * SizeUnit.MB).setMaxWriteBufferNumber(4)
@@ -69,6 +75,86 @@ public class RecordDb {
             return false;
         }
         return true;
+    }
+    
+    public boolean  saveListProgress(String prefix, String marker) {
+        String value = prefix + "|" + marker;
+        return saveKV("listProgress", value);
+    }
+    
+    
+    public String[] getListProgress() {
+        String value = queryKV("listProgress");
+        if (value == null) {
+            return null;
+        } 
+
+        int i = value.lastIndexOf("|");
+        if (i < 0) {
+            return null;
+        }
+
+        String prefix = value.substring(0, i);
+        String marker = "";
+        if (i != value.length()-1) {
+            marker = value.substring(i+1, value.length()-1);
+        }
+        
+        String[] arr1 = new String[] {prefix, marker};
+        return arr1;
+        
+    }
+    
+    public boolean saveDirProgress(String curDir, String lastItr, LinkedList<String> dirList) {
+
+        String progressFile = this.dbFolder + "/PROGRESS";
+
+        try {
+            BufferedOutputStream bos =
+                    new BufferedOutputStream(new FileOutputStream(progressFile, false));
+            bos.write(lastItr.getBytes(ENCODING_TYPE));
+            bos.write("\n".getBytes(ENCODING_TYPE));
+            bos.write(curDir.getBytes(ENCODING_TYPE));
+            bos.write("\n".getBytes(ENCODING_TYPE));
+            for (String x: dirList) {
+                bos.write(x.getBytes(ENCODING_TYPE));
+                bos.write("\n".getBytes(ENCODING_TYPE));
+            }
+
+            bos.close();
+        } catch (FileNotFoundException e) {
+            log.error(e.toString());
+            return false;
+        } catch (IOException e) {
+            log.error(e.toString());
+            return false;
+        }
+            
+        return true;
+    }
+    
+    public LinkedList<String> getDirProgress() {
+        String progressFile = this.dbFolder + "/PROGRESS";
+        LinkedList<String> result = new LinkedList<String>();
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(progressFile)));
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                result.addLast(line);
+                log.info("[{}]", line);
+            }
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            //log.error(e.toString());
+            //e.printStackTrace();
+            return null;
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            log.error(e.toString());
+            e.printStackTrace();
+            return null;
+        }
+        return result;
     }
 
     // 保存记录

@@ -90,13 +90,19 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
     }
 
     public void buildTask() {
-
+        String nextMarker = "";
+        String[] progress = this.recordDb.getListProgress();
+        if (config.isResume() && progress != null) {
+            nextMarker = progress[1];
+        }
         try {
             ListObjectsRequest listObjectsRequest = new ListObjectsRequest();
             listObjectsRequest.setBucketName(srcBucket);
             listObjectsRequest.setPrefix(srcPrefix);
+            listObjectsRequest.setMarker(nextMarker);
             ObjectListing objectListing = null;
             do {
+
                 objectListing = s3Client.listObjects(listObjectsRequest);
                 for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
                     // AddTask
@@ -104,15 +110,20 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
                             objectSummary.getKey(), objectSummary.getSize(),
                             objectSummary.getETag(), smallFileTransferManager,
                             bigFileTransferManager, recordDb, semaphore);
-                    log.info("list key: {}, size: {}, etag: {}", objectSummary.getKey(), objectSummary.getSize(), objectSummary.getETag());
+                    log.info("list key: {}, size: {}, etag: {}", objectSummary.getKey(),
+                            objectSummary.getSize(), objectSummary.getETag());
 
-                        AddTask(task);
+                    AddTask(task);
                 }
-                listObjectsRequest.setMarker(objectListing.getNextMarker());
+                nextMarker = objectListing.getNextMarker();
+                listObjectsRequest.setMarker(nextMarker);
+                if (nextMarker != null) {
+                    this.recordDb.saveListProgress(srcPrefix, nextMarker);
+                }
             } while (objectListing.isTruncated());
-            
+
             TaskStatics.instance.setListFinished(true);
-            
+
         } catch (AmazonServiceException ase) {
             log.error("list fail AmazonServiceException errorcode: {}, msg: {}", ase.getErrorCode(),
                     ase.getMessage());
@@ -122,7 +133,7 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
             TaskStatics.instance.setListFinished(false);
         } catch (Exception e) {
             log.error(e.getMessage());
-            TaskStatics.instance.setListFinished(false);     
+            TaskStatics.instance.setListFinished(false);
         }
 
     }

@@ -36,6 +36,19 @@ public class CommonConfig {
     private String batchTaskPath = "";    
     private boolean realTimeCompare = false;
     private String outputFinishedFilePath = "";
+    private boolean isResume = false;
+    
+    public void setResume(String isResume) {
+        if (isResume.compareToIgnoreCase("true") == 0) {
+            this.isResume = true;
+        } else if (isResume.compareToIgnoreCase("false") != 0) {
+            throw new IllegalArgumentException("resume invalid.should be true or false");
+        }
+    }
+    
+    public boolean isResume() {
+        return this.isResume;
+    }
     
     public void setRealTimeCompare(String realTimeCompare)  throws IllegalArgumentException {
         if (realTimeCompare.equalsIgnoreCase("on")) {
