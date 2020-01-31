@@ -253,7 +253,7 @@ public class CommonConfig {
         try {
             long number = Long.valueOf(smallFileThresholdStr);
             final long minSmallFile = 5 * 1024 * 1024; // 最小5MB
-            final long maxSmallFile = 5 * 1024 * 1024 * 1024; // 最大5GB
+            final long maxSmallFile = 5L * 1024 * 1024 * 1024; // 最大5GB
             if (number < minSmallFile || number > maxSmallFile) {
                 throw new IllegalArgumentException(String.format(
                         "legal smallFileThreshold is [%d, %d], 5MB ~ 5GB", minSmallFile, maxSmallFile));
