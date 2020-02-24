@@ -37,6 +37,7 @@ public class CommonConfig {
     private boolean realTimeCompare = false;
     private String outputFinishedFilePath = "";
     private boolean isResume = false;
+    private String dbCosPath = "";
     
     public void setResume(String isResume) {
         if (isResume.compareToIgnoreCase("true") == 0) {
@@ -165,6 +166,21 @@ public class CommonConfig {
         }
         this.cosPath = PathUtils.formatCosFolderPath(cosPath);
     }
+
+    public void setDbCosPath(String dbCosPath) throws IllegalArgumentException {
+        if (!dbCosPath.startsWith("/")) {
+            throw new IllegalArgumentException("dbcospath must start with /");
+        }
+        this.dbCosPath = PathUtils.formatCosFolderPath(dbCosPath);
+    }
+
+    public String getDbCosPath() {
+        if (dbCosPath.isEmpty()) {
+            return cosPath;
+	}
+	return dbCosPath;
+    }
+
 
     public boolean isEnableHttps() {
         return enableHttps;

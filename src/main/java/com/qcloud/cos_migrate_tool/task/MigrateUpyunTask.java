@@ -68,8 +68,11 @@ public class MigrateUpyunTask extends Task {
         int lastDelimiter = srcPrefix.lastIndexOf("/");
         if (lastDelimiter == 0) {
             lastDelimiter = -1;
-        }
-
+        } else {
+	    if (srcPrefix.startsWith("/")) {
+                lastDelimiter = lastDelimiter - 1;
+            }
+	}
         String keyName = srcKey.substring(lastDelimiter + 1);
         String cosPrefix = config.getCosPath();
         if (cosPrefix.endsWith("/")) {

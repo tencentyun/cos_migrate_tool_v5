@@ -73,8 +73,10 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
 
     @Override
     public String buildTaskDbFolderPath() {
+        String dbPrefix = this.config.getDbPrefix();
+	String dbCosFolder = this.config.getDbCosPath();
         String temp = String.format("[srcEndpoint: %s] [prefix: %s] [cosFolder: %s] ", srcEndpoint,
-                srcPrefix, cosFolder);
+                dbPrefix, dbCosFolder);
         String dbFolderPath =
                 String.format("db/migrate_from_upyun/%s/%s", bucketName, DigestUtils.md5Hex(temp));
         return dbFolderPath;
@@ -118,11 +120,16 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
 
                         params.put("x-list-iter", lastItr);
                         params.put("x-list-limit", "1000");
+                        params.put("x-upyun-folder", "true");
                         if (!config.isAscendingOrder()) {
                             params.put("x-list-order", "desc");
                         }
                         
-                        folderItemIter = upyun.readDirIter(curDir, params);
+                        String fixedDir = curDir;
+ 			if (fixedDir.endsWith("/")) {
+		            fixedDir = fixedDir.substring(0, fixedDir.length()-1);
+     			}
+                        folderItemIter = upyun.readDirIter(fixedDir, params);
                         lastItr = folderItemIter.iter;
                         
 

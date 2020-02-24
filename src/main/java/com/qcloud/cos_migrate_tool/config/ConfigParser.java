@@ -35,6 +35,7 @@ public class ConfigParser {
     private static final String COMMON_AK = "secretId";
     private static final String COMMON_SK = "secretKey";
     private static final String COMMON_COSPATH = "cosPath";
+    private static final String COMMON_DB_COSPATH = "dbCosPath";
     private static final String COMMON_HTTPS = "https";
     private static final String COMMON_TMP = "tmpFolder";
     private static final String COMMON_SMALL_FILE_ThRESHOLD = "smallFileThreshold";
@@ -72,6 +73,7 @@ public class ConfigParser {
     private static final String OSS_AK = "accessKeyId";
     private static final String OSS_SK = "accessKeySecret";
     private static final String OSS_PREFIX = "prefix";
+    private static final String OSS_DB_PREFIX = "dbPrefix";
     private static final String OSS_END_POINT = "endPoint";
     private static final String OSS_PROXY_HOST = "proxyHost";
     private static final String OSS_PROXY_PORT = "proxyPort";
@@ -452,6 +454,11 @@ public class ConfigParser {
             assert (cosPathConfig != null);
             commonConfig.setCosPath(cosPathConfig);
 
+            String dbCosPathConfig = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_DB_COSPATH);
+	    if (dbCosPathConfig != null) {
+	        commonConfig.setDbCosPath(dbCosPathConfig);
+            }
+
             
             String realTimeCompare = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_REAL_TIME_COMPARE);
             if ((realTimeCompare != null) && !realTimeCompare.isEmpty()) {
@@ -774,6 +781,12 @@ public class ConfigParser {
             if (prefixConfig != null) {
                 copyOssConfig.setSrcPrefix(prefixConfig);
             }
+
+            String dbPrefixConfig = getConfigValue(prefs, sectionName, OSS_DB_PREFIX);
+            if (dbPrefixConfig != null) {
+                copyOssConfig.setDbPrefix(dbPrefixConfig);
+            }
+
 
             String bucket = getConfigValue(prefs, sectionName, OSS_BUCKET);
             assert (bucket != null);

@@ -12,6 +12,20 @@ public class CopyFromCompetitorConfig extends CommonConfig {
     private String srcProxyHost = "";
     private int srcProxyPort = -1;
 
+    private String dbPrefix;
+
+    public void setDbPrefix(String dbPrefix) {
+        this.dbPrefix= dbPrefix;
+    }
+
+    public String getDbPrefix() {
+        if (dbPrefix == null) {
+            return this.srcPrefix;
+        }
+        return this.dbPrefix;
+    }
+
+
     public void setUrlList(String urlList) {
         this.urlList = urlList;
     }
