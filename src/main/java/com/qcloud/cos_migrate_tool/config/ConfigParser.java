@@ -23,7 +23,7 @@ public class ConfigParser {
     private MigrateType migrateType = null;
 
     private Ini ini;
-    private static final String configFilePath = "conf/config.ini";
+    private static  String configFilePath = "conf/config.ini";
 
     private static final String MIGRATE_TYPE_SECTION_NAME = "migrateType";
     private static final String MIGRATE_TYPE = "type";
@@ -77,6 +77,7 @@ public class ConfigParser {
     private static final String OSS_END_POINT = "endPoint";
     private static final String OSS_PROXY_HOST = "proxyHost";
     private static final String OSS_PROXY_PORT = "proxyPort";
+    private static final String OSS_SRC_HTTPS = "srcHttps";
     private static final String OSS_URL_LIST = "uriList";
     private static final String UPYUN_COMPARE_MD5 = "compareMd5";
     private static final String UPYUN_ASCENDGING_ORDER = "acsendingOrder";
@@ -110,8 +111,12 @@ public class ConfigParser {
         return config;
     }
 
+    public static void setConfigFilePath(String configFilePath) {
+        ConfigParser.configFilePath = configFilePath;
+    }
     
     private Preferences buildConfigPrefs() {
+        System.out.println("cos migrate tool config path:" + configFilePath);
         File configFile = new File(configFilePath);
         if (!configFile.exists()) {
             String errMsg = String.format("config %s not exist or readable!", configFilePath);
@@ -827,7 +832,10 @@ public class ConfigParser {
             if ((urlList != null) && !urlList.isEmpty()) {
                 copyOssConfig.setUrlList(urlList);
             }
-            
+            String enableSrcHttpsStr = getConfigValue(prefs, sectionName, OSS_SRC_HTTPS);
+            if(enableSrcHttpsStr != null && !enableSrcHttpsStr.isEmpty()) {
+                copyOssConfig.setEnableSrcHttps(enableSrcHttpsStr);
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());

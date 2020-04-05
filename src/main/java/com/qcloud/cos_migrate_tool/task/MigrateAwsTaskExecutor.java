@@ -55,7 +55,11 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
         awsConf.setMaxErrorRetry(5);
         awsConf.setSocketTimeout(10000);
         awsConf.setMaxConnections(1024);
-        awsConf.setProtocol(Protocol.HTTPS);
+        if(config.isEnableSrcHttps()) {
+            awsConf.setProtocol(Protocol.HTTPS);
+        } else {
+            awsConf.setProtocol(Protocol.HTTP);
+        }
 
         if (!config.getSrcProxyHost().isEmpty()) {
             awsConf.setProxyHost(config.getSrcProxyHost());

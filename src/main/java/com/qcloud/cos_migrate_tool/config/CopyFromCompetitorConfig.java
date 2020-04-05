@@ -11,6 +11,7 @@ public class CopyFromCompetitorConfig extends CommonConfig {
 
     private String srcProxyHost = "";
     private int srcProxyPort = -1;
+    private boolean enableSrcHttps = false;
 
     private String dbPrefix;
 
@@ -136,5 +137,17 @@ public class CopyFromCompetitorConfig extends CommonConfig {
         this.srcAccessKeySecret = accessKeySecret;
     }
 
+    public boolean isEnableSrcHttps() {
+        return enableSrcHttps;
+    }
 
+    public void setEnableSrcHttps(String enableSrcHttps) {
+        if (enableSrcHttps.equalsIgnoreCase("on")) {
+            this.enableSrcHttps = true;
+        } else if (enableSrcHttps.equalsIgnoreCase("off")) {
+            this.enableSrcHttps = false;
+        } else {
+            throw new IllegalArgumentException("invalid srcHttps config. only support on/off");
+        }
+    }
 }

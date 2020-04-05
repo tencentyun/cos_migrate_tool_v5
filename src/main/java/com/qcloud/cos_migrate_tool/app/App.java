@@ -63,7 +63,9 @@ public class App {
     }
 
     public static void main(String[] args) {
-
+        if(0 < args.length) {
+            ConfigParser.setConfigFilePath(args[0]);
+        }
         if (!ConfigParser.instance.parse()) {
             return;
         }

@@ -44,8 +44,10 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
         COSCredentials srcCred =
                 new BasicCOSCredentials(config.getSrcAccessKeyId(), config.getSrcAccessKeySecret());
         ClientConfig clientConfig = new ClientConfig();
-        if (config.isEnableHttps()) {
+        if (config.isEnableSrcHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
+        } else {
+            clientConfig.setHttpProtocol(HttpProtocol.http);
         }
 
         clientConfig.setRegion(new Region(""));
@@ -53,7 +55,6 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
 
         clientConfig.setConnectionTimeout(5000);
         clientConfig.setSocketTimeout(5000);
-
         clientConfig.setUserAgent("cos-migrate-tool-v1.3.6");
         this.srcCosClient = new COSClient(srcCred, clientConfig);
         this.srcEndPoint = config.getSrcEndpoint();

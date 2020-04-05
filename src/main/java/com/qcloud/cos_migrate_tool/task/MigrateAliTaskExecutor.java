@@ -51,8 +51,11 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
         ossConf.setMaxErrorRetry(20);
         ossConf.setSocketTimeout(10000);
         ossConf.setMaxConnections(1024);
-        ossConf.setProtocol(Protocol.HTTP);
-
+        if(config.isEnableSrcHttps()) {
+            ossConf.setProtocol(Protocol.HTTPS);
+        } else {
+            ossConf.setProtocol(Protocol.HTTP);
+        }
         if (!config.getSrcProxyHost().isEmpty()) {
             ossConf.setProxyHost(config.getSrcProxyHost());
         }
