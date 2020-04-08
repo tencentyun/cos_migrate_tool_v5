@@ -10,6 +10,13 @@
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
 	</properties>
+	<repositories>
+	   <repository>
+	      <id>Central Maven repository</id>
+	      <name>Central Maven repository https</name>
+	      <url>https://repo.maven.apache.org/maven2</url>
+	   </repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -45,7 +52,7 @@
 		<dependency>
 			<groupId>com.qcloud</groupId>
 			<artifactId>cos_api</artifactId>
-			<version>5.6.3</version>
+			<version>5.6.19</version>
 		</dependency>
 
 		<dependency>
