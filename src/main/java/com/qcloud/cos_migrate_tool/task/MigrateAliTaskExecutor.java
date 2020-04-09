@@ -47,9 +47,9 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
         this.config = config;
 
         ClientConfiguration ossConf = new ClientConfiguration();
-        ossConf.setConnectionTimeout(5000);
+        ossConf.setConnectionTimeout(config.getSrcConnectTimeout());
         ossConf.setMaxErrorRetry(20);
-        ossConf.setSocketTimeout(10000);
+        ossConf.setSocketTimeout(config.getSrcSocketTimeout());
         ossConf.setMaxConnections(1024);
         if(config.isEnableSrcHttps()) {
             ossConf.setProtocol(Protocol.HTTPS);

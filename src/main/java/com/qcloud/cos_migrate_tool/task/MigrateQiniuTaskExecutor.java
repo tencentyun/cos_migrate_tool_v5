@@ -47,7 +47,6 @@ public class MigrateQiniuTaskExecutor extends TaskExecutor {
             cfg.proxy = new ProxyConfiguration(config.getSrcProxyHost(), config.getSrcProxyPort());
         }
         cfg.useHttpsDomains = false;
-
         cfg.zone = Zone.autoZone(); // 七牛使用autozone后，list性能不太好，不过一次获取1000，平摊起来耗能接受
         auth = Auth.create(srcAccessKeyId, srcAccessKeySecret);
 

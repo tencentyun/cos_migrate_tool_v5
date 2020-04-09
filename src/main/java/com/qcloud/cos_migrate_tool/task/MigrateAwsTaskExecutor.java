@@ -51,9 +51,9 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
         this.config = config;
 
         com.amazonaws.ClientConfiguration awsConf = new com.amazonaws.ClientConfiguration();
-        awsConf.setConnectionTimeout(5000);
+        awsConf.setConnectionTimeout(config.getSrcConnectTimeout());
         awsConf.setMaxErrorRetry(5);
-        awsConf.setSocketTimeout(10000);
+        awsConf.setSocketTimeout(config.getSrcSocketTimeout());
         awsConf.setMaxConnections(1024);
         if(config.isEnableSrcHttps()) {
             awsConf.setProtocol(Protocol.HTTPS);

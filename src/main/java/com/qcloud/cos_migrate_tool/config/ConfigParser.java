@@ -78,6 +78,8 @@ public class ConfigParser {
     private static final String OSS_PROXY_HOST = "proxyHost";
     private static final String OSS_PROXY_PORT = "proxyPort";
     private static final String OSS_SRC_HTTPS = "srcHttps";
+    private static final String OSS_SRC_SOCKET_TIMEOUT = "srcSocketTimeout";
+    private static final String OSS_SRC_CONNECT_TIMEOUT = "srcConnectTimeout";
     private static final String OSS_URL_LIST = "uriList";
     private static final String UPYUN_COMPARE_MD5 = "compareMd5";
     private static final String UPYUN_ASCENDGING_ORDER = "acsendingOrder";
@@ -835,6 +837,14 @@ public class ConfigParser {
             String enableSrcHttpsStr = getConfigValue(prefs, sectionName, OSS_SRC_HTTPS);
             if(enableSrcHttpsStr != null && !enableSrcHttpsStr.isEmpty()) {
                 copyOssConfig.setEnableSrcHttps(enableSrcHttpsStr);
+            }
+            String srcSocketTimeout = getConfigValue(prefs, sectionName, OSS_SRC_SOCKET_TIMEOUT);
+            if (srcSocketTimeout != null && !srcSocketTimeout.isEmpty()) {
+                copyOssConfig.setSrcSocketTimeout(Integer.valueOf(srcSocketTimeout));
+            }
+            String srcConnectTimeout = getConfigValue(prefs, sectionName, OSS_SRC_CONNECT_TIMEOUT);
+            if (srcConnectTimeout != null && !srcConnectTimeout.isEmpty()) {
+                copyOssConfig.setSrcConnectTimeout(Integer.valueOf(srcConnectTimeout));
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());

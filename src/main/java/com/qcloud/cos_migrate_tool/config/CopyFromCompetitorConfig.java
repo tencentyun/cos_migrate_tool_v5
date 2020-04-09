@@ -14,6 +14,8 @@ public class CopyFromCompetitorConfig extends CommonConfig {
     private boolean enableSrcHttps = false;
 
     private String dbPrefix;
+    private int srcSocketTimeout = 10000;
+    private int srcConnectTimeout = 5000;
 
     public void setDbPrefix(String dbPrefix) {
         this.dbPrefix= dbPrefix;
@@ -149,5 +151,27 @@ public class CopyFromCompetitorConfig extends CommonConfig {
         } else {
             throw new IllegalArgumentException("invalid srcHttps config. only support on/off");
         }
+    }
+
+    public int getSrcSocketTimeout() {
+        return srcSocketTimeout;
+    }
+
+    public void setSrcSocketTimeout(int srcSocketTimeout) {
+        if(srcSocketTimeout <= 0) {
+            throw new IllegalArgumentException("srcSocketTimeout is below or equal to zero");
+        }
+        this.srcSocketTimeout = srcSocketTimeout;
+    }
+
+    public int getSrcConnectTimeout() {
+        return srcConnectTimeout;
+    }
+
+    public void setSrcConnectTimeout(int srcConnectTimeout) {
+        if(srcConnectTimeout <= 0) {
+            throw new IllegalArgumentException("srcConnectTimeout is below or equal to zero");
+        }
+        this.srcConnectTimeout = srcConnectTimeout;
     }
 }
