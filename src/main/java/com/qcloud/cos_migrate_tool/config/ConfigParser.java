@@ -62,6 +62,8 @@ public class ConfigParser {
             "ignoreModifiedTimeLessThanSeconds";
     private static final String IGNORE_SUFFIX = "ignoreSuffix";
     private static final String IGNORE_EMPTY_FILE = "ignoreEmptyFile";
+    private static final String FILE_LIST_MODE = "fileListMode";
+    private static final String FILE_LIST_PATH = "fileListPath";
 
     private static final String ALI_SECTION_NAME = "migrateAli";
     private static final String AWS_SECTION_NAME = "migrateAws";
@@ -612,7 +614,14 @@ public class ConfigParser {
             if (ignoreEmptyFile != null && (ignoreEmptyFile.compareToIgnoreCase("on") == 0)) {
                 copyLocalConfig.setIgnoreEmptyFile(true);
             }
-
+            String fileListMode = getConfigValue(prefs, LOCAL_SECTION_NAME, FILE_LIST_MODE);
+            if(fileListMode != null && (fileListMode.compareToIgnoreCase("on") == 0)) {
+                copyLocalConfig.setFileListMode(true);
+            }
+            String fileListPath = getConfigValue(prefs, LOCAL_SECTION_NAME, FILE_LIST_PATH);
+            if(fileListPath != null) {
+                copyLocalConfig.setFileListPath(fileListPath);
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());

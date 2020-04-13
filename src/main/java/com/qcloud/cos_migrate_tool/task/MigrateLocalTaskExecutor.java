@@ -2,6 +2,9 @@ package com.qcloud.cos_migrate_tool.task;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,12 +30,14 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
     private String bucketName;
     private String localFolder;
     private String cosFolder;
+    private CopyFromLocalConfig config;
 
     public MigrateLocalTaskExecutor(CopyFromLocalConfig config) {
         super(MigrateType.MIGRATE_FROM_LOCAL, config);
         this.bucketName = config.getBucketName();
         this.localFolder = config.getLocalPath();
         this.cosFolder = config.getCosPath();
+        this.config = config;
     }
 
     @Override
@@ -52,7 +57,65 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
         return dbFolderPath;
     }
 
+    private void buildFileListTask() {
+        String localPathPrefix = "";
+        if(config.getLocalPath() != null) {
+            localPathPrefix = config.getLocalPath();
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(new File(config.getFileListPath())))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                Path file = Paths.get(localPathPrefix, line);
+                String localPath = "";
+                try {
+                    localPath = SystemUtils.formatLocalPath(file.toString());
+                } catch (IllegalArgumentException e) {
+                    String printMsg = String.format("skip the file for illegal utf-8 letter, [local_file:%s]",
+                            file.toString());
+                    System.out.println(printMsg);
+                    log.error(printMsg);
+                    TaskStatics.instance.addConditionNotMatchCnt();
+                    continue;
+                }
+                try {
+                    String reason = config.needToMigrate(file, localPath);
+                    if (reason.isEmpty()) {
+                        File localFile = new File(file.toString());
+
+                        MigrateLocalTask migrateLocalTask = new MigrateLocalTask(semaphore,
+                                config, smallFileTransferManager,
+                                bigFileTransferManager, recordDb, localFile);
+                        AddTask(migrateLocalTask);
+                    } else {
+                        String printMsg = String.format(
+                                "[condition_not_match] [reason: %s]  [local_file: %s]", reason,
+                                file.toString());
+                        System.out.println(printMsg);
+                        log.info(printMsg);
+                        TaskStatics.instance.addConditionNotMatchCnt();
+                    }
+                } catch (InterruptedException e) {
+                    log.error("add task to queue occur a exception", e);
+                    throw new IOException(e.getMessage());
+                }
+            }
+            TaskStatics.instance.setListFinished(true);
+        } catch (FileNotFoundException e) {
+            log.error("fileList path not exist:", e);
+            TaskStatics.instance.setListFinished(false);
+        } catch (IOException e) {
+            log.error("error ocured:", e);
+            TaskStatics.instance.setListFinished(false);
+        }
+    }
+
     public void buildTask() {
+        if(config.isFileListMode()) {
+            buildFileListTask();
+            return;
+        }
+
         SimpleFileVisitor<Path> finder = new SimpleFileVisitor<Path>() {
 
             @Override

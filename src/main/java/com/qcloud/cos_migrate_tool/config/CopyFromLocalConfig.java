@@ -13,6 +13,8 @@ public class CopyFromLocalConfig extends CommonConfig {
     private long ignoreModifiedTimeLessThan = -1;
     private Set<String> ignoreSuffixs = new HashSet<String>();
     boolean ignoreEmptyFile = false;
+    boolean fileListMode = false;
+    private String fileListPath;
 
     public void setIgnoreEmptyFile(boolean ignoreEmptyFile) {
         this.ignoreEmptyFile = ignoreEmptyFile;
@@ -89,5 +91,20 @@ public class CopyFromLocalConfig extends CommonConfig {
 
     public long getIgnoreModifiedTimeLessThan() {
         return ignoreModifiedTimeLessThan;
+    }
+    public boolean isFileListMode() {
+        return fileListMode;
+    }
+
+    public void setFileListMode(boolean fileListMode) {
+        this.fileListMode = fileListMode;
+    }
+
+    public String getFileListPath() {
+        return fileListPath;
+    }
+
+    public void setFileListPath(String fileListPath) {
+        this.fileListPath = fileListPath;
     }
 }
