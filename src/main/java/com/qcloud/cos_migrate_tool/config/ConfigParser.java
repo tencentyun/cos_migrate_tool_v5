@@ -42,6 +42,7 @@ public class ConfigParser {
     private static final String COMMON_STORAGE_CLASS = "storageClass";
     private static final String COMMON_SMALL_FILE_EXECUTOR_NUM = "smallFileExecutorNum";
     private static final String COMMON_BIG_FILE_EXECUTOR_NUM = "bigFileExecutorNum";
+    private static final String COMMON_BIG_FILE_UPLOAD_PART_SIZE = "bigFileUploadPartSize";
     private static final String COMMON_ENTIRE_FILE_MD5_ATTACHED = "entireFileMd5Attached";
     private static final String COMMON_DAEMON_MODE = "daemonMode";
     private static final String COMMON_DAEMON_MODE_INTERVAL = "daemonModeInterVal";
@@ -496,6 +497,12 @@ public class ConfigParser {
                     getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_BIG_FILE_EXECUTOR_NUM);
             assert (bigFileExecutorNumberStr != null);
             commonConfig.setBigFileUploadExecutorNum(bigFileExecutorNumberStr);
+
+            String bigFileUploadPartSizeStr =
+                    getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_BIG_FILE_UPLOAD_PART_SIZE);
+            if(bigFileUploadPartSizeStr != null) {
+                commonConfig.setBigFileUploadPartSize(Long.parseLong(bigFileUploadPartSizeStr));
+            }
 
             String storageClassStr =
                     getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_STORAGE_CLASS);

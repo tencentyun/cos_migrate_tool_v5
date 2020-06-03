@@ -24,6 +24,7 @@ public class CommonConfig {
     private StorageClass storageClass = StorageClass.Standard;
     private int smallFileExecutorNumber = 64;
     private int bigFileExecutorNum = 4;
+    private long bigFileUploadPartSize = 5 * 1024 * 1024;
     private long smallFileThreshold = 5 * 1024 * 1024;
     private boolean damonMode = false;
     private long damonInterVal = 60;
@@ -413,5 +414,13 @@ public class CommonConfig {
     
     public String getOutputFinishedFilePath() {
         return this.outputFinishedFilePath;
+    }
+
+    public long getBigFileUploadPartSize() {
+        return bigFileUploadPartSize;
+    }
+
+    public void setBigFileUploadPartSize(long bigFileUploadPartSize) {
+        this.bigFileUploadPartSize = bigFileUploadPartSize;
     }
 }
