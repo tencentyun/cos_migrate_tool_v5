@@ -87,6 +87,9 @@ public abstract class TaskExecutor {
         
         this.bigFileTransferManager.getConfiguration()
                 .setMultipartUploadThreshold(config.getSmallFileThreshold());
+
+        this.bigFileTransferManager.getConfiguration().
+                setMinimumUploadPartSize(config.getBigFileUploadPartSize());
     }
 
     protected abstract String buildTaskDbComment();
