@@ -78,8 +78,8 @@ public class CopyFromCompetitorConfig extends CommonConfig {
     }
 
     public void setSrcPrefix(String prefix) {
-        if (srcPrefix.equals("/")) {
-            this.srcPrefix = "";
+        if (prefix.startsWith("/")) {
+            this.srcPrefix = prefix.substring(1, prefix.length() - 1);
         } else {
             this.srcPrefix = prefix;
         }
