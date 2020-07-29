@@ -1,5 +1,6 @@
 package com.qcloud.cos_migrate_tool.task;
 
+import java.io.ByteArrayInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -204,24 +205,39 @@ public abstract class Task implements Runnable {
 
     private String uploadSmallFile(PutObjectRequest putObjectRequest) throws InterruptedException {
         Upload upload = smallFileTransfer.upload(putObjectRequest);
-        return showTransferProgressAndGetRequestId(upload, false, putObjectRequest.getKey(),
-                putObjectRequest.getFile().lastModified());
+        File file = putObjectRequest.getFile();
+        long mtime = 0;
+        if(file != null){
+            mtime = file.lastModified();
+        }
+        return showTransferProgressAndGetRequestId(upload, false, putObjectRequest.getKey(), mtime);
     }
 
 
     public String uploadFile(String bucketName, String cosPath, File localFile,
             StorageClass storageClass, boolean entireMd5Attached, ObjectMetadata objectMetadata,
             AccessControlList acl) throws Exception {
-        PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
+        PutObjectRequest putObjectRequest;
+        if(localFile.isDirectory()) {
+            if(!cosPath.endsWith("/")) {
+                cosPath += "/";
+            }
+            byte[] contentByteArray = new byte[0];
+            objectMetadata.setContentType("application/x-directory");
+            objectMetadata.setContentLength(0);
+            putObjectRequest = new PutObjectRequest(bucketName, cosPath, new ByteArrayInputStream(contentByteArray),
+                    objectMetadata);
+        } else {
+            putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
+        }
         putObjectRequest.setStorageClass(storageClass);
 
         if (acl != null) {
             putObjectRequest.setAccessControlList(acl);
         }
 
-        if (entireMd5Attached) {
+        if (entireMd5Attached && !localFile.isDirectory()) {
             String md5 = Md5Utils.md5Hex(localFile);
-            
             String upyunTag = objectMetadata.getUserMetaDataOf("upyun-etag");
             if (upyunTag != null) {
                 if (!md5.equalsIgnoreCase(upyunTag)) {
