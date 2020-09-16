@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
+import com.qcloud.cos.auth.BasicSessionCredentials;
 import com.qcloud.cos.auth.COSCredentials;
 import com.qcloud.cos.http.HttpProtocol;
 import com.qcloud.cos.model.COSObjectSummary;
@@ -38,8 +39,15 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
 
     public MigrateCopyBucketTaskExecutor(CopyBucketConfig config) {
         super(MigrateType.MIGRATE_FROM_COS_BUCKET_COPY, config);
-
-        COSCredentials srcCred = new BasicCOSCredentials(config.getSrcAk(), config.getSrcSk());
+        String src_token = ((CopyBucketConfig) config).getSrcToken();
+        COSCredentials srcCred = null;
+        if (src_token != null && !src_token.trim().isEmpty()) {
+            log.info("Use temporary token to list object");
+            System.out.println("Use temporary token to list object");
+            srcCred = new BasicSessionCredentials(config.getSrcAk(), config.getSrcSk(), src_token);
+        } else {
+            srcCred = new BasicCOSCredentials(config.getSrcAk(), config.getSrcSk());
+        }
         ClientConfig clientConfig = new ClientConfig(new Region(config.getSrcRegion()));
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);

@@ -10,6 +10,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import com.qcloud.cos.auth.BasicSessionCredentials;
+import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +59,18 @@ public abstract class TaskExecutor {
         this.smallFileUploadExecutorNum = config.getSmallFileExecutorNumber();
         this.bigFileUploadExecutorNum = config.getBigFileExecutorNum();
 
-        COSCredentials cred = new BasicCOSCredentials(config.getAk(), config.getSk());
+        COSCredentials cred = null;
+        String token = config.getToken();
+        // supporting temporary token
+        if (token != null && !token.trim().isEmpty()) {
+            log.info("Use temporary token to put object");
+            System.out.println("Use temporary token to put object");
+            cred = new BasicSessionCredentials(config.getAk(), config.getSk(), token);
+        } else {
+            cred = new BasicCOSCredentials(config.getAk(), config.getSk());
+        }
+
+        //COSCredentials cred = new BasicCOSCredentials(config.getAk(), config.getSk());
         ClientConfig clientConfig = new ClientConfig(new Region(config.getRegion()));
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);

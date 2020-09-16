@@ -17,6 +17,7 @@ public class CommonConfig {
     private String region;
     private String ak;
     private String sk;
+    private String token;
     private String cosPath;
     private boolean enableHttps;
     private boolean entireFileMd5Attached;
@@ -155,6 +156,17 @@ public class CommonConfig {
             throw new IllegalArgumentException("secretValue is missing");
         }
         this.sk = sk;
+    }
+
+    public String getToken() { 
+        return token;
+    }
+
+    public void setToken(String token) {
+        if (token.trim().isEmpty()) {
+            throw new IllegalArgumentException("token is empty");
+        }
+        this.token = token.trim(); 
     }
 
     public String getCosPath() {
