@@ -41,7 +41,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
         super(MigrateType.MIGRATE_FROM_COS_BUCKET_COPY, config);
         String src_token = ((CopyBucketConfig) config).getSrcToken();
         COSCredentials srcCred = null;
-        if (src_token != null && !src_token.trim().isEmpty()) {
+        if (src_token != null && !src_token.isEmpty()) {
             log.info("Use temporary token to list object");
             System.out.println("Use temporary token to list object");
             srcCred = new BasicSessionCredentials(config.getSrcAk(), config.getSrcSk(), src_token);

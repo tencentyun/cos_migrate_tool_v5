@@ -62,7 +62,7 @@ public abstract class TaskExecutor {
         COSCredentials cred = null;
         String token = config.getToken();
         // supporting temporary token
-        if (token != null && !token.trim().isEmpty()) {
+        if (token != null && !token.isEmpty()) {
             log.info("Use temporary token to put object");
             System.out.println("Use temporary token to put object");
             cred = new BasicSessionCredentials(config.getAk(), config.getSk(), token);
