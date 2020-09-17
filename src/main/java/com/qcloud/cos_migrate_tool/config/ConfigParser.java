@@ -34,6 +34,7 @@ public class ConfigParser {
     private static final String COMMON_BUCKETNAME = "bucketName";
     private static final String COMMON_AK = "secretId";
     private static final String COMMON_SK = "secretKey";
+    private static final String COMMON_TOKEN = "token";
     private static final String COMMON_COSPATH = "cosPath";
     private static final String COMMON_DB_COSPATH = "dbCosPath";
     private static final String COMMON_HTTPS = "https";
@@ -94,6 +95,7 @@ public class ConfigParser {
     private static final String COPY_SRC_BUCKETNAME = "srcBucketName";
     private static final String COPY_SRC_SECRETID = "srcSecretId";
     private static final String COPY_SRC_SECRETKEY = "srcSecretKey";
+    private static final String COPY_SRC_TOKEN = "srcToken";
     private static final String COPY_SRC_COSPATH = "srcCosPath";
     private static final String COPY_SRC_ENDPOINT_SUFFIX = "srcEndPointSuffix";
     private static final String COPY_SRC_FILE_LIST = "srcFileList";
@@ -457,7 +459,10 @@ public class ConfigParser {
                 assert (sk != null);
                 commonConfig.setSk(sk);
 
-
+                String token = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_TOKEN);
+                if (token != null) {
+                    commonConfig.setToken(token);
+                }
             }
             
             String cosPathConfig = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_COSPATH);
@@ -893,6 +898,11 @@ public class ConfigParser {
             assert (srcSecretKey != null);
             copyBucketConfig.setSrcSk(srcSecretKey);
 
+            String token = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_TOKEN);
+            if (token != null && !token.trim().isEmpty()) {
+                copyBucketConfig.setSrcToken(token);
+            }
+            
             String srcCosPath = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_COSPATH);
             assert (srcCosPath != null);
             copyBucketConfig.setSrcCosPath(srcCosPath);

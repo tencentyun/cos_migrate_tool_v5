@@ -11,6 +11,7 @@ public class CopyBucketConfig extends CommonConfig {
     private String srcBucket;
     private String srcAk;
     private String srcSk;
+    private String srcToken;
     private String srcCosPath;
     private String srcEndpointSuffix;
     private String srcFileList = "";
@@ -72,6 +73,17 @@ public class CopyBucketConfig extends CommonConfig {
             throw new IllegalArgumentException("srcSecretKey value is missing");
         }
         this.srcSk = srcSk.trim();
+    }
+
+    public String getSrcToken() {
+        return srcToken;
+    }
+
+    public void setSrcToken(String srcToken) {
+        if (srcToken.trim().isEmpty()) {
+            throw new IllegalArgumentException("srcToken is empty");
+        }
+        this.srcToken = srcToken.trim();
     }
 
     public String getSrcCosPath() {
