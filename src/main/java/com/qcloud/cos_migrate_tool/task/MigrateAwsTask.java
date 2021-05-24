@@ -1,7 +1,6 @@
 package com.qcloud.cos_migrate_tool.task;
 
 import java.io.File;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
@@ -132,6 +131,21 @@ public class MigrateAwsTask extends Task {
         if (isExist(awsRecordElement, true)) {
             TaskStatics.instance.addSkipCnt();
             return;
+        }
+
+        if (config.skipSamePath()) {
+            try {
+                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_AWS, config.getBucketName(), cosPath)) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
+            } catch (Exception e) {
+                String printMsg = String.format("[fail] task_info: %s", awsRecordElement.buildKey());
+                System.err.println(printMsg);
+                log.error("[fail] task_info: {}, exception: {}", awsRecordElement.buildKey(), e.toString());
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
         }
 
         // download

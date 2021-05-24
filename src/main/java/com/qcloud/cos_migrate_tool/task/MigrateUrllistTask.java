@@ -75,7 +75,21 @@ public class MigrateUrllistTask extends Task {
             TaskStatics.instance.addSkipCnt();
             return;
         }
-        
+
+        if (config.skipSamePath()) {
+            try {
+                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_URLLIST, config.getBucketName(), cosPath)) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
+            } catch (Exception e) {
+                String printMsg = String.format("[fail] task_info: %s", urllistRecordElement.buildKey());
+                System.err.println(printMsg);
+                log.error("[fail] task_info: {}, exception: {}", urllistRecordElement.buildKey(), e.toString());
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
+        }
 
         File localFile = new File(localPath);
 

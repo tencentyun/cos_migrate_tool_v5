@@ -1,10 +1,7 @@
 package com.qcloud.cos_migrate_tool.task;
 
 import java.io.File;
-import java.net.URL;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
@@ -12,9 +9,7 @@ import com.qcloud.cos.COSClient;
 import com.qcloud.cos.event.ProgressEvent;
 import com.qcloud.cos.event.ProgressEventType;
 import com.qcloud.cos.event.ProgressListener;
-import com.qcloud.cos.http.HttpMethodName;
 import com.qcloud.cos.model.AccessControlList;
-import com.qcloud.cos.model.GeneratePresignedUrlRequest;
 import com.qcloud.cos.model.GetObjectRequest;
 import com.qcloud.cos.model.Grant;
 import com.qcloud.cos.model.ObjectMetadata;
@@ -155,6 +150,21 @@ public class MigrateCspTask extends Task {
         if (isExist(cspRecordElement, true)) {
             TaskStatics.instance.addSkipCnt();
             return;
+        }
+
+        if (config.skipSamePath()) {
+            try {
+                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_CSP, config.getBucketName(), cosPath)) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
+            } catch (Exception e) {
+                String printMsg = String.format("[fail] task_info: %s", cspRecordElement.buildKey());
+                System.err.println(printMsg);
+                log.error("[fail] task_info: {}, exception: {}", cspRecordElement.buildKey(), e.toString());
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
         }
 
         // download

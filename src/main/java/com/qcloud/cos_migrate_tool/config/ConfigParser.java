@@ -1,11 +1,7 @@
 package com.qcloud.cos_migrate_tool.config;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -56,6 +52,7 @@ public class ConfigParser {
     private static final String COMMON_REAL_TIME_COMPARE = "realTimeCompare";
     private static final String COMMON_OUTPUT_FINISHED_FILE = "outputFinishedFileFolder";
     private static final String COMMON_RESUME = "resume";
+    private static final String COMMON_SKIP_SAME_PATH = "skipSamePath";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -580,6 +577,10 @@ public class ConfigParser {
                 commonConfig.setResume(resume);
             }
             
+            String skipSamePath = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_SKIP_SAME_PATH);
+            if (skipSamePath != null && !skipSamePath.isEmpty()) {
+                commonConfig.setSkipSamePath(skipSamePath);
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());

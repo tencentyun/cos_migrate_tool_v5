@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
-import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyFromQiniuConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
@@ -60,6 +59,22 @@ public class MigrateQiniuTask extends Task {
             TaskStatics.instance.addSkipCnt();
             return;
         }
+
+        if (config.skipSamePath()) {
+            try {
+                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_QINIU, config.getBucketName(), cosPath)) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
+            } catch (Exception e) {
+                String printMsg = String.format("[fail] task_info: %s", qiniuRecordElement.buildKey());
+                System.err.println(printMsg);
+                log.error("[fail] task_info: {}, exception: {}", qiniuRecordElement.buildKey(), e.toString());
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
+        }
+
 
         // generate download url
         String url = "http://" + ((CopyFromQiniuConfig) config).getSrcEndpoint() + "/" + srcKey;

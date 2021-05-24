@@ -15,6 +15,7 @@ import com.qcloud.cos.region.Region;
 import com.qcloud.cos.transfer.Copy;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
+import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCopyBucketRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
@@ -97,6 +98,22 @@ public class MigrateCopyBucketTask extends Task {
             TaskStatics.instance.addSkipCnt();
             return;
         }
+
+        if (config.skipSamePath()) {
+            try {
+                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_COS_BUCKET_COPY, destBucketName, destKey)) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
+            } catch (Exception e) {
+                String printMsg = String.format("[fail] task_info: %s", migrateCopyBucketRecordElement.buildKey());
+                System.err.println(printMsg);
+                log.error("[fail] task_info: {}, exception: {}", migrateCopyBucketRecordElement.buildKey(), e.toString());
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
+        }
+
         CopyObjectRequest copyObjectRequest = new CopyObjectRequest(new Region(srcRegion),
                 srcBucketName, srcKey, destBucketName, destKey);
         

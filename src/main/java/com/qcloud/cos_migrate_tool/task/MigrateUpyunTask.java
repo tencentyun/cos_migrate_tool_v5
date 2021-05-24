@@ -1,30 +1,20 @@
 package com.qcloud.cos_migrate_tool.task;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Logger;
 
 import com.UpYun;
-
-import com.qcloud.cos.COSClient;
-import com.qcloud.cos.exception.CosClientException;
 import com.qcloud.cos.exception.CosServiceException;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos.utils.UrlEncoderUtils;
-import com.qcloud.cos_migrate_tool.config.CopyFromAliConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromUpyunConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCompetitorRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
-import com.upyun.UpException;
 
 public class MigrateUpyunTask extends Task {
 
@@ -104,6 +94,11 @@ public class MigrateUpyunTask extends Task {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }
+
+                if (config.skipSamePath()) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
             } catch (CosServiceException e) {
                 if (e.getStatusCode() != 404) {
                     log.error("[fail] task_info: {}, exception: {}", upyunRecordElement.buildKey(),
@@ -131,6 +126,20 @@ public class MigrateUpyunTask extends Task {
             return;
         }
 
+        if (config.skipSamePath()) {
+            try {
+                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_UPYUN, config.getBucketName(), cosPath)) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
+            } catch (Exception e) {
+                String printMsg = String.format("[fail] task_info: %s", upyunRecordElement.buildKey());
+                System.err.println(printMsg);
+                log.error("[fail] task_info: {}, exception: {}", upyunRecordElement.buildKey(), e.toString());
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
+        }
 
         String localPath = config.getTempFolderPath() + UUID.randomUUID().toString();
         File localFile = new File(localPath);

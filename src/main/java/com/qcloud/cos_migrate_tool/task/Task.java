@@ -1,19 +1,9 @@
 package com.qcloud.cos_migrate_tool.task;
 
 import java.io.ByteArrayInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
-
-import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.qcloud.cos.exception.CosServiceException;
 import com.qcloud.cos.model.AccessControlList;
@@ -29,11 +19,15 @@ import com.qcloud.cos.transfer.TransferProgress;
 import com.qcloud.cos.transfer.Upload;
 import com.qcloud.cos.utils.Md5Utils;
 import com.qcloud.cos_migrate_tool.config.CommonConfig;
-import com.qcloud.cos_migrate_tool.config.ConfigParser;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
+import com.qcloud.cos_migrate_tool.record.MigrateCompetitorRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.record.RecordDb.QUERY_RESULT;
 import com.qcloud.cos_migrate_tool.record.RecordElement;
+
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class Task implements Runnable {
     private Semaphore semaphore;
@@ -278,6 +272,29 @@ public abstract class Task implements Runnable {
             }
         }
         return null;
+    }
+
+    public boolean isExistOnCOS(TransferManager transferManager, MigrateType migrateType, String bucketName, String cosPath) {
+        try {
+            ObjectMetadata objectMetadata = transferManager.getCOSClient().getObjectMetadata(bucketName, cosPath);
+            MigrateCompetitorRecordElement record = new MigrateCompetitorRecordElement(migrateType, bucketName, cosPath,
+                                                            objectMetadata.getETag(), objectMetadata.getContentLength());
+            log.info("skip! file on cos, task_info: [key: {}], [value: {}]", record.buildKey(),
+                    record.buildValue());
+            return true;
+        } catch (CosServiceException e) {
+            if (e.getStatusCode() == 404) {
+                return false;
+            } else if (e.getStatusCode() == 503) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+            }
+
+            throw e;
+        }
     }
 
     public abstract void doTask();

@@ -1,7 +1,6 @@
 package com.qcloud.cos_migrate_tool.config;
 
 import java.io.File;
-import java.util.regex.Pattern;
 
 import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos_migrate_tool.utils.PathUtils;
@@ -40,6 +39,19 @@ public class CommonConfig {
     private String outputFinishedFilePath = "";
     private boolean isResume = false;
     private String dbCosPath = "";
+    private boolean skipSamePath = false;
+
+    public void setSkipSamePath(String skipSamePath) {
+        if (skipSamePath.compareToIgnoreCase("true") == 0) {
+            this.skipSamePath = true;
+        } else if (skipSamePath.compareToIgnoreCase("false") != 0) {
+            throw new IllegalArgumentException("skipSamePath invalid. should be true or false");
+        }
+    }
+
+    public boolean skipSamePath() {
+        return this.skipSamePath;
+    }
     
     public void setResume(String isResume) {
         if (isResume.compareToIgnoreCase("true") == 0) {

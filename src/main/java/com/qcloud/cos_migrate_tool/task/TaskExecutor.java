@@ -10,14 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import com.qcloud.cos.auth.BasicSessionCredentials;
-import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
+import com.qcloud.cos.auth.BasicSessionCredentials;
 import com.qcloud.cos.auth.COSCredentials;
 import com.qcloud.cos.http.HttpProtocol;
 import com.qcloud.cos.region.Region;
@@ -27,6 +23,9 @@ import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class TaskExecutor {
     private static final Logger log = LoggerFactory.getLogger(TaskExecutor.class);

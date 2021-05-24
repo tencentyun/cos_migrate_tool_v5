@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Logger;
 
 import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.common.utils.CRC64;
@@ -16,8 +14,6 @@ import com.aliyun.oss.event.ProgressEventType;
 import com.aliyun.oss.event.ProgressListener;
 import com.aliyun.oss.model.GetObjectRequest;
 import com.aliyun.oss.model.ObjectMetadata;
-import com.qcloud.cos.COSClient;
-import com.qcloud.cos.exception.CosClientException;
 import com.qcloud.cos.exception.CosServiceException;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyFromAliConfig;
@@ -151,6 +147,11 @@ public class MigrateAliTask extends Task {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }
+
+                if (config.skipSamePath()) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
             } catch (CosServiceException e) {
                 if (e.getStatusCode() != 404) {
                     log.error("[fail] task_info: {}, exception: {}", ossRecordElement.buildKey(),
@@ -176,6 +177,21 @@ public class MigrateAliTask extends Task {
         } else if (isExist(ossRecordElement, true)) {
             TaskStatics.instance.addSkipCnt();
             return;
+        }
+
+        if (config.skipSamePath()) {
+            try {
+                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_ALI, config.getBucketName(), cosPath)) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
+            } catch (Exception e) {
+                String printMsg = String.format("[fail] task_info: %s", ossRecordElement.buildKey());
+                System.err.println(printMsg);
+                log.error("[fail] task_info: {}, exception: {}", ossRecordElement.buildKey(), e.toString());
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
         }
 
         ObjectMetadata aliMetaData = null;

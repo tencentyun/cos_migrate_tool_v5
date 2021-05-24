@@ -9,18 +9,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Semaphore;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos.transfer.TransferManager;
-import com.qcloud.cos_migrate_tool.config.ConfigParser;
 import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateLocalRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MigrateLocalTask extends Task {
     private static final Logger log = LoggerFactory.getLogger(MigrateLocalTask.class);
@@ -78,6 +77,21 @@ public class MigrateLocalTask extends Task {
         if (isExist(migrateLocalRecordElement, true)) {
             TaskStatics.instance.addSkipCnt();
             return;
+        }
+
+        if (config.skipSamePath()) {
+            try {
+                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_LOCAL, config.getBucketName(), cosPath)) {
+                    TaskStatics.instance.addSkipCnt();
+                    return;
+                }
+            } catch (Exception e) {
+                String printMsg = String.format("[fail] task_info: %s", migrateLocalRecordElement.buildKey());
+                System.err.println(printMsg);
+                log.error("[fail] task_info: {}, exception: {}", migrateLocalRecordElement.buildKey(), e.toString());
+                TaskStatics.instance.addFailCnt();
+                return;
+            }
         }
 
         try {
