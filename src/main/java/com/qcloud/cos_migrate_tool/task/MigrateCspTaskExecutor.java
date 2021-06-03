@@ -1,37 +1,25 @@
 package com.qcloud.cos_migrate_tool.task;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.qcloud.cos.COSClient;
-import com.qcloud.cos.ClientConfig;
-import com.qcloud.cos.auth.BasicCOSCredentials;
-import com.qcloud.cos.auth.COSCredentials;
-import com.qcloud.cos.endpoint.SuffixEndpointBuilder;
-import com.qcloud.cos.exception.CosServiceException;
-import com.qcloud.cos.http.HttpProtocol;
-import com.qcloud.cos.model.COSObjectSummary;
-import com.qcloud.cos.model.ListObjectsRequest;
-import com.qcloud.cos.model.ObjectListing;
-import com.qcloud.cos.region.Region;
 import com.qcloud.cos_migrate_tool.config.CopyFromCspConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class MigrateCspTaskExecutor extends TaskExecutor {
     private static final Logger log = LoggerFactory.getLogger(MigrateCspTaskExecutor.class);
 
-    private COSClient srcCosClient;
+    private com.branch.cos.COSClient srcCosClient;
     private String cosFolder;
     private String srcBucketName;
     // private String srcCosPath;
@@ -41,22 +29,22 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
     public MigrateCspTaskExecutor(CopyFromCspConfig config) {
         super(MigrateType.MIGRATE_FROM_CSP, config);
 
-        COSCredentials srcCred =
-                new BasicCOSCredentials(config.getSrcAccessKeyId(), config.getSrcAccessKeySecret());
-        ClientConfig clientConfig = new ClientConfig();
+        com.branch.cos.auth.COSCredentials srcCred =
+                new com.branch.cos.auth.BasicCOSCredentials(config.getSrcAccessKeyId(), config.getSrcAccessKeySecret());
+        com.branch.cos.ClientConfig clientConfig = new com.branch.cos.ClientConfig();
         if (config.isEnableSrcHttps()) {
-            clientConfig.setHttpProtocol(HttpProtocol.https);
+            clientConfig.setHttpProtocol(com.branch.cos.http.HttpProtocol.https);
         } else {
-            clientConfig.setHttpProtocol(HttpProtocol.http);
+            clientConfig.setHttpProtocol(com.branch.cos.http.HttpProtocol.http);
         }
 
-        clientConfig.setRegion(new Region(""));
-        clientConfig.setEndpointBuilder(new SuffixEndpointBuilder(config.getSrcEndpoint()));
+        clientConfig.setRegion(new com.branch.cos.region.Region(""));
+        clientConfig.setEndpointBuilder(new com.branch.cos.endpoint.SuffixEndpointBuilder(config.getSrcEndpoint()));
 
         clientConfig.setConnectionTimeout(config.getSrcConnectTimeout());
         clientConfig.setSocketTimeout(config.getSrcSocketTimeout());
         clientConfig.setUserAgent("cos-migrate-tool-v1.3.6");
-        this.srcCosClient = new COSClient(srcCred, clientConfig);
+        this.srcCosClient = new com.branch.cos.COSClient(srcCred, clientConfig);
         this.srcEndPoint = config.getSrcEndpoint();
         this.srcBucketName = config.getSrcBucket();
         this.srcPrefix = config.getSrcPrefix();
@@ -90,10 +78,10 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
 
 
 
-        ListObjectsRequest listObjectsRequest =
-                new ListObjectsRequest(srcBucketName, srcPrefix, null, null, 1000);
+        com.branch.cos.model.ListObjectsRequest listObjectsRequest =
+                new com.branch.cos.model.ListObjectsRequest(srcBucketName, srcPrefix, null, null, 1000);
 
-        ObjectListing objectListing;
+        com.branch.cos.model.ObjectListing objectListing;
         int retry_num = 0;
 
         String urlList = ((CopyFromCspConfig) config).getUrlList();
@@ -143,10 +131,10 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
                     while (true) {
 
                         objectListing = srcCosClient.listObjects(listObjectsRequest);
-                        List<COSObjectSummary> cosObjectSummaries =
+                        List<com.branch.cos.model.COSObjectSummary> cosObjectSummaries =
                                 objectListing.getObjectSummaries();
 
-                        for (COSObjectSummary cosObjectSummary : cosObjectSummaries) {
+                        for (com.branch.cos.model.COSObjectSummary cosObjectSummary : cosObjectSummaries) {
                             String srcKey = cosObjectSummary.getKey();
                             String srcEtag = cosObjectSummary.getETag();
                             long srcSize = cosObjectSummary.getSize();
@@ -171,7 +159,7 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
 
                     return;
 
-                } catch (CosServiceException e) {
+                } catch (com.branch.cos.exception.CosServiceException e) {
                     log.error("List cos bucket occur a exception:{}", e.toString());
                     TaskStatics.instance.setListFinished(false);
                     if (e.getStatusCode() == 503) {

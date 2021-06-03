@@ -56,6 +56,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.qcloud</groupId>
+			<artifactId>branch_cos_api</artifactId>
+			<version>5.6.19</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.ini4j</groupId>
 			<artifactId>ini4j</artifactId>
 			<version>0.5.4</version>

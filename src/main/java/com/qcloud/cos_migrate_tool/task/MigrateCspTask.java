@@ -5,14 +5,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
-import com.qcloud.cos.COSClient;
-import com.qcloud.cos.event.ProgressEvent;
-import com.qcloud.cos.event.ProgressEventType;
-import com.qcloud.cos.event.ProgressListener;
+import com.branch.cos.event.ProgressEvent;
+import com.branch.cos.event.ProgressEventType;
+import com.branch.cos.event.ProgressListener;
 import com.qcloud.cos.model.AccessControlList;
-import com.qcloud.cos.model.GetObjectRequest;
-import com.qcloud.cos.model.Grant;
-import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.Permission;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyFromCspConfig;
@@ -27,9 +23,9 @@ public class MigrateCspTask extends Task {
     private String srcKey;
     private long fileSize;
     private String etag;
-    private COSClient cosClient;
+    private com.branch.cos.COSClient cosClient;
 
-    public MigrateCspTask(CopyFromCspConfig config, COSClient cosClient, String srcKey,
+    public MigrateCspTask(CopyFromCspConfig config, com.branch.cos.COSClient cosClient, String srcKey,
             long fileSize, String etag, TransferManager smallFileTransfer,
             TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore) {
         super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
@@ -129,7 +125,7 @@ public class MigrateCspTask extends Task {
     public void doTask() {
 
         String cosPath = buildCOSPath();
-        ObjectMetadata srcMetaData = null;
+        com.branch.cos.model.ObjectMetadata srcMetaData = null;
 
         if (this.etag.isEmpty()) {
             try {
@@ -175,8 +171,8 @@ public class MigrateCspTask extends Task {
             GetObjectProgressListener getObjectProgressListener =
                     new GetObjectProgressListener(srcKey);
             srcMetaData = cosClient.getObject(
-                    new GetObjectRequest(((CopyFromCspConfig) config).getSrcBucket(), srcKey)
-                            .<GetObjectRequest>withGeneralProgressListener(
+                    new com.branch.cos.model.GetObjectRequest(((CopyFromCspConfig) config).getSrcBucket(), srcKey)
+                            .<com.branch.cos.model.GetObjectRequest>withGeneralProgressListener(
                                     getObjectProgressListener),
                     localFile);
            
@@ -213,7 +209,7 @@ public class MigrateCspTask extends Task {
         }
 
         
-        AccessControlList acl;
+        com.branch.cos.model.AccessControlList acl;
         try {
             if(srcKey.endsWith("/") && !((CopyFromCspConfig) config).isMigrateSlashEndObjectAcl()) {
                 // 如果key以'/'结尾, 且不迁移以'/'结尾key的acl, 则不去获取源的acl进行迁移
@@ -236,10 +232,10 @@ public class MigrateCspTask extends Task {
             
         if (acl != null) {
            
-            List<Grant> grantList = acl.getGrantsAsList();
+            List<com.branch.cos.model.Grant> grantList = acl.getGrantsAsList();
             
             for (int i = 0; i < grantList.size(); ++i) {
-                if (grantList.get(i).getPermission() == Permission.Write) {
+                if (grantList.get(i).getPermission() == com.branch.cos.model.Permission.Write) {
                     continue;
                 }
                 
@@ -266,7 +262,8 @@ public class MigrateCspTask extends Task {
                     grantee.setIdentifier(grantList.get(i).getGrantee().getIdentifier());
                 }
                 
-                acl2.grantPermission(grantee, grantList.get(i).getPermission());
+                com.branch.cos.model.Permission srcPermission = grantList.get(i).getPermission();
+                acl2.grantPermission(grantee, Permission.parsePermission(srcPermission.toString()));
             }
         }
 
