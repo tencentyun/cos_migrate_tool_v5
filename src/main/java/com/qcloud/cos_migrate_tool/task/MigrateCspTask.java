@@ -72,6 +72,11 @@ public class MigrateCspTask extends Task {
             this.srcKey = srcKey;
         }
 
+        public GetObjectProgressListener(String srcKey, long contentLength) {
+            this.srcKey = srcKey;
+            this.totalBytes = contentLength;
+        }
+
         private void showDownloadProgress(String key, long byteTotal, long byteDownloadSofar) {
             double pct = 100.0;
             if (byteTotal > 0) {
@@ -169,7 +174,7 @@ public class MigrateCspTask extends Task {
         File localFile = new File(localPath);
         try {
             GetObjectProgressListener getObjectProgressListener =
-                    new GetObjectProgressListener(srcKey);
+                    new GetObjectProgressListener(srcKey, this.fileSize);
             srcMetaData = cosClient.getObject(
                     new com.branch.cos.model.GetObjectRequest(((CopyFromCspConfig) config).getSrcBucket(), srcKey)
                             .<com.branch.cos.model.GetObjectRequest>withGeneralProgressListener(
@@ -209,7 +214,8 @@ public class MigrateCspTask extends Task {
         }
 
         
-        com.branch.cos.model.AccessControlList acl;
+        com.branch.cos.model.AccessControlList acl = null;
+        /** no need migrate acl
         try {
             if(srcKey.endsWith("/") && !((CopyFromCspConfig) config).isMigrateSlashEndObjectAcl()) {
                 // 如果key以'/'结尾, 且不迁移以'/'结尾key的acl, 则不去获取源的acl进行迁移
@@ -226,6 +232,7 @@ public class MigrateCspTask extends Task {
             localFile.delete();
             return;
         }
+        */
 
         // acl转换
         AccessControlList acl2 = new AccessControlList();

@@ -135,7 +135,7 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
                                 objectListing.getObjectSummaries();
 
                         for (com.branch.cos.model.COSObjectSummary cosObjectSummary : cosObjectSummaries) {
-                            String srcKey = cosObjectSummary.getKey();
+                            String srcKey = this.srcPrefix + cosObjectSummary.getKey();
                             String srcEtag = cosObjectSummary.getETag();
                             long srcSize = cosObjectSummary.getSize();
                             MigrateCspTask task =
