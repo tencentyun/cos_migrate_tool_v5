@@ -40,6 +40,8 @@ public class CommonConfig {
     private boolean isResume = false;
     private String dbCosPath = "";
     private boolean skipSamePath = false;
+    private int modId = -1;
+    private int cmdId = -1;
 
     public void setSkipSamePath(String skipSamePath) {
         if (skipSamePath.compareToIgnoreCase("true") == 0) {
@@ -446,5 +448,21 @@ public class CommonConfig {
 
     public void setBigFileUploadPartSize(long bigFileUploadPartSize) {
         this.bigFileUploadPartSize = bigFileUploadPartSize;
+    }
+
+    public void setModId(int modId) {
+        this.modId = modId;
+    }
+
+    public int getModId() {
+        return this.modId;
+    }
+
+    public void setCmdId(int cmdId) {
+        this.cmdId = cmdId;
+    }
+
+    public int getCmdId() {
+        return this.cmdId;
     }
 }

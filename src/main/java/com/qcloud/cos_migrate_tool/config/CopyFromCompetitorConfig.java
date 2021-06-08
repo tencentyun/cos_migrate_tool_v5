@@ -17,6 +17,9 @@ public class CopyFromCompetitorConfig extends CommonConfig {
     private int srcSocketTimeout = 10000;
     private int srcConnectTimeout = 5000;
 
+    private int srcModId;
+    private int srcCmdId;
+
     public void setDbPrefix(String dbPrefix) {
         this.dbPrefix= dbPrefix;
     }
@@ -166,6 +169,22 @@ public class CopyFromCompetitorConfig extends CommonConfig {
 
     public int getSrcConnectTimeout() {
         return srcConnectTimeout;
+    }
+
+    public void setModId(int srcModId) {
+        this.srcModId = srcModId;
+    }
+
+    public void setCmdId(int srcCmdId) {
+        this.srcCmdId = srcCmdId;
+    }
+
+    public int getModId() {
+        return srcModId;
+    }
+
+    public int getCmdId() {
+        return srcCmdId;
     }
 
     public void setSrcConnectTimeout(int srcConnectTimeout) {

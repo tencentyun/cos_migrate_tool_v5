@@ -53,6 +53,8 @@ public class ConfigParser {
     private static final String COMMON_OUTPUT_FINISHED_FILE = "outputFinishedFileFolder";
     private static final String COMMON_RESUME = "resume";
     private static final String COMMON_SKIP_SAME_PATH = "skipSamePath";
+    private static final String COMMON_MODID = "modid";
+    private static final String COMMON_CMDID = "cmdid";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -100,6 +102,9 @@ public class ConfigParser {
     private static final String URLLIST_SECTION_NAME = "migrateUrl";
     private static final String URLLIST_PATH = "urllistPath";
     private static final String URLLIST_IS_SKIP_HEAD = "isSkipHead";
+
+    private static final String CSP_MODID = "modId";
+    private static final String CSP_CMDID = "cmdId";
 
 
 
@@ -581,6 +586,16 @@ public class ConfigParser {
             if (skipSamePath != null && !skipSamePath.isEmpty()) {
                 commonConfig.setSkipSamePath(skipSamePath);
             }
+
+            String modId = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_MODID);
+            if (modId != null && !modId.isEmpty()) {
+                commonConfig.setModId(Integer.valueOf(modId));
+            }
+
+            String cmdId = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_CMDID);
+            if (cmdId != null && !cmdId.isEmpty()) {
+                commonConfig.setCmdId(Integer.valueOf(cmdId));
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());
@@ -867,6 +882,14 @@ public class ConfigParser {
             String srcConnectTimeout = getConfigValue(prefs, sectionName, OSS_SRC_CONNECT_TIMEOUT);
             if (srcConnectTimeout != null && !srcConnectTimeout.isEmpty()) {
                 copyOssConfig.setSrcConnectTimeout(Integer.valueOf(srcConnectTimeout));
+            }
+            String srcModId = getConfigValue(prefs, sectionName, CSP_MODID);
+            if (srcModId != null && !srcModId.isEmpty()) {
+                copyOssConfig.setModId(Integer.valueOf(srcModId));
+            }
+            String srcCmdId = getConfigValue(prefs, sectionName, CSP_CMDID);
+            if (srcCmdId != null && !srcModId.isEmpty()) {
+                copyOssConfig.setCmdId(Integer.valueOf(srcCmdId));
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());

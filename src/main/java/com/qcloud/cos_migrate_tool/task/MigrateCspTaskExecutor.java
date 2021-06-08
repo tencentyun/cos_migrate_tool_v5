@@ -44,6 +44,7 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
         clientConfig.setConnectionTimeout(config.getSrcConnectTimeout());
         clientConfig.setSocketTimeout(config.getSrcSocketTimeout());
         clientConfig.setUserAgent("cos-migrate-tool-v1.3.6");
+        clientConfig.setEndpointResolver(new IDCL5EndpointResolver(config.getModId(), config.getCmdId()));
         this.srcCosClient = new com.branch.cos.COSClient(srcCred, clientConfig);
         this.srcEndPoint = config.getSrcEndpoint();
         this.srcBucketName = config.getSrcBucket();
