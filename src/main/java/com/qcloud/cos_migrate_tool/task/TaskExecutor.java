@@ -75,7 +75,9 @@ public abstract class TaskExecutor {
             clientConfig.setHttpProtocol(HttpProtocol.https);
         }
 
-        clientConfig.setEndpointResolver(new L5EndpointResolver(config.getModId(), config.getCmdId()));
+        if (config.getModId() != -1 && config.getCmdId() != -1) {
+            clientConfig.setEndpointResolver(new L5EndpointResolver(config.getModId(), config.getCmdId()));
+        }
 
         if (config.getEndpointSuffix() != null) {
             System.out.println(config.getEndpointSuffix());

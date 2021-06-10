@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class L5EndpointResolver implements EndpointResolver {
-    private static final Logger log = LoggerFactory.getLogger(IDCL5EndpointResolver.class);
+    private static final Logger log = LoggerFactory.getLogger(L5EndpointResolver.class);
     private int modId;
     private int cmdId;
 
