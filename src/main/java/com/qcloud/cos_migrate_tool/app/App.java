@@ -6,20 +6,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.qcloud.cos_migrate_tool.config.CommonConfig;
 import com.qcloud.cos_migrate_tool.config.ConfigParser;
 import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromAliConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromAwsConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromCompetitorConfig;
+import com.qcloud.cos_migrate_tool.config.CopyFromCspConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromQiniuConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromUpyunConfig;
 import com.qcloud.cos_migrate_tool.config.CopyFromUrllistConfig;
-import com.qcloud.cos_migrate_tool.config.CopyFromCspConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.task.MigrateAliTaskExecutor;
@@ -31,6 +28,9 @@ import com.qcloud.cos_migrate_tool.task.MigrateQiniuTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.MigrateUpyunTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.MigrateUrllistTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.TaskExecutor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class App {
 
@@ -140,6 +140,10 @@ public class App {
                     break;
                 }
             }
+
+            // Just in ai migration feature: because L5 client does not kill his thread pool, the program cannot exit
+            // if donot run blow.
+            System.exit(0);
         }
     }
 }
