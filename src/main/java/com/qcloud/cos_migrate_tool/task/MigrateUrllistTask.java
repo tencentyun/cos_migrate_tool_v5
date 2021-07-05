@@ -127,7 +127,8 @@ public class MigrateUrllistTask extends Task {
             TaskStatics.instance.addFailCnt();
             return;
         }
-        
+
+        long localFileLength = localFile.length();
         
         try {
             com.qcloud.cos.model.ObjectMetadata cosMetadata =
@@ -157,5 +158,17 @@ public class MigrateUrllistTask extends Task {
             localFile.delete();
         }
 
+        if (localFileLength >= smallFileThreshold) {
+            log.info("start to calculate and set MD5 for: {}-{}", config.getBucketName(), cosPath);
+            try {
+                calculateSetMD5(this.bigFileTransfer, config.getBucketName(), cosPath);
+            } catch (Exception e) {
+                log.error("[fail] calculate and set md5 failed. task_info: {}, exception: {}", urllistRecordElement.buildKey(), e);
+            }
+
+            log.info("[ok] calculate and set MD5 for: {}-{} finished", config.getBucketName(), cosPath);
+        } else {
+            log.info("no need to calculate and set MD5 for: {}-{}, size: {}", config.getBucketName(), cosPath, headAttr.fileSize);
+        }
     }
 }

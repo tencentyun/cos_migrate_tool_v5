@@ -2,11 +2,13 @@ package com.qcloud.cos_migrate_tool.task;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.qcloud.cos.exception.CosServiceException;
 import com.qcloud.cos.model.AccessControlList;
+import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.ListPartsRequest;
 import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
@@ -25,6 +27,7 @@ import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.record.RecordDb.QUERY_RESULT;
 import com.qcloud.cos_migrate_tool.record.RecordElement;
 
+import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -294,6 +297,50 @@ public abstract class Task implements Runnable {
             }
 
             throw e;
+        }
+    }
+
+    public ObjectMetadata calculateSetMD5(TransferManager transferManager, String bucketName, String cosPath) throws Exception {
+        com.qcloud.cos.model.GetObjectRequest getObjectRequest = new com.qcloud.cos.model.GetObjectRequest(bucketName, cosPath);
+
+        COSObject destObj = null;
+        String destMD5 = null;
+        ObjectMetadata objMeta = null;
+
+        int i = 0;
+        int maxRetry = 5;
+        while (true) {
+            try {
+                destObj = transferManager.getCOSClient().getObject(getObjectRequest);
+                objMeta = destObj.getObjectMetadata();
+                InputStream is = destObj.getObjectContent();
+                destMD5 = Hex.encodeHexString(Md5Utils.computeMD5Hash(is));
+                break;
+            } catch (Exception e) {
+                if (i >= maxRetry) {
+                    throw e;
+                }
+                log.warn("get object failed, ready to retry: {}", i);
+                i++;
+                Thread.sleep(100);
+            }
+        }
+
+        objMeta.addUserMetadata("md5", destMD5);
+
+        int j = 0;
+        while (true) {
+            try {
+                transferManager.getCOSClient().updateObjectMetaData(bucketName, cosPath, objMeta);
+                return objMeta;
+            } catch (Exception e) {
+                if (j >= maxRetry) {
+                    throw e;
+                }
+                log.warn("set metadata failed, ready to retry: {}", i);
+                j++;
+                Thread.sleep(100);
+            }
         }
     }
 
