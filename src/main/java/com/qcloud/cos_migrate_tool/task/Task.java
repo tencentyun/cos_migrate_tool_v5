@@ -221,6 +221,9 @@ public abstract class Task implements Runnable {
                     objectMetadata);
         } else {
             putObjectRequest = new PutObjectRequest(bucketName, cosPath, localFile);
+            if (config.getThreadTrafficLimit() > 0) {
+                putObjectRequest.setTrafficLimit(config.getThreadTrafficLimit());
+            }
         }
         putObjectRequest.setStorageClass(storageClass);
 

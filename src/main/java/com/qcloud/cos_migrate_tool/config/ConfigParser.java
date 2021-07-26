@@ -53,6 +53,7 @@ public class ConfigParser {
     private static final String COMMON_OUTPUT_FINISHED_FILE = "outputFinishedFileFolder";
     private static final String COMMON_RESUME = "resume";
     private static final String COMMON_SKIP_SAME_PATH = "skipSamePath";
+    private static final String COMMON_THREAD_TRAFFIC_LIMIT = "threadTrafficLimit";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -580,6 +581,11 @@ public class ConfigParser {
             String skipSamePath = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_SKIP_SAME_PATH);
             if (skipSamePath != null && !skipSamePath.isEmpty()) {
                 commonConfig.setSkipSamePath(skipSamePath);
+            }
+
+            String threadTrafficLimit = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_THREAD_TRAFFIC_LIMIT);
+            if (threadTrafficLimit != null && !threadTrafficLimit.isEmpty()) {
+                commonConfig.setThreadTrafficLimit(threadTrafficLimit);
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());

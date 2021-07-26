@@ -40,6 +40,25 @@ public class CommonConfig {
     private boolean isResume = false;
     private String dbCosPath = "";
     private boolean skipSamePath = false;
+    private int threadTrafficLimit = 0;
+
+    public void setThreadTrafficLimit(String threadTrafficLimitStr) {
+        threadTrafficLimitStr = threadTrafficLimitStr.trim();
+        try {
+            int number = Integer.valueOf(threadTrafficLimitStr);
+            if (number <= 0) {
+                threadTrafficLimit = 0;
+            } else {
+                threadTrafficLimit = number;
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("invalid threadTrafficLimit");
+        }
+    }
+
+    public int getThreadTrafficLimit() {
+        return threadTrafficLimit;
+    }
 
     public void setSkipSamePath(String skipSamePath) {
         if (skipSamePath.compareToIgnoreCase("true") == 0) {
