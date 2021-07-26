@@ -78,7 +78,7 @@ public class MigrateUrllistTask extends Task {
 
         if (config.skipSamePath()) {
             try {
-                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_URLLIST, config.getBucketName(), cosPath)) {
+                if (isExistOnCOS(smallFileTransfer, urllistRecordElement, config.getBucketName(), cosPath)) {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }

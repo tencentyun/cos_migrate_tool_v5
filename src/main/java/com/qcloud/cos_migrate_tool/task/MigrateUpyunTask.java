@@ -128,7 +128,7 @@ public class MigrateUpyunTask extends Task {
 
         if (config.skipSamePath()) {
             try {
-                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_UPYUN, config.getBucketName(), cosPath)) {
+                if (isExistOnCOS(smallFileTransfer, upyunRecordElement, config.getBucketName(), cosPath)) {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }

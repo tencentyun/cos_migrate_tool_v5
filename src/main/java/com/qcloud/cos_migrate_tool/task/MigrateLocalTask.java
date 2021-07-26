@@ -12,7 +12,6 @@ import java.util.concurrent.Semaphore;
 import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
-import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateLocalRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
@@ -81,7 +80,7 @@ public class MigrateLocalTask extends Task {
 
         if (config.skipSamePath()) {
             try {
-                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_LOCAL, config.getBucketName(), cosPath)) {
+                if (isExistOnCOS(smallFileTransfer, migrateLocalRecordElement, config.getBucketName(), cosPath)) {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }

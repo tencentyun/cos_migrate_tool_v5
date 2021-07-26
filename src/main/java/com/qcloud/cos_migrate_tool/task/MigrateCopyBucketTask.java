@@ -15,7 +15,6 @@ import com.qcloud.cos.region.Region;
 import com.qcloud.cos.transfer.Copy;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
-import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCopyBucketRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
@@ -101,7 +100,7 @@ public class MigrateCopyBucketTask extends Task {
 
         if (config.skipSamePath()) {
             try {
-                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_COS_BUCKET_COPY, destBucketName, destKey)) {
+                if (isExistOnCOS(smallFileTransfer, migrateCopyBucketRecordElement, destBucketName, destKey)) {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }

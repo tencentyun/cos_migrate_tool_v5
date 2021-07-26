@@ -19,8 +19,6 @@ import com.qcloud.cos.transfer.TransferProgress;
 import com.qcloud.cos.transfer.Upload;
 import com.qcloud.cos.utils.Md5Utils;
 import com.qcloud.cos_migrate_tool.config.CommonConfig;
-import com.qcloud.cos_migrate_tool.config.MigrateType;
-import com.qcloud.cos_migrate_tool.record.MigrateCompetitorRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.record.RecordDb.QUERY_RESULT;
 import com.qcloud.cos_migrate_tool.record.RecordElement;
@@ -274,13 +272,13 @@ public abstract class Task implements Runnable {
         return null;
     }
 
-    public boolean isExistOnCOS(TransferManager transferManager, MigrateType migrateType, String bucketName, String cosPath) {
+    public boolean isExistOnCOS(TransferManager transferManager, RecordElement recordElement, String bucketName, String cosPath) {
         try {
-            ObjectMetadata objectMetadata = transferManager.getCOSClient().getObjectMetadata(bucketName, cosPath);
-            MigrateCompetitorRecordElement record = new MigrateCompetitorRecordElement(migrateType, bucketName, cosPath,
-                                                            objectMetadata.getETag(), objectMetadata.getContentLength());
-            log.info("skip! file on cos, task_info: [key: {}], [value: {}]", record.buildKey(),
-                    record.buildValue());
+            transferManager.getCOSClient().getObjectMetadata(bucketName, cosPath);
+            String printMsg = String.format("[skip] file on cos, task_info: %s", recordElement.buildKey());
+            System.out.println(printMsg);
+            log.info("skip! file on cos, task_info: [key: {}], [value: {}]", recordElement.buildKey(),
+                    recordElement.buildValue());
             return true;
         } catch (CosServiceException e) {
             if (e.getStatusCode() == 404) {

@@ -181,7 +181,7 @@ public class MigrateAliTask extends Task {
 
         if (config.skipSamePath()) {
             try {
-                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_ALI, config.getBucketName(), cosPath)) {
+                if (isExistOnCOS(smallFileTransfer, ossRecordElement, config.getBucketName(), cosPath)) {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }

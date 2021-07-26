@@ -62,7 +62,7 @@ public class MigrateQiniuTask extends Task {
 
         if (config.skipSamePath()) {
             try {
-                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_QINIU, config.getBucketName(), cosPath)) {
+                if (isExistOnCOS(smallFileTransfer, qiniuRecordElement, config.getBucketName(), cosPath)) {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }

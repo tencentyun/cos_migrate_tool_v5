@@ -154,7 +154,7 @@ public class MigrateCspTask extends Task {
 
         if (config.skipSamePath()) {
             try {
-                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_CSP, config.getBucketName(), cosPath)) {
+                if (isExistOnCOS(smallFileTransfer, cspRecordElement, config.getBucketName(), cosPath)) {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }

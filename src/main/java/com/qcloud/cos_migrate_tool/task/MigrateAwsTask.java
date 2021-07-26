@@ -135,7 +135,7 @@ public class MigrateAwsTask extends Task {
 
         if (config.skipSamePath()) {
             try {
-                if (isExistOnCOS(smallFileTransfer, MigrateType.MIGRATE_FROM_AWS, config.getBucketName(), cosPath)) {
+                if (isExistOnCOS(smallFileTransfer, awsRecordElement, config.getBucketName(), cosPath)) {
                     TaskStatics.instance.addSkipCnt();
                     return;
                 }
