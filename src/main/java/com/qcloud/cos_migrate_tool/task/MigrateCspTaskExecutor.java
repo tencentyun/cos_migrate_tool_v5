@@ -1,16 +1,11 @@
 package com.qcloud.cos_migrate_tool.task;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
@@ -27,6 +22,11 @@ import com.qcloud.cos_migrate_tool.config.CopyFromCspConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
+import com.qcloud.cos_migrate_tool.utils.VersionInfoUtils;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MigrateCspTaskExecutor extends TaskExecutor {
     private static final Logger log = LoggerFactory.getLogger(MigrateCspTaskExecutor.class);
@@ -55,7 +55,7 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
 
         clientConfig.setConnectionTimeout(config.getSrcConnectTimeout());
         clientConfig.setSocketTimeout(config.getSrcSocketTimeout());
-        clientConfig.setUserAgent("cos-migrate-tool-v1.3.6");
+        clientConfig.setUserAgent(VersionInfoUtils.getUserAgent());
         this.srcCosClient = new COSClient(srcCred, clientConfig);
         this.srcEndPoint = config.getSrcEndpoint();
         this.srcBucketName = config.getSrcBucket();

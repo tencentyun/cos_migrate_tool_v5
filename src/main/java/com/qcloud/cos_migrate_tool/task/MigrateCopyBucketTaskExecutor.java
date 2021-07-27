@@ -8,10 +8,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -27,6 +23,11 @@ import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
+import com.qcloud.cos_migrate_tool.utils.VersionInfoUtils;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
     private static final Logger log = LoggerFactory.getLogger(MigrateCopyBucketTaskExecutor.class);
@@ -58,7 +59,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
         clientConfig.setConnectionTimeout(5000);
         clientConfig.setSocketTimeout(5000);
 
-        clientConfig.setUserAgent("cos-migrate-tool-v1.3.0");
+        clientConfig.setUserAgent(VersionInfoUtils.getUserAgent());
         this.srcCosClient = new COSClient(srcCred, clientConfig);
         this.srcRegion = config.getSrcRegion();
         this.srcBucketName = config.getSrcBucket();

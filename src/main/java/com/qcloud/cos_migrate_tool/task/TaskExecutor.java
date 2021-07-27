@@ -23,6 +23,7 @@ import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
+import com.qcloud.cos_migrate_tool.utils.VersionInfoUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +80,7 @@ public abstract class TaskExecutor {
             System.out.println(config.getEndpointSuffix());
             clientConfig.setEndPointSuffix(config.getEndpointSuffix());
         }
-        clientConfig.setUserAgent("cos-migrate-tool-v1.3.0");
+        clientConfig.setUserAgent(VersionInfoUtils.getUserAgent());
 
         if (!config.getProxyHost().isEmpty() && config.getProxyPort() > 0) {
             clientConfig.setHttpProxyIp(config.getProxyHost());
