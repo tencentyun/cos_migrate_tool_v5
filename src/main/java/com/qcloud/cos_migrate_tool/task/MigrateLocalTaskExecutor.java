@@ -1,10 +1,12 @@
 package com.qcloud.cos_migrate_tool.task;
 
-import java.io.File;
-import java.io.IOException;
+import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
+
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,16 +14,14 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
 import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 
-import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MigrateLocalTaskExecutor extends TaskExecutor {
 

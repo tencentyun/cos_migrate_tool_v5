@@ -54,6 +54,11 @@ public class ConfigParser {
     private static final String COMMON_RESUME = "resume";
     private static final String COMMON_SKIP_SAME_PATH = "skipSamePath";
     private static final String COMMON_THREAD_TRAFFIC_LIMIT = "threadTrafficLimit";
+    private static final String COMMON_CLIENT_ENCRYPTION = "clientEncryption";
+    private static final String COMMON_ENCRYPTION_ALGO = "encryptionAlgo";
+    private static final String COMMON_KEYPATH = "keyPath";
+    private static final String COMMON_ENCRYPTIV = "encryptIV";
+    private static final String COMMON_CHECK = "check";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -468,11 +473,10 @@ public class ConfigParser {
             commonConfig.setCosPath(cosPathConfig);
 
             String dbCosPathConfig = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_DB_COSPATH);
-	    if (dbCosPathConfig != null) {
-	        commonConfig.setDbCosPath(dbCosPathConfig);
+            if (dbCosPathConfig != null) {
+                commonConfig.setDbCosPath(dbCosPathConfig);
             }
 
-            
             String realTimeCompare = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_REAL_TIME_COMPARE);
             if ((realTimeCompare != null) && !realTimeCompare.isEmpty()) {
                 commonConfig.setRealTimeCompare(realTimeCompare);
@@ -587,6 +591,32 @@ public class ConfigParser {
             if (threadTrafficLimit != null && !threadTrafficLimit.isEmpty()) {
                 commonConfig.setThreadTrafficLimit(threadTrafficLimit);
             }
+
+            String clientEncryption = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_CLIENT_ENCRYPTION);
+            if (clientEncryption != null && clientEncryption.compareToIgnoreCase("on") == 0) {
+                commonConfig.setClientEncrypt(true);
+            }
+
+            String encryptionAlgo = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_ENCRYPTION_ALGO);
+            if (encryptionAlgo != null && !encryptionAlgo.isEmpty()) {
+                commonConfig.setEncryptionAlgo(encryptionAlgo);
+            }
+
+            String keyPath = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_KEYPATH);
+            if (keyPath != null && !keyPath.isEmpty()) {
+                commonConfig.setKeyPath(keyPath);
+            }
+
+            String encryptIV = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_ENCRYPTIV);
+            if (encryptIV != null && !encryptIV.isEmpty()) {
+                commonConfig.setEncrytIV(encryptIV);
+            }
+
+            String check = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_CHECK);
+            if (check != null && check.compareToIgnoreCase("on") == 0) {
+                commonConfig.setCheck(true);
+            }
+
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());

@@ -41,6 +41,51 @@ public class CommonConfig {
     private String dbCosPath = "";
     private boolean skipSamePath = false;
     private int threadTrafficLimit = 0;
+    private boolean clientEncrypt = false;
+    private String encryptionAlgo = null;
+    private String keyPath = null;
+    private String encryptIV = null;
+    private boolean check = false;
+
+    public void setClientEncrypt(boolean clientEncrypt) {
+        this.clientEncrypt = clientEncrypt;
+    }
+
+    public boolean getClientEncrypt() {
+        return this.clientEncrypt;
+    }
+
+    public void setEncryptionAlgo(String algo) {
+        this.encryptionAlgo = algo;
+    }
+
+    public String getEncrypString() {
+        return this.encryptionAlgo;
+    }
+
+    public void setKeyPath(String keyPath) {
+        this.keyPath = keyPath;
+    }
+
+    public String getKeyPath() {
+        return this.keyPath;
+    }
+
+    public void setEncrytIV(String iv) {
+        this.encryptIV = iv;
+    }
+
+    public String getEncryptIV() {
+        return this.encryptIV;
+    }
+
+    public void setCheck(boolean check) {
+        this.check = check;
+    }
+
+    public boolean getCheck() {
+        return this.check;
+    }
 
     public void setThreadTrafficLimit(String threadTrafficLimitStr) {
         threadTrafficLimitStr = threadTrafficLimitStr.trim();

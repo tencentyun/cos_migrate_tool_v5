@@ -2,20 +2,35 @@ package com.qcloud.cos_migrate_tool.task;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 import com.qcloud.cos.COSClient;
+import com.qcloud.cos.COSEncryptionClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
 import com.qcloud.cos.auth.BasicSessionCredentials;
 import com.qcloud.cos.auth.COSCredentials;
+import com.qcloud.cos.auth.COSStaticCredentialsProvider;
+import com.qcloud.cos.exception.CosClientException;
 import com.qcloud.cos.http.HttpProtocol;
+import com.qcloud.cos.internal.crypto.CryptoConfiguration;
+import com.qcloud.cos.internal.crypto.CryptoMode;
+import com.qcloud.cos.internal.crypto.CryptoStorageMode;
+import com.qcloud.cos.internal.crypto.EncryptionMaterials;
+import com.qcloud.cos.internal.crypto.StaticEncryptionMaterialsProvider;
 import com.qcloud.cos.region.Region;
 import com.qcloud.cos.transfer.TransferManager;
 import com.qcloud.cos_migrate_tool.config.CommonConfig;
@@ -87,7 +102,11 @@ public abstract class TaskExecutor {
             clientConfig.setHttpProxyPort(config.getProxyPort());
         }
 
-        this.cosClient = new COSClient(cred, clientConfig);
+        if (config.getClientEncrypt()) {
+            this.cosClient = createEncryptClient(config, cred, clientConfig);
+        } else {
+            this.cosClient = new COSClient(cred, clientConfig);
+        }
 
         this.smallFileTransferManager = new TransferManager(this.cosClient,
                 Executors.newFixedThreadPool(config.getSmallFileExecutorNumber()));
@@ -103,6 +122,46 @@ public abstract class TaskExecutor {
 
         this.bigFileTransferManager.getConfiguration().
                 setMinimumUploadPartSize(config.getBigFileUploadPartSize());
+    }
+
+    protected COSClient createEncryptClient(CommonConfig config, COSCredentials cred, ClientConfig clientConfig) {
+        SecretKey symKey = null;
+
+        try {
+            symKey = loadSymmetricAESKey(config.getKeyPath());
+        } catch (Exception e) {
+            throw new CosClientException(e);
+        }
+
+        EncryptionMaterials encryptionMaterials = new EncryptionMaterials(symKey);
+        // 使用AES/CBC模式，并将加密信息存储在文件元信息中.
+        CryptoConfiguration cryptoConf = new CryptoConfiguration(CryptoMode.AesCtrEncryption)
+                .withStorageMode(CryptoStorageMode.ObjectMetadata);
+
+        String encryptIV = config.getEncryptIV();
+        if (encryptIV != null) {
+            cryptoConf.setIV(config.getEncryptIV().getBytes());
+        }
+
+        COSEncryptionClient cosEncryptionClient =
+                new COSEncryptionClient(new COSStaticCredentialsProvider(cred),
+                        new StaticEncryptionMaterialsProvider(encryptionMaterials), clientConfig,
+                        cryptoConf);
+
+		return cosEncryptionClient;
+	}
+
+    public static SecretKey loadSymmetricAESKey(String keyPath) throws IOException, NoSuchAlgorithmException,
+            InvalidKeySpecException, InvalidKeyException {
+        // Read private key from file.
+        File keyFile = new File(keyPath);
+        FileInputStream keyfis = new FileInputStream(keyFile);
+        byte[] encodedPrivateKey = new byte[(int) keyFile.length()];
+        keyfis.read(encodedPrivateKey);
+        keyfis.close();
+
+        // Generate secret key.
+        return new SecretKeySpec(encodedPrivateKey, "AES");
     }
 
     protected abstract String buildTaskDbComment();
