@@ -66,6 +66,7 @@ public class ConfigParser {
     private static final String IGNORE_MODIFIED_TIME_LESS_THAN =
             "ignoreModifiedTimeLessThanSeconds";
     private static final String IGNORE_SUFFIX = "ignoreSuffix";
+    private static final String INCLUDE_SUFFIX = "includeSuffix";
     private static final String IGNORE_EMPTY_FILE = "ignoreEmptyFile";
     private static final String FILE_LIST_MODE = "fileListMode";
     private static final String FILE_LIST_PATH = "fileListPath";
@@ -657,6 +658,11 @@ public class ConfigParser {
             String ignoreSuffix = getConfigValue(prefs, LOCAL_SECTION_NAME, IGNORE_SUFFIX);
             if (ignoreSuffix != null && !ignoreSuffix.trim().isEmpty()) {
                 copyLocalConfig.setIgnoreSuffix(ignoreSuffix);
+            }
+
+            String includeSuffix = getConfigValue(prefs, LOCAL_SECTION_NAME, INCLUDE_SUFFIX);
+            if (includeSuffix != null && !includeSuffix.trim().isEmpty()) {
+                copyLocalConfig.setIncludeSuffix(includeSuffix);
             }
             
             String ignoreEmptyFile =  getConfigValue(prefs, LOCAL_SECTION_NAME, IGNORE_EMPTY_FILE);

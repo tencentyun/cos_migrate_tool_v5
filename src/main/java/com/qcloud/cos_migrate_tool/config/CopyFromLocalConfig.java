@@ -12,6 +12,7 @@ public class CopyFromLocalConfig extends CommonConfig {
     private Set<String> excludes = new HashSet<String>();
     private long ignoreModifiedTimeLessThan = -1;
     private Set<String> ignoreSuffixs = new HashSet<String>();
+    private Set<String> includeSuffixs = new HashSet<String>();
     boolean ignoreEmptyFile = false;
     boolean fileListMode = false;
     private String fileListPath;
@@ -25,6 +26,14 @@ public class CopyFromLocalConfig extends CommonConfig {
         String[] ignoreArray = ignore.split(";");
         for (String ignoreElement : ignoreArray) {
             this.ignoreSuffixs.add(ignoreElement);
+        }
+    }
+
+    public void setIncludeSuffix(String include) {
+        include = include.trim();
+        String[] includeArray = include.split(";");
+        for (String includeElement : includeArray) {
+            this.includeSuffixs.add(includeElement);
         }
     }
     
@@ -45,8 +54,18 @@ public class CopyFromLocalConfig extends CommonConfig {
                 return "empty file";
             }
         }
+
+        if (includeSuffixs.isEmpty()) {
+            return "";
+        }
+
+        for (String suffix:includeSuffixs) {
+            if (localPath.endsWith(suffix)) {
+                return "";
+            }
+        }
         
-        return "";
+        return "do not match include suffix";
     }
     
     public String getLocalPath() {
