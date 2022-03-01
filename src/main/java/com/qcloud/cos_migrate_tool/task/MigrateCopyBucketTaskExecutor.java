@@ -17,6 +17,7 @@ import com.qcloud.cos.http.HttpProtocol;
 import com.qcloud.cos.model.COSObjectSummary;
 import com.qcloud.cos.model.ListObjectsRequest;
 import com.qcloud.cos.model.ObjectListing;
+import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos.region.Region;
 import com.qcloud.cos.utils.UrlEncoderUtils;
 import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
@@ -126,10 +127,12 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                         copyDestKey = config.getCosPath() + srcKey;
                     }
 
+                    // set storage class to Standard just for a non-null value needed
+                    // no side effect
                     MigrateCopyBucketTask task =
                             new MigrateCopyBucketTask(semaphore, (CopyBucketConfig) config,
                                     smallFileTransferManager, bigFileTransferManager, recordDb,
-                                    srcCosClient, srcKey, 0, "", copyDestKey);
+                                    srcCosClient, srcKey, 0, "", StorageClass.Standard, copyDestKey);
 
                     AddTask(task);
 
@@ -190,7 +193,8 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                             MigrateCopyBucketTask task = new MigrateCopyBucketTask(semaphore,
                                     (CopyBucketConfig) config, smallFileTransferManager,
                                     bigFileTransferManager, recordDb, srcCosClient, srcKey, srcSize,
-                                    srcEtag, copyDestKey);
+                                    srcEtag, StorageClass.fromValue(cosObjectSummary.getStorageClass()),
+                                    copyDestKey);
 
                             AddTask(task);
                         }
@@ -201,7 +205,6 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                         if (!objectListing.isTruncated()) {
                             break;
                         }
-
                     }
 
                     TaskStatics.instance.setListFinished(true);

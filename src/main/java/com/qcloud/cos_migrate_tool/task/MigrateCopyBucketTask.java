@@ -11,6 +11,7 @@ import com.qcloud.cos.model.CopyObjectRequest;
 import com.qcloud.cos.model.CopyResult;
 import com.qcloud.cos.model.GetObjectRequest;
 import com.qcloud.cos.model.ObjectMetadata;
+import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos.region.Region;
 import com.qcloud.cos.transfer.Copy;
 import com.qcloud.cos.transfer.TransferManager;
@@ -28,12 +29,15 @@ public class MigrateCopyBucketTask extends Task {
     private final String srcEndpointSuffx;
     private final String srcBucketName;
     private final String srcKey;
-    private  long srcSize;
-    private  String srcEtag;
+    private final StorageClass srcStorageClass;
+    private long srcSize;
+    private String srcEtag;
+    private CopyBucketConfig copyBucketConfig;
 
     public MigrateCopyBucketTask(Semaphore semaphore, CopyBucketConfig config,
             TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
-            COSClient srcCOSClient, String srcKey, long srcSize, String srcEtag, String destKey) {
+            COSClient srcCOSClient, String srcKey, long srcSize, String srcEtag, StorageClass srcStorageClass,
+            String destKey) {
         super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
         this.srcCOSClient = srcCOSClient;
         this.destRegion = config.getRegion();
@@ -43,8 +47,10 @@ public class MigrateCopyBucketTask extends Task {
         this.srcEndpointSuffx = config.getSrcEndpointSuffix();
         this.srcBucketName = config.getSrcBucket();
         this.srcKey = srcKey;
+        this.srcStorageClass = srcStorageClass;
         this.srcSize = srcSize;
         this.srcEtag = srcEtag;
+        this.copyBucketConfig = (CopyBucketConfig)config;
     }
 
 
@@ -92,10 +98,18 @@ public class MigrateCopyBucketTask extends Task {
  
         MigrateCopyBucketRecordElement migrateCopyBucketRecordElement =
                 new MigrateCopyBucketRecordElement(destRegion, destBucketName, destKey, srcRegion,
-                        srcBucketName, srcKey, srcSize, srcEtag);
+                        srcBucketName, srcKey, srcSize, srcEtag, srcStorageClass.toString());
         if (isExist(migrateCopyBucketRecordElement, true)) {
             TaskStatics.instance.addSkipCnt();
             return;
+        }
+
+        if (copyBucketConfig.getSrcStorageClass() != null) {
+            if (!srcStorageClass.toString().equalsIgnoreCase(copyBucketConfig.getSrcStorageClass().toString())) {
+                TaskStatics.instance.addSkipCnt();
+                log.info("[skip] file [%s], storage class: [%s]", srcKey, srcStorageClass.toString());
+                return;
+            }
         }
 
         if (config.skipSamePath()) {

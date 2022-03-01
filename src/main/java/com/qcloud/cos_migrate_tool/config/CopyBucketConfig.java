@@ -3,6 +3,7 @@ package com.qcloud.cos_migrate_tool.config;
 import java.io.File;
 import java.util.regex.Pattern;
 
+import com.qcloud.cos.model.StorageClass;
 import com.qcloud.cos_migrate_tool.utils.PathUtils;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 
@@ -15,6 +16,7 @@ public class CopyBucketConfig extends CommonConfig {
     private String srcCosPath;
     private String srcEndpointSuffix;
     private String srcFileList = "";
+    private StorageClass srcStorageClass;
     
     public void setSrcFileList(String srcFileList) {
         File localPathFile = new File(srcFileList);
@@ -103,5 +105,17 @@ public class CopyBucketConfig extends CommonConfig {
 
     public void setSrcEndpointSuffix(String srcEndpointSuffix) {
         this.srcEndpointSuffix = srcEndpointSuffix;
+    }
+
+    public StorageClass getSrcStorageClass() {
+        return this.srcStorageClass;
+    }
+
+    public void setSrcStorageClass(String srcStorageClass) {
+        try {
+            this.srcStorageClass = StorageClass.valueOf(srcStorageClass);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(srcStorageClass + " is invalid storage class!");
+        }
     }
 }

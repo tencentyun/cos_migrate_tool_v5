@@ -103,6 +103,7 @@ public class ConfigParser {
     private static final String COPY_SRC_COSPATH = "srcCosPath";
     private static final String COPY_SRC_ENDPOINT_SUFFIX = "srcEndPointSuffix";
     private static final String COPY_SRC_FILE_LIST = "srcFileList";
+    private static final String COPY_SRC_STORAGE_CLASS = "srcStorageClass";
 
     private static final String URLLIST_SECTION_NAME = "migrateUrl";
     private static final String URLLIST_PATH = "urllistPath";
@@ -959,6 +960,11 @@ public class ConfigParser {
             String fileList = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_FILE_LIST);
             if (fileList != null && !fileList.isEmpty()) {
                 copyBucketConfig.setSrcFileList(fileList);
+            }
+
+            String srcStorageClass = getConfigValue(prefs, COPY_BUCKET_SECTION_NAME, COPY_SRC_STORAGE_CLASS);
+            if (srcStorageClass != null && !srcStorageClass.isEmpty()) {
+                copyBucketConfig.setSrcStorageClass(srcStorageClass);
             }
 
         } catch (Exception e) {

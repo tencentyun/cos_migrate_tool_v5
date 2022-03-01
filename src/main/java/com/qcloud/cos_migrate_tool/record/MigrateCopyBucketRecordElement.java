@@ -11,11 +11,12 @@ public class MigrateCopyBucketRecordElement extends RecordElement {
     private String srcKey;
     private long srcSize;
     private String srcEtag;
+    private String srcStorageClass;
 
 
 
     public MigrateCopyBucketRecordElement(String destRegion, String destBucketName, String destKey,
-            String srcRegion, String srcBucketName, String srcKey, long srcSize, String srcEtag) {
+            String srcRegion, String srcBucketName, String srcKey, long srcSize, String srcEtag, String srcStorageClass) {
         super(MigrateType.MIGRATE_FROM_COS_BUCKET_COPY);
         this.destRegion = destRegion;
         this.destBucketName = destBucketName;
@@ -25,19 +26,20 @@ public class MigrateCopyBucketRecordElement extends RecordElement {
         this.srcKey = srcKey;
         this.srcSize = srcSize;
         this.srcEtag = srcEtag;
+        this.srcStorageClass = srcStorageClass;
     }
 
     @Override
     public String buildKey() {
         String key = String.format(
-                "[taskType: %s] [destRegion: %s], [destBucketName: %s], [destKey: %s], [srcRegion: %s], [srcBucketName: %s], [srcKey: %s]",
-                recordType.toString(), destRegion, destBucketName, destKey, srcRegion, srcBucketName, srcKey);
+                "[taskType: %s] [destRegion: %s], [destBucketName: %s], [destKey: %s], [srcRegion: %s], [srcBucketName: %s], [srcKey: %s], [srcStorageClass: %s]",
+                recordType.toString(), destRegion, destBucketName, destKey, srcRegion, srcBucketName, srcKey, srcStorageClass);
         return key;
     }
 
     @Override
     public String buildValue() {
-        String value = String.format("[srcSize: %d], [srcEtag: %s]", srcSize, srcEtag);
+        String value = String.format("[srcSize: %d], [srcEtag: %s], [srcStorageClass: %s]", srcSize, srcEtag, srcStorageClass);
         return value;
     }
 
