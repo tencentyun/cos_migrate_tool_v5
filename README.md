@@ -12,6 +12,11 @@
 - JDK1.8或以上, 有关JDK的安装请参考[JAVA安装与配置](https://cloud.tencent.com/document/product/436/10865)
 - linux或windows环境, 推荐linux
 
+## 打包方式：
+如果需要修改源码，重新打包，需要先安装maven并配置环境变量，确保maven可用。
+- 在windows环境下，进入opbin目录，直接双击运行rebuild.bat，新生成的cos_migrate_tool-1.4.8-jar-with-dependencies.jar会复制至dep目录下；
+- 在Linux环境下，进入opbin目录，直接`sh rebuild.sh`，新生成的cos_migrate_tool-1.4.8-jar-with-dependencies.jar会复制至dep目录下；
+
 # 使用范例
 1. 配置全部通过配置文件读入
 sh start_migrate.sh
