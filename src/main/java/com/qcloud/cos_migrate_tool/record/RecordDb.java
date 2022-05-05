@@ -1,5 +1,6 @@
 package com.qcloud.cos_migrate_tool.record;
 
+import com.qcloud.cos_migrate_tool.config.CommonConfig;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -43,29 +44,33 @@ public class RecordDb {
     private Options options;
     private final String requestIdPrefix = "x-cos-requestId-";
     private String dbFolder;
-   
+
 
     public RecordDb() {}
 
-    public boolean init(String historyDbFolder, String comment) {
+    public boolean init(DBParam dbParam) {
+        log.info("init db with :" + dbParam);
         try {
-            dbFolder = historyDbFolder;
+            dbFolder = dbParam.getHistoryFolder();
             options = new Options();
             options.setCreateIfMissing(true);
-            options.setWriteBufferSize(16 * SizeUnit.MB).setMaxWriteBufferNumber(4)
-                    .setMaxBackgroundCompactions(4);
-            db = RocksDB.open(options, historyDbFolder);
+            options.setWriteBufferSize(16 * SizeUnit.MB).setMaxWriteBufferNumber(4).setMaxBackgroundCompactions(4);
+
+            if (CommonConfig.isRocksDBMaxOpenFileValid(dbParam.getMaxOpenFile())) {
+                // 这里先不给默认值，稳定后再给默认值
+                options.setMaxOpenFiles(dbParam.getMaxOpenFile());
+            }
+
+            db = RocksDB.open(options, dbParam.getHistoryFolder());
         } catch (RocksDBException e) {
             log.error(e.toString());
             return false;
         }
 
-
-        String commentFile = historyDbFolder + "/README";
+        String commentFile = dbParam.getHistoryFolder() + "/README";
         try {
-            BufferedOutputStream bos =
-                    new BufferedOutputStream(new FileOutputStream(commentFile, true));
-            bos.write(comment.getBytes(ENCODING_TYPE));
+            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(commentFile, true));
+            bos.write(dbParam.getComment().getBytes(ENCODING_TYPE));
             bos.close();
         } catch (FileNotFoundException e) {
             log.error(e.toString());

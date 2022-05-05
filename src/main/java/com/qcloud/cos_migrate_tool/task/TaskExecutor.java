@@ -1,5 +1,6 @@
 package com.qcloud.cos_migrate_tool.task;
 
+import com.qcloud.cos_migrate_tool.record.DBParam;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -180,7 +181,7 @@ public abstract class TaskExecutor {
                 return false;
             }
         }
-        return recordDb.init(dbFolderPath, comment);
+        return recordDb.init(new DBParam(dbFolderPath, comment, config.getRocksDBMaxOpenFile()));
     }
 
     protected void AddTask(Task task) throws InterruptedException {
