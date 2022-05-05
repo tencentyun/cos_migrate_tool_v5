@@ -107,7 +107,7 @@ public class MigrateCopyBucketTask extends Task {
         if (copyBucketConfig.getSrcStorageClass() != null) {
             if (!srcStorageClass.toString().equalsIgnoreCase(copyBucketConfig.getSrcStorageClass().toString())) {
                 TaskStatics.instance.addSkipCnt();
-                log.info("[skip] file [{}], storage class: [{}]", srcKey, srcStorageClass.toString());
+                log.info("[skip] file [{}], storage class: [{}]", srcKey, srcStorageClass);
                 return;
             }
         }

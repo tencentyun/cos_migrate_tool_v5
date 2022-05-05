@@ -59,6 +59,7 @@ public class ConfigParser {
     private static final String COMMON_KEYPATH = "keyPath";
     private static final String COMMON_ENCRYPTIV = "encryptIV";
     private static final String COMMON_CHECK = "check";
+    private static final String COMMON_ROCKSDB_MAX_OPEN_FILE = "rocksMaxOpenFile";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -619,6 +620,10 @@ public class ConfigParser {
                 commonConfig.setCheck(true);
             }
 
+            String rocksDBMaxOpenFile = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_ROCKSDB_MAX_OPEN_FILE);
+            if(rocksDBMaxOpenFile != null && !rocksDBMaxOpenFile.isEmpty()) {
+                commonConfig.setRocksDBMaxOpenFile(Integer.parseInt(rocksDBMaxOpenFile));
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());

@@ -46,6 +46,20 @@ public class CommonConfig {
     private String keyPath = null;
     private String encryptIV = null;
     private boolean check = false;
+    private int rocksDBMaxOpenFile = InvalidRocksDBMaxOpenFile;
+    private static final int InvalidRocksDBMaxOpenFile = -2; // -1 is valid for rocsdb.max_open_file
+
+    public int getRocksDBMaxOpenFile() {
+        return rocksDBMaxOpenFile;
+    }
+
+    public void setRocksDBMaxOpenFile(int rocksDBMaxOpenFile) {
+        this.rocksDBMaxOpenFile = rocksDBMaxOpenFile;
+    }
+
+    public static boolean isRocksDBMaxOpenFileValid(int maxOpenFile) {
+        return maxOpenFile != InvalidRocksDBMaxOpenFile;
+    }
 
     public void setClientEncrypt(boolean clientEncrypt) {
         this.clientEncrypt = clientEncrypt;
