@@ -161,7 +161,7 @@ public class MigrateCopyBucketTask extends Task {
             log.info(printMsg);
         } catch (Exception e) {
             if (e instanceof CosServiceException) {
-                if (((CosServiceException) e).getStatusCode() == 405) {
+                if (((CosServiceException) e).getStatusCode() == 405 || ((CosServiceException) e).getStatusCode() == 403) {
                     log.info(
                             "try to transfer file for not allowed copy object, task_info: [key: {}], [value: {}], exception: {}",
                             migrateCopyBucketRecordElement.buildKey(),
