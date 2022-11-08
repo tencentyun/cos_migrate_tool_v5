@@ -53,7 +53,10 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
         ClientConfig clientConfig = new ClientConfig(new Region(config.getSrcRegion()));
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
+        } else {
+            clientConfig.setHttpProtocol(HttpProtocol.http);
         }
+
         if (config.getSrcEndpointSuffix() != null) {
             clientConfig.setEndPointSuffix(config.getSrcEndpointSuffix());
         }

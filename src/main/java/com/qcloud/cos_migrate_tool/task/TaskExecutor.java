@@ -90,6 +90,8 @@ public abstract class TaskExecutor {
         ClientConfig clientConfig = new ClientConfig(new Region(config.getRegion()));
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
+        } else {
+            clientConfig.setHttpProtocol(HttpProtocol.http);
         }
 
         if (config.getEndpointSuffix() != null) {
