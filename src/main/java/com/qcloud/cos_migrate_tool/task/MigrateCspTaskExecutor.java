@@ -50,6 +50,8 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
             clientConfig.setHttpProtocol(HttpProtocol.http);
         }
 
+        // 没有使用common config里的短链接，csp一般没有公有云一样的问题
+
         clientConfig.setRegion(new Region(""));
         clientConfig.setEndpointBuilder(new SuffixEndpointBuilder(config.getSrcEndpoint()));
 

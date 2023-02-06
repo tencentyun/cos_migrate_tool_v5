@@ -105,6 +105,10 @@ public abstract class TaskExecutor {
             clientConfig.setHttpProxyPort(config.getProxyPort());
         }
 
+        if (config.isShortConnection()) {
+            clientConfig.setShortConnection();
+        }
+
         if (config.getClientEncrypt()) {
             this.cosClient = createEncryptClient(config, cred, clientConfig);
         } else {

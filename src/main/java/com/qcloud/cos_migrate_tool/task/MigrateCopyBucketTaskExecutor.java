@@ -57,6 +57,11 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
             clientConfig.setHttpProtocol(HttpProtocol.http);
         }
 
+        // 源也是cos的，就直接使用一样的配置，没有再像从其他云一样使用单独的src配置
+        if (config.isShortConnection()) {
+            clientConfig.setShortConnection();
+        }
+
         if (config.getSrcEndpointSuffix() != null) {
             clientConfig.setEndPointSuffix(config.getSrcEndpointSuffix());
         }

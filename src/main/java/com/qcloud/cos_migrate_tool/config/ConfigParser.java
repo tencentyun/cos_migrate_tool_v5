@@ -34,6 +34,7 @@ public class ConfigParser {
     private static final String COMMON_COSPATH = "cosPath";
     private static final String COMMON_DB_COSPATH = "dbCosPath";
     private static final String COMMON_HTTPS = "https";
+    private static final String COMMON_SHORT_CONNECTION = "shortConnection";
     private static final String COMMON_TMP = "tmpFolder";
     private static final String COMMON_SMALL_FILE_ThRESHOLD = "smallFileThreshold";
     private static final String COMMON_STORAGE_CLASS = "storageClass";
@@ -488,6 +489,11 @@ public class ConfigParser {
             String enableHttpsStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_HTTPS);
             assert (enableHttpsStr != null);
             commonConfig.setEnableHttps(enableHttpsStr);
+
+            String shortConnectionStr = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_SHORT_CONNECTION);
+            if (shortConnectionStr != null && !shortConnectionStr.trim().isEmpty()) {
+                commonConfig.setShortConnection(shortConnectionStr);
+            }
 
             String tmpFolder = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_TMP);
             assert (tmpFolder != null);
