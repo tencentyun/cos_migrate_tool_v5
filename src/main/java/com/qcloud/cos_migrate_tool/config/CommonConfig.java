@@ -18,7 +18,8 @@ public class CommonConfig {
     private String sk;
     private String token;
     private String cosPath;
-    private boolean enableHttps;
+    private boolean enableHttps = false;
+    private boolean isShortConnection = false;
     private boolean entireFileMd5Attached;
     private int taskExecutorNumber = 68;
     private StorageClass storageClass = StorageClass.Standard;
@@ -525,4 +526,19 @@ public class CommonConfig {
     public void setBigFileUploadPartSize(long bigFileUploadPartSize) {
         this.bigFileUploadPartSize = bigFileUploadPartSize;
     }
+
+    public boolean isShortConnection() {
+        return isShortConnection;
+    }
+
+    public void setShortConnection(String shortConnection) throws IllegalArgumentException {
+        if (shortConnection.equalsIgnoreCase("true")) {
+            isShortConnection = true;
+        } else if (shortConnection.equalsIgnoreCase("false")) {
+            isShortConnection = false;
+        } else {
+            throw new IllegalArgumentException("invalid short connection config. only support true/false");
+        }
+    }
+
 }
