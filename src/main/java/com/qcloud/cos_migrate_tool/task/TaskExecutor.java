@@ -109,6 +109,13 @@ public abstract class TaskExecutor {
             clientConfig.setShortConnection();
         }
 
+        if (config.isRequestTimeoutEnable()) {
+            clientConfig.setRequestTimeOutEnable(true);
+            clientConfig.setRequestTimeout(config.getRequestTimeoutMS());
+        } else {
+            clientConfig.setRequestTimeOutEnable(false);
+        }
+
         if (config.getClientEncrypt()) {
             this.cosClient = createEncryptClient(config, cred, clientConfig);
         } else {
