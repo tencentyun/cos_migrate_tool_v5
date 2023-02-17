@@ -50,6 +50,10 @@ public class CommonConfig {
     private int rocksDBMaxOpenFile = InvalidRocksDBMaxOpenFile;
     private static final int InvalidRocksDBMaxOpenFile = -2; // -1 is valid for rocsdb.max_open_file
 
+    private boolean requestTimeoutEnable;
+    private int requestTimeoutMS = 5 * 60 * 1000;
+    private int requestTryCount = 5;
+
     public int getRocksDBMaxOpenFile() {
         return rocksDBMaxOpenFile;
     }
@@ -541,4 +545,51 @@ public class CommonConfig {
         }
     }
 
+    public boolean isRequestTimeoutEnable() {
+        return requestTimeoutEnable;
+    }
+
+    public void setRequestTimeoutEnable(String strRequestTimeoutEnable) throws IllegalArgumentException {
+        if (strRequestTimeoutEnable.equalsIgnoreCase("on")) {
+            requestTimeoutEnable = true;
+        } else if (strRequestTimeoutEnable.equalsIgnoreCase("off")) {
+            requestTimeoutEnable = false;
+        } else {
+            throw new IllegalArgumentException("invalid request timeout enable config. only support on/off");
+        }
+    }
+
+    public int getRequestTimeoutMS() {
+        return requestTimeoutMS;
+    }
+
+    public void setRequestTimeoutMS(String strRequestTimeoutMS) throws IllegalArgumentException {
+        strRequestTimeoutMS = strRequestTimeoutMS.trim();
+        try {
+            int number = Integer.valueOf(strRequestTimeoutMS);
+            if (number <= 0) {
+                throw new IllegalArgumentException("legal requestTimeoutMS  must be gt 0");
+            }
+            requestTimeoutMS = number;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("invalid RequestTimeoutMS");
+        }
+    }
+
+    public int getRequestTryCount() {
+        return requestTryCount;
+    }
+
+    public void setRequestTryCount(String strRequestTryCount) throws IllegalArgumentException {
+        strRequestTryCount = strRequestTryCount.trim();
+        try {
+            int number = Integer.valueOf(strRequestTryCount);
+            if (number <= 0) {
+                throw new IllegalArgumentException("legal requestTryCount must be gt 0");
+            }
+            requestTryCount = number;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("invalid requestTryCount");
+        }
+    }
 }

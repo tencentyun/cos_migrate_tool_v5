@@ -61,6 +61,9 @@ public class ConfigParser {
     private static final String COMMON_ENCRYPTIV = "encryptIV";
     private static final String COMMON_CHECK = "check";
     private static final String COMMON_ROCKSDB_MAX_OPEN_FILE = "rocksMaxOpenFile";
+    private static final String COMMON_REQUEST_TIMEOUT_ENABLE = "requestTimeoutEnable";
+    private static final String COMMON_REQUEST_TIMEOUT_MS = "requestTimeoutMs";
+    private static final String COMMON_REQUEST_TRY_COUNT = "requestTryCount";
 
     private static final String LOCAL_SECTION_NAME = "migrateLocal";
     private static final String LOCAL_LOCALPATH = "localPath";
@@ -630,6 +633,22 @@ public class ConfigParser {
             if(rocksDBMaxOpenFile != null && !rocksDBMaxOpenFile.isEmpty()) {
                 commonConfig.setRocksDBMaxOpenFile(Integer.parseInt(rocksDBMaxOpenFile));
             }
+
+            String requestTimeoutEnable = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_REQUEST_TIMEOUT_ENABLE);
+            if(requestTimeoutEnable != null && !requestTimeoutEnable.isEmpty()) {
+                commonConfig.setRequestTimeoutEnable(requestTimeoutEnable);
+            }
+
+            String requestTimeoutMs = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_REQUEST_TIMEOUT_MS);
+            if(requestTimeoutMs != null && !requestTimeoutMs.isEmpty()) {
+                commonConfig.setRequestTimeoutMS(requestTimeoutMs);
+            }
+
+            String requestTryCount = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_REQUEST_TRY_COUNT);
+            if(requestTryCount != null && !requestTryCount.isEmpty()) {
+                commonConfig.setRequestTryCount(requestTryCount);
+            }
+
         } catch (Exception e) {
             System.err.println(e.getMessage());
             log.error(e.getMessage());

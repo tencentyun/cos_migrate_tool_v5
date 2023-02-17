@@ -249,10 +249,10 @@ public abstract class Task implements Runnable {
         }
 
         putObjectRequest.setMetadata(objectMetadata);
-        int retryTime = 0;
-        final int maxRetry = 5;
+        int tryTime = 0;
+        final int maxTryCount = config.getRequestTryCount();
 
-        while (retryTime < maxRetry) {
+        while (tryTime < maxTryCount) {
             try {
                 String requestId;
                 if (localFile.length() >= smallFileThreshold) {
@@ -263,9 +263,10 @@ public abstract class Task implements Runnable {
                 
                 return requestId;
             } catch (Exception e) {
-                log.warn("upload failed, ready to retry. retryTime:" + retryTime, e);
-                ++retryTime;
-                if (retryTime >= maxRetry) {
+                log.warn("fail to do requests for the " + tryTime + "/" + maxTryCount + " time." , e);
+                ++tryTime;
+                if (tryTime >= maxTryCount) {
+                    log.warn("this task fails after requests have been tried max time: tryTime:" + tryTime + "/ maxTry:" + maxTryCount , e);
                     throw e;
                 } else {
                     Thread.sleep(ThreadLocalRandom.current().nextLong(200, 1000));
