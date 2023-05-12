@@ -62,9 +62,6 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
             clientConfig.setShortConnection();
         }
 
-        if (config.getSrcEndpointSuffix() != null) {
-            clientConfig.setEndPointSuffix(config.getSrcEndpointSuffix());
-        }
         clientConfig.setConnectionTimeout(5000);
         clientConfig.setSocketTimeout(5000);
 

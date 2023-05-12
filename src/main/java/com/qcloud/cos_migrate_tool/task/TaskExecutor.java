@@ -94,10 +94,6 @@ public abstract class TaskExecutor {
             clientConfig.setHttpProtocol(HttpProtocol.http);
         }
 
-        if (config.getEndpointSuffix() != null) {
-            System.out.println(config.getEndpointSuffix());
-            clientConfig.setEndPointSuffix(config.getEndpointSuffix());
-        }
         clientConfig.setUserAgent(VersionInfoUtils.getUserAgent());
 
         if (!config.getProxyHost().isEmpty() && config.getProxyPort() > 0) {

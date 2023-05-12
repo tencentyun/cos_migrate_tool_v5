@@ -220,11 +220,13 @@ public class CommonConfig {
         }
         this.region = region.trim();
     }
-    
+
+    @Deprecated
     public String getEndpointSuffix() {
         return endpointSuffix;
     }
 
+    @Deprecated
     public void setEndpointSuffix(String endpointSuffix) {
         this.endpointSuffix = endpointSuffix;
     }

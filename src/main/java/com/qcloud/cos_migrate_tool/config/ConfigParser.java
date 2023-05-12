@@ -26,7 +26,6 @@ public class ConfigParser {
 
     private static final String COMMON_SECTION_NAME = "common";
     private static final String COMMON_REGION = "region";
-    private static final String COMMON_ENDPOINT_SUFFIX = "endPointSuffix";
     private static final String COMMON_BUCKETNAME = "bucketName";
     private static final String COMMON_AK = "secretId";
     private static final String COMMON_SK = "secretKey";
@@ -547,12 +546,6 @@ public class ConfigParser {
                     getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_EXECUTE_TIME_WINDOW);
             assert (timeWindowStr != null);
             commonConfig.setTimeWindowsStr(timeWindowStr);
-
-            String endPointSuffixStr =
-                    getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_ENDPOINT_SUFFIX);
-            if (endPointSuffixStr != null && !endPointSuffixStr.trim().isEmpty()) {
-                commonConfig.setEndpointSuffix(endPointSuffixStr);
-            }
 
             String proxyHost = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_PROXY_HOST);
             if (proxyHost != null && !proxyHost.trim().isEmpty()) {
