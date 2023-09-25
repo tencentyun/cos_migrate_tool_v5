@@ -16,6 +16,7 @@ public class CopyFromLocalConfig extends CommonConfig {
     boolean ignoreEmptyFile = false;
     boolean fileListMode = false;
     private String fileListPath;
+    private boolean isCheckLocalRecord = true;
 
     public void setIgnoreEmptyFile(boolean ignoreEmptyFile) {
         this.ignoreEmptyFile = ignoreEmptyFile;
@@ -100,7 +101,7 @@ public class CopyFromLocalConfig extends CommonConfig {
         try {
             long number = Long.valueOf(ignoreModifiedTimeLessThanStr);
             if (number <= 0) {
-                throw new IllegalArgumentException("legal ignoreModifiedTimeLessThan must be positive");
+                throw new IllegalArgumentException(ignoreModifiedTimeLessThanStr + " is invalid, ignoreModifiedTimeLessThan must be positive");
             }
             this.ignoreModifiedTimeLessThan = number;
         } catch (NumberFormatException e) {
@@ -125,5 +126,62 @@ public class CopyFromLocalConfig extends CommonConfig {
 
     public void setFileListPath(String fileListPath) {
         this.fileListPath = fileListPath;
+    }
+
+    public void setCheckLocalRecord(String checkLocalRecord) {
+        if (checkLocalRecord.compareToIgnoreCase("true") == 0) {
+            isCheckLocalRecord = true;
+        } else if (checkLocalRecord.compareToIgnoreCase("false") == 0) {
+            isCheckLocalRecord = false;
+        } else {
+            throw new IllegalArgumentException(checkLocalRecord + " is invalid, checkLocalRecord should be true or false");
+        }
+    }
+
+    public boolean checkLocalRecord() {
+        return isCheckLocalRecord;
+    }
+
+
+    public String toString() {
+        String strExclude = "";
+        if (!excludes.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (String element : excludes) {
+                sb.append(element).append(",");
+            }
+            strExclude = sb.toString();
+        }
+
+
+        String strIgnoreSuffix = "";
+        if (!ignoreSuffixs.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (String element : ignoreSuffixs) {
+                sb.append(element).append(",");
+            }
+            strIgnoreSuffix = sb.toString();
+        }
+
+        String strIncludeSuffix = "";
+        if (!includeSuffixs.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (String element : includeSuffixs) {
+                sb.append(element).append(",");
+            }
+            strIncludeSuffix = sb.toString();
+        }
+
+        return super.toString()
+                + ",localPath=" + getLocalPath()
+                + ",excludes=" + strExclude
+                + ",ignoreModifiedTimeLessThanSeconds=" + getIgnoreModifiedTimeLessThan()
+                + ",ignoreSuffix=" + strIgnoreSuffix
+                + ",ignoreEmptyFile=" + ignoreEmptyFile
+                + ",includeSuffix=" + strIncludeSuffix
+                + ",fileListMode=" + isFileListMode()
+                + ",fileListPath=" + getFileListPath()
+                + ",checkLocalRecord=" + checkLocalRecord()
+                ;
     }
 }
