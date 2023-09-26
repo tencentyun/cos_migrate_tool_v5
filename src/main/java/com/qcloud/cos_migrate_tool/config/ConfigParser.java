@@ -74,6 +74,7 @@ public class ConfigParser {
     private static final String IGNORE_EMPTY_FILE = "ignoreEmptyFile";
     private static final String FILE_LIST_MODE = "fileListMode";
     private static final String FILE_LIST_PATH = "fileListPath";
+    private static final String CHECK_LOCAL_RECORD = "checkLocalRecord";
 
     private static final String ALI_SECTION_NAME = "migrateAli";
     private static final String AWS_SECTION_NAME = "migrateAws";
@@ -694,12 +695,17 @@ public class ConfigParser {
                 copyLocalConfig.setIgnoreEmptyFile(true);
             }
             String fileListMode = getConfigValue(prefs, LOCAL_SECTION_NAME, FILE_LIST_MODE);
-            if(fileListMode != null && (fileListMode.compareToIgnoreCase("on") == 0)) {
+            if (fileListMode != null && (fileListMode.compareToIgnoreCase("on") == 0)) {
                 copyLocalConfig.setFileListMode(true);
             }
             String fileListPath = getConfigValue(prefs, LOCAL_SECTION_NAME, FILE_LIST_PATH);
-            if(fileListPath != null) {
+            if (fileListPath != null) {
                 copyLocalConfig.setFileListPath(fileListPath);
+            }
+
+            String strCheckLocal = getConfigValue(prefs, LOCAL_SECTION_NAME, CHECK_LOCAL_RECORD);
+            if (strCheckLocal != null) {
+                copyLocalConfig.setCheckLocalRecord(strCheckLocal);
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());

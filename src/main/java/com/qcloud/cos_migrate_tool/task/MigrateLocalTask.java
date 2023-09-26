@@ -29,6 +29,7 @@ public class MigrateLocalTask extends Task {
     private File localFile;
     private StorageClass storageClass;
     private boolean entireMd5Attached;
+    private boolean isCheckLocalRecord;
 
 
     public MigrateLocalTask(Semaphore semaphore, CopyFromLocalConfig copyFromLocalConfig,
@@ -41,6 +42,7 @@ public class MigrateLocalTask extends Task {
         this.localFile = localFile;
         this.storageClass = copyFromLocalConfig.getStorageClass();
         this.entireMd5Attached = copyFromLocalConfig.isEntireFileMd5Attached();
+        isCheckLocalRecord = copyFromLocalConfig.checkLocalRecord();
     }
 
     private String buildCOSPath(String localPath) {
@@ -72,10 +74,13 @@ public class MigrateLocalTask extends Task {
 
         MigrateLocalRecordElement migrateLocalRecordElement =
                 new MigrateLocalRecordElement(bucketName, localPath, cosPath, mtime, fileSize);
-        // 如果记录存在
-        if (isExist(migrateLocalRecordElement, true)) {
-            TaskStatics.instance.addSkipCnt();
-            return;
+
+        if (isCheckLocalRecord) {
+            // 如果记录存在
+            if (isExist(migrateLocalRecordElement, true)) {
+                TaskStatics.instance.addSkipCnt();
+                return;
+            }
         }
 
         if (config.skipSamePath()) {

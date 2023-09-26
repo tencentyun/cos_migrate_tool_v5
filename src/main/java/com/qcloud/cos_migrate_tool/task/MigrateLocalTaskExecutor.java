@@ -49,6 +49,27 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
         return comment;
     }
 
+    /**
+     * [md5path]是通过如下方式计算
+     * 获取本地目录与cos上的目标目录，拼接出字符串“[local: %s], [cosFolder: %s]”，再做32位的md5
+     *
+     * 示例1，配置文件中：
+     * localPath=/data/log
+     * cosPath=/
+     * 拼接出字符串如下，请注意如果不是以“/”结束，需要补齐1个“/”
+     * [local: /data/log/], [cosFolder: /]
+     *
+     * 32位md5:
+     * 0804c9153e80cb96474ef53cc31fb55a
+     *
+     * 示例2：
+     * localPath=/data/log
+     * cosPath=/aaa
+     * [local: /data/log/], [cosFolder: /aaa/]
+     *
+     * 32位md5:
+     * 3f3b01e32d9fe04259ca686fafe70117
+     */
     @Override
     public String buildTaskDbFolderPath() {
         String temp = String.format("[local: %s], [cosFolder: %s]", localFolder, cosFolder);
@@ -111,6 +132,7 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
     }
 
     public void buildTask() {
+        log.info(config.toString());
         if(config.isFileListMode()) {
             buildFileListTask();
             return;

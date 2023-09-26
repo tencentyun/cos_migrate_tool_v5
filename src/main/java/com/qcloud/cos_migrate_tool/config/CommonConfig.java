@@ -140,7 +140,7 @@ public class CommonConfig {
         if (isResume.compareToIgnoreCase("true") == 0) {
             this.isResume = true;
         } else if (isResume.compareToIgnoreCase("false") != 0) {
-            throw new IllegalArgumentException("resume invalid.should be true or false");
+            throw new IllegalArgumentException(isResume + " is invalid, isResume should be true or false");
         }
     }
     
@@ -154,7 +154,7 @@ public class CommonConfig {
         } else if (realTimeCompare.equalsIgnoreCase("off")) {
             this.realTimeCompare = false;
         } else {
-            throw new IllegalArgumentException("invalid realTimeCompare config. only support on/off");
+            throw new IllegalArgumentException(realTimeCompare + " is invalid, realTimeCompare only support on/off");
         }
     }
     
@@ -272,14 +272,14 @@ public class CommonConfig {
 
     public void setCosPath(String cosPath) throws IllegalArgumentException {
         if (!cosPath.startsWith("/")) {
-            throw new IllegalArgumentException("cospath must start with /");
+            throw new IllegalArgumentException(cosPath + " is invalid, cospath must start with /");
         }
         this.cosPath = PathUtils.formatCosFolderPath(cosPath);
     }
 
     public void setDbCosPath(String dbCosPath) throws IllegalArgumentException {
         if (!dbCosPath.startsWith("/")) {
-            throw new IllegalArgumentException("dbcospath must start with /");
+            throw new IllegalArgumentException(dbCosPath + " is invalid, dbcospath must start with /");
         }
         this.dbCosPath = PathUtils.formatCosFolderPath(dbCosPath);
     }
@@ -302,7 +302,7 @@ public class CommonConfig {
         } else if (enableHttpsStr.equalsIgnoreCase("off")) {
             this.enableHttps = false;
         } else {
-            throw new IllegalArgumentException("invalid https config. only support on/off");
+            throw new IllegalArgumentException(enableHttpsStr + " is invalid, https config only support on/off");
         }
     }
 
@@ -312,7 +312,7 @@ public class CommonConfig {
         try {
             int number = Integer.valueOf(taskExecutorNumberStr);
             if (number <= 0) {
-                throw new IllegalArgumentException("taskExecutorNumber must be greater than 0");
+                throw new IllegalArgumentException(taskExecutorNumberStr + " is invalid, taskExecutorNumber must be greater than 0");
             }
             this.taskExecutorNumber = number;
         } catch (NumberFormatException e) {
@@ -347,7 +347,7 @@ public class CommonConfig {
         try {
             int number = Integer.valueOf(smallFileExecutorNumStr);
             if (number <= 0 || number > 1024) {
-                throw new IllegalArgumentException("legal smallFileExecutorNum  is [1, 1024] ");
+                throw new IllegalArgumentException(smallFileExecutorNumStr + " is invalid, legal smallFileExecutorNum  is [1, 1024] ");
             }
             this.smallFileExecutorNumber = number;
             this.taskExecutorNumber = this.smallFileExecutorNumber + this.bigFileExecutorNum;
@@ -365,7 +365,7 @@ public class CommonConfig {
         try {
             int number = Integer.valueOf(bigFileExecutorNumStr);
             if (number <= 0 || number > 64) {
-                throw new IllegalArgumentException("legal bigFileExecutorNum is [1, 64] ");
+                throw new IllegalArgumentException(bigFileExecutorNumStr + " is invalid, legal bigFileExecutorNum is [1, 64] ");
             }
             this.bigFileExecutorNum = number;
             this.taskExecutorNumber = this.smallFileExecutorNumber + this.bigFileExecutorNum;
@@ -382,7 +382,8 @@ public class CommonConfig {
             final long maxSmallFile = 5L * 1024 * 1024 * 1024; // 最大5GB
             if (number < minSmallFile || number > maxSmallFile) {
                 throw new IllegalArgumentException(String.format(
-                        "legal smallFileThreshold is [%d, %d], 5MB ~ 5GB", minSmallFile, maxSmallFile));
+                        "invalid smallFileThresholdStr: %s, legal smallFileThreshold is [%d, %d], 5MB ~ 5GB"
+                        , smallFileThresholdStr, minSmallFile, maxSmallFile));
             }
             this.smallFileThreshold = number;
         } catch (NumberFormatException e) {
@@ -404,8 +405,7 @@ public class CommonConfig {
         } else if (entireFileMd5AttachedStr.equalsIgnoreCase("off")) {
             this.entireFileMd5Attached = false;
         } else {
-            throw new IllegalArgumentException(
-                    "invalid entireFileMd5Attached config. only support on/off");
+            throw new IllegalArgumentException(entireFileMd5AttachedStr + " is invalid, entireFileMd5Attached only support on/off");
         }
     }
     
@@ -415,17 +415,16 @@ public class CommonConfig {
         } else if (daemonModeStr.equalsIgnoreCase("off")) {
             this.damonMode = false;
         } else {
-            throw new IllegalArgumentException(
-                    "invalid daemonMode config. only support on/off");
+            throw new IllegalArgumentException(daemonModeStr + " is invalid, daemonMode only support on/off");
         }
     }
     
-    public void setDaemonModeInterVal(String daemonModeStr) {
-        daemonModeStr = daemonModeStr.trim();
+    public void setDaemonModeInterVal(String daemonModeInvatervalStr) {
+        daemonModeInvatervalStr = daemonModeInvatervalStr.trim();
         try {
-            int number = Integer.valueOf(daemonModeStr);
+            int number = Integer.valueOf(daemonModeInvatervalStr);
             if (number <= 0) {
-                throw new IllegalArgumentException("damonInterVal must be greater than 0");
+                throw new IllegalArgumentException(daemonModeInvatervalStr + " is invalid, damonInterVal must be greater than 0");
             }
             this.damonInterVal = number;
         } catch (NumberFormatException e) {
@@ -445,34 +444,34 @@ public class CommonConfig {
         timeWindowStr = timeWindowStr.trim();
         String[] timeWindowArray = timeWindowStr.split(",");
         if (timeWindowArray.length != 2) {
-            throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+            throw new IllegalArgumentException(timeWindowStr + " is invalid, the legal executeTimeWindow example 03:30,21:00");
         }
         try {
             String[] timeBeginMemberArray = timeWindowArray[0].split(":");
             if (timeBeginMemberArray.length != 2) {
-                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+                throw new IllegalArgumentException(timeWindowStr + " is invalid, the legal executeTimeWindow example 03:30,21:00");
             }
             int hour = Integer.valueOf(timeBeginMemberArray[0]);
             if (hour < 0 || hour >= 24) {
-                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+                throw new IllegalArgumentException(timeWindowStr + " is invalid, the legal executeTimeWindow example 03:30,21:00");
             }
             int minute = Integer.valueOf(timeBeginMemberArray[1]);
             if (minute < 0 || minute >= 60) {
-                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+                throw new IllegalArgumentException(timeWindowStr + " is invalid, the legal executeTimeWindow example 03:30,21:00");
             }
             this.timeWindowBegin = hour * 60 + minute;
             
             String[] timeEndMemberArray = timeWindowArray[1].split(":");
             if (timeEndMemberArray.length != 2) {
-                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+                throw new IllegalArgumentException(timeWindowStr + " is invalid, the legal executeTimeWindow example 03:30,21:00");
             }
             hour = Integer.valueOf(timeEndMemberArray[0]);
             if (hour < 0 || hour > 24) {
-                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+                throw new IllegalArgumentException(timeWindowStr + " is invalid, the legal executeTimeWindow example 03:30,21:00");
             }
             minute = Integer.valueOf(timeEndMemberArray[1]);
             if (minute < 0 || minute >= 60) {
-                throw new IllegalArgumentException("executeTimeWindow is invalid, the legal example 03:30,21:00");
+                throw new IllegalArgumentException(timeWindowStr + " is invalid, the legal executeTimeWindow example 03:30,21:00");
             }
             this.timeWindowEnd = hour * 60 + minute;
             
@@ -543,7 +542,7 @@ public class CommonConfig {
         } else if (shortConnection.equalsIgnoreCase("false")) {
             isShortConnection = false;
         } else {
-            throw new IllegalArgumentException("invalid short connection config. only support true/false");
+            throw new IllegalArgumentException(shortConnection + " is invalid, short connection config. only support true/false");
         }
     }
 
@@ -557,7 +556,7 @@ public class CommonConfig {
         } else if (strRequestTimeoutEnable.equalsIgnoreCase("off")) {
             requestTimeoutEnable = false;
         } else {
-            throw new IllegalArgumentException("invalid request timeout enable config. only support on/off");
+            throw new IllegalArgumentException(strRequestTimeoutEnable + " is invalid, request timeout enable config. only support on/off");
         }
     }
 
@@ -570,7 +569,7 @@ public class CommonConfig {
         try {
             int number = Integer.valueOf(strRequestTimeoutMS);
             if (number <= 0) {
-                throw new IllegalArgumentException("legal requestTimeoutMS  must be gt 0");
+                throw new IllegalArgumentException(strRequestTimeoutMS + " is invalid, legal requestTimeoutMS  must be gt 0");
             }
             requestTimeoutMS = number;
         } catch (NumberFormatException e) {
@@ -587,11 +586,31 @@ public class CommonConfig {
         try {
             int number = Integer.valueOf(strRequestTryCount);
             if (number <= 0) {
-                throw new IllegalArgumentException("legal requestTryCount must be gt 0");
+                throw new IllegalArgumentException(strRequestTryCount + " is invalid, legal requestTryCount must be gt 0");
             }
             requestTryCount = number;
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("invalid requestTryCount");
         }
+    }
+
+    /**
+     * 打印关键参数
+     */
+    public String toString() {
+        return "CommonConfig:"
+                + "cosPath=" + cosPath
+                + ",https=" + isEnableHttps()
+                + ",shortConnection=" + isShortConnection()
+                + ",smallFileThreshold=" + getSmallFileThreshold()
+                + ",smallFileExecutorNum=" + getSmallFileExecutorNumber()
+                + ",bigFileExecutorNum=" + getBigFileExecutorNum()
+                + ",bigFileUploadPartSize=" + getBigFileUploadPartSize()
+                + ",threadTrafficLimit=" + getThreadTrafficLimit()
+                + ",executeTimeWindow=" + getTimeWindowBegin() + "," + getTimeWindowEnd()
+                + ",resume=" + isResume()
+                + ",skipSamePath=" + skipSamePath()
+                + ",requestTryCount=" + getRequestTryCount()
+                ;
     }
 }
