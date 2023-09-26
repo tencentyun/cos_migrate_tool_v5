@@ -173,7 +173,8 @@ public class CopyFromLocalConfig extends CommonConfig {
         }
 
         return super.toString()
-                + ",localPath=" + getLocalPath()
+                + ". CopyFromLocalConfig:"
+                + "localPath=" + getLocalPath()
                 + ",excludes=" + strExclude
                 + ",ignoreModifiedTimeLessThanSeconds=" + getIgnoreModifiedTimeLessThan()
                 + ",ignoreSuffix=" + strIgnoreSuffix

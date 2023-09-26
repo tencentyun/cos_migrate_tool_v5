@@ -132,7 +132,7 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
     }
 
     public void buildTask() {
-        log.info("CopyFromLocalConfig: " + config);
+        log.info(config.toString());
         if(config.isFileListMode()) {
             buildFileListTask();
             return;

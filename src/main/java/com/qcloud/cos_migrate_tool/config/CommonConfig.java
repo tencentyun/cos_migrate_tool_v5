@@ -598,7 +598,8 @@ public class CommonConfig {
      * 打印关键参数
      */
     public String toString() {
-        return "cosPath=" + cosPath
+        return "CommonConfig:"
+                + "cosPath=" + cosPath
                 + ",https=" + isEnableHttps()
                 + ",shortConnection=" + isShortConnection()
                 + ",smallFileThreshold=" + getSmallFileThreshold()
