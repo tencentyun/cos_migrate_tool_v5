@@ -113,7 +113,7 @@ public class MigrateAliTaskExecutor extends TaskExecutor {
                                 com.qcloud.cos.utils.UrlEncoderUtils.urlDecode(s.getKey()),
                                 s.getSize(), s.getETag(), s.getLastModified(),
                                 smallFileTransferManager, bigFileTransferManager, recordDb,
-                                semaphore);
+                                semaphore,fs);
 
                         AddTask(task);
                     }

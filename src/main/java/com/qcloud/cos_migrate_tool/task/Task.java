@@ -2,6 +2,7 @@ package com.qcloud.cos_migrate_tool.task;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -23,6 +24,8 @@ import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.record.RecordDb.QUERY_RESULT;
 import com.qcloud.cos_migrate_tool.record.RecordElement;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +37,7 @@ public abstract class Task implements Runnable {
 
     protected TransferManager smallFileTransfer;
     protected TransferManager bigFileTransfer;
+    protected FileSystem fs;
     protected long smallFileThreshold;
     private RecordDb recordDb;
     protected CommonConfig config;
@@ -42,7 +46,7 @@ public abstract class Task implements Runnable {
 
 
     public Task(Semaphore semaphore, CommonConfig config, TransferManager smallFileTransfer,
-            TransferManager bigFileTransfer, RecordDb recordDb) {
+            TransferManager bigFileTransfer, RecordDb recordDb,FileSystem fs) {
         super();
         this.semaphore = semaphore;
         this.config = config;
@@ -50,6 +54,7 @@ public abstract class Task implements Runnable {
         this.bigFileTransfer = bigFileTransfer;
         this.smallFileThreshold = config.getSmallFileThreshold();
         this.recordDb = recordDb;
+        this.fs = fs;
     }
 
     public boolean isExist(RecordElement recordElement, boolean isCompareValue) {
@@ -206,9 +211,24 @@ public abstract class Task implements Runnable {
     }
 
 
+    public String uploadCosnFile(String cosPath, File localFile) throws Exception {
+        Path dstPath = new Path(cosPath);
+        if(localFile.isDirectory()) {
+            fs.mkdirs(dstPath);
+        } else {
+            Path localPath = new Path(localFile.getPath());
+            fs.copyFromLocalFile(localPath, dstPath);
+        }
+        return "upload by cosn";
+    }
+
     public String uploadFile(String bucketName, String cosPath, File localFile,
             StorageClass storageClass, boolean entireMd5Attached, ObjectMetadata objectMetadata,
             AccessControlList acl) throws Exception {
+
+        if (config.useCosn()){
+            return uploadCosnFile(cosPath,localFile);
+        }
         PutObjectRequest putObjectRequest;
         if(localFile.isDirectory()) {
             if(!cosPath.endsWith("/")) {

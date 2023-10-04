@@ -41,6 +41,14 @@ import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 import com.qcloud.cos_migrate_tool.utils.VersionInfoUtils;
 
+import com.qcloud.chdfs.fs.FileSystemWithLockCleaner;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.ByteBuffer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +67,7 @@ public abstract class TaskExecutor {
     protected TransferManager smallFileTransferManager;
     protected TransferManager bigFileTransferManager;
 
+    protected FileSystem fs;
 
 
     enum RUN_MODE {
@@ -132,6 +141,33 @@ public abstract class TaskExecutor {
 
         this.bigFileTransferManager.getConfiguration().
                 setMinimumUploadPartSize(config.getBigFileUploadPartSize());
+
+        if (config.useCosn()) {
+            try {
+                this.fs = initCosnFs();
+            } catch (IOException e) {
+                log.error("get file system failed!",e);
+            }
+        }
+    }
+
+    protected FileSystem initCosnFs() throws IOException {
+        Configuration conf = new Configuration();
+
+        String[] parts = config.getBucketName().split("-");
+        String appid = parts[parts.length - 1];
+
+        conf.set("fs.cosn.impl", "org.apache.hadoop.fs.CosFileSystem");
+        conf.set("fs.AbstractFileSystem.cosn.impl", "org.apache.hadoop.fs.CosN");
+        conf.set("fs.cosn.userinfo.secretId",  config.getAk());
+        conf.set("fs.cosn.userinfo.secretKey", config.getSk());
+        conf.set("fs.cosn.bucket.region", config.getRegion());
+        conf.set("fs.cosn.tmp.dir", config.getTempFolderPath());
+        conf.set("fs.cosn.trsf.fs.ofs.tmp.cache.dir", config.getTempFolderPath());
+        conf.set("fs.cosn.userinfo.appid", appid);
+        String cosnUrl = "cosn://" + config.getBucketName()+"/";
+
+        return FileSystem.get(URI.create(cosnUrl), conf);
     }
 
     protected COSClient createEncryptClient(CommonConfig config, COSCredentials cred, ClientConfig clientConfig) {
@@ -273,12 +309,18 @@ public abstract class TaskExecutor {
             this.smallFileTransferManager.shutdownNow();
             this.bigFileTransferManager.shutdownNow();
             this.cosClient.shutdown();
+            if(config.useCosn()){
+                this.fs.close();
+            }
             if (getRunMode().equals(RUN_MODE.NORMAL)) {
                 printTaskStaticsInfo();
             }
         } catch (InterruptedException e) {
             log.error("waitTaskOver is interrupted!", e);
             System.err.println("waitTaskOver is interrupted!");
+        } catch (IOException e) {
+            log.error("waitTaskOver occurred ioexception!", e);
+            System.err.println("waitTaskOver occurred ioexception!");
         }
     }
 

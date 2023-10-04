@@ -54,6 +54,8 @@ public class CommonConfig {
     private int requestTimeoutMS = 5 * 60 * 1000;
     private int requestTryCount = 5;
 
+    private boolean useCosn = false;
+
     public int getRocksDBMaxOpenFile() {
         return rocksDBMaxOpenFile;
     }
@@ -134,6 +136,18 @@ public class CommonConfig {
 
     public boolean skipSamePath() {
         return this.skipSamePath;
+    }
+
+    public void setUseCosn(String useCosn) {
+        if (useCosn.compareToIgnoreCase("true") == 0) {
+            this.useCosn = true;
+        } else if (useCosn.compareToIgnoreCase("false") != 0) {
+            throw new IllegalArgumentException(useCosn + " is invalid, useCosn should be true or false");
+        }
+    }
+
+    public boolean useCosn() {
+        return this.useCosn;
     }
     
     public void setResume(String isResume) {

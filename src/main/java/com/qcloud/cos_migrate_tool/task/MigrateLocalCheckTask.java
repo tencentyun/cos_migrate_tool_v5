@@ -14,6 +14,7 @@ import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.SystemUtils;
 
+import org.apache.hadoop.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +27,9 @@ public class MigrateLocalCheckTask extends Task {
     private File localFile;
 
     public MigrateLocalCheckTask(Semaphore semaphore, CopyFromLocalConfig copyFromLocalConfig,
-            TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
-            File localFile) {
-        super(semaphore, copyFromLocalConfig, smallFileTransfer, bigFileTransfer, recordDb);
+                                 TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
+                                 File localFile, FileSystem fs) {
+        super(semaphore, copyFromLocalConfig, smallFileTransfer, bigFileTransfer, recordDb,fs);
         this.bucketName = copyFromLocalConfig.getBucketName();
         this.localFolder = copyFromLocalConfig.getLocalPath();
         this.cosFolder = copyFromLocalConfig.getCosPath();

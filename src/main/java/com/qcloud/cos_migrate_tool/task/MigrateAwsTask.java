@@ -18,6 +18,7 @@ import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCompetitorRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
+import org.apache.hadoop.fs.FileSystem;
 
 public class MigrateAwsTask extends Task {
 
@@ -27,9 +28,9 @@ public class MigrateAwsTask extends Task {
     private AmazonS3 s3Client;
 
     public MigrateAwsTask(CopyFromAwsConfig config, AmazonS3 s3Client, String srcKey, long fileSize,
-            String etag, TransferManager smallFileTransfer, TransferManager bigFileTransfer,
-            RecordDb recordDb, Semaphore semaphore) {
-        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
+                          String etag, TransferManager smallFileTransfer, TransferManager bigFileTransfer,
+                          RecordDb recordDb, Semaphore semaphore, FileSystem fs) {
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb, fs);
         this.s3Client = s3Client;
         this.srcKey = srcKey;
         this.fileSize = fileSize;

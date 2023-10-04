@@ -106,7 +106,7 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
 
                         MigrateLocalTask migrateLocalTask = new MigrateLocalTask(semaphore,
                                 config, smallFileTransferManager,
-                                bigFileTransferManager, recordDb, localFile);
+                                bigFileTransferManager, recordDb, localFile,fs);
                         AddTask(migrateLocalTask);
                     } else {
                         String printMsg = String.format(
@@ -175,7 +175,7 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
                       
                         MigrateLocalTask migrateLocalTask = new MigrateLocalTask(semaphore,
                                 ((CopyFromLocalConfig) config), smallFileTransferManager,
-                                bigFileTransferManager, recordDb, localFile);
+                                bigFileTransferManager, recordDb, localFile,fs);
                         AddTask(migrateLocalTask);
                     } else {
                         String printMsg = String.format(

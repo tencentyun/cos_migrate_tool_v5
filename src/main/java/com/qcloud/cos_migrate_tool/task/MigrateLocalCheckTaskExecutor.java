@@ -79,7 +79,7 @@ public class MigrateLocalCheckTaskExecutor extends TaskExecutor {
 
                         MigrateLocalCheckTask migrateLocalCheckTask = new MigrateLocalCheckTask(semaphore,
                                 config, smallFileTransferManager,
-                                bigFileTransferManager, recordDb, localFile);
+                                bigFileTransferManager, recordDb, localFile,fs);
                         AddTask(migrateLocalCheckTask);
                     } else {
                         String printMsg = String.format(

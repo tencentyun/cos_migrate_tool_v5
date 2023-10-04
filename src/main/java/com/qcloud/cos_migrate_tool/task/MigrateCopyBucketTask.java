@@ -19,6 +19,8 @@ import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCopyBucketRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
+import jdk.internal.org.jline.reader.impl.completer.FileNameCompleter;
+import org.apache.hadoop.fs.FileSystem;
 
 public class MigrateCopyBucketTask extends Task {
     private final COSClient srcCOSClient;
@@ -35,10 +37,10 @@ public class MigrateCopyBucketTask extends Task {
     private CopyBucketConfig copyBucketConfig;
 
     public MigrateCopyBucketTask(Semaphore semaphore, CopyBucketConfig config,
-            TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
-            COSClient srcCOSClient, String srcKey, long srcSize, String srcEtag, StorageClass srcStorageClass,
-            String destKey) {
-        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
+                                 TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
+                                 COSClient srcCOSClient, String srcKey, long srcSize, String srcEtag, StorageClass srcStorageClass,
+                                 String destKey, FileSystem fs) {
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb,fs);
         this.srcCOSClient = srcCOSClient;
         this.destRegion = config.getRegion();
         this.destBucketName = config.getBucketName();

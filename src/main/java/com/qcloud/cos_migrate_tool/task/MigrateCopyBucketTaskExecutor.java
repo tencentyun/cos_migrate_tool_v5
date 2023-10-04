@@ -137,7 +137,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                     MigrateCopyBucketTask task =
                             new MigrateCopyBucketTask(semaphore, (CopyBucketConfig) config,
                                     smallFileTransferManager, bigFileTransferManager, recordDb,
-                                    srcCosClient, srcKey, 0, "", StorageClass.Standard, copyDestKey);
+                                    srcCosClient, srcKey, 0, "", StorageClass.Standard, copyDestKey,fs);
 
                     AddTask(task);
 
@@ -199,7 +199,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
                                     (CopyBucketConfig) config, smallFileTransferManager,
                                     bigFileTransferManager, recordDb, srcCosClient, srcKey, srcSize,
                                     srcEtag, StorageClass.fromValue(cosObjectSummary.getStorageClass()),
-                                    copyDestKey);
+                                    copyDestKey,fs);
 
                             AddTask(task);
                         }

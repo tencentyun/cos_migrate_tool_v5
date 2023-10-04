@@ -21,6 +21,7 @@ import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCompetitorRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.TceGrantee;
+import org.apache.hadoop.fs.FileSystem;
 
 public class MigrateCspTask extends Task {
 
@@ -30,9 +31,9 @@ public class MigrateCspTask extends Task {
     private COSClient cosClient;
 
     public MigrateCspTask(CopyFromCspConfig config, COSClient cosClient, String srcKey,
-            long fileSize, String etag, TransferManager smallFileTransfer,
-            TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore) {
-        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
+                          long fileSize, String etag, TransferManager smallFileTransfer,
+                          TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore, FileSystem fs) {
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb,fs);
         this.cosClient = cosClient;
         this.srcKey = srcKey;
         this.fileSize = fileSize;

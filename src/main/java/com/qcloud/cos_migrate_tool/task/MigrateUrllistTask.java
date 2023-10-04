@@ -12,6 +12,7 @@ import com.qcloud.cos_migrate_tool.record.MigrateUrllistRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.Downloader;
 import com.qcloud.cos_migrate_tool.utils.HeadAttr;
+import org.apache.hadoop.fs.FileSystem;
 
 public class MigrateUrllistTask extends Task {
 
@@ -19,9 +20,9 @@ public class MigrateUrllistTask extends Task {
     private String srcKey;
 
     public MigrateUrllistTask(CopyFromUrllistConfig config, String url, String srcKey,
-            TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
-            Semaphore semaphore) {
-        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
+                              TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
+                              Semaphore semaphore, FileSystem fs) {
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb,fs);
         this.url = url;
         this.srcKey = srcKey;
         if (srcKey.startsWith("/")) {

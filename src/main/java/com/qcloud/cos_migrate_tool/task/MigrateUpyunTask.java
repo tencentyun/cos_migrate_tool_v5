@@ -15,6 +15,7 @@ import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCompetitorRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
+import org.apache.hadoop.fs.FileSystem;
 
 public class MigrateUpyunTask extends Task {
 
@@ -26,9 +27,9 @@ public class MigrateUpyunTask extends Task {
     private String contentType;
 
     public MigrateUpyunTask(CopyFromUpyunConfig config, UpYun upyun, String srcKey, long fileSize,
-            Date lastModify, String contentType, TransferManager smallFileTransfer,
-            TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore) {
-        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
+                            Date lastModify, String contentType, TransferManager smallFileTransfer,
+                            TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore, FileSystem fs) {
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb,fs);
         //this.upyun = upyun;
         
         //又拍云sdk多线程有坑，headers不对

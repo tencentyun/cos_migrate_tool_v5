@@ -85,7 +85,7 @@ public class MigrateQiniuTaskExecutor extends TaskExecutor {
                 for (FileInfo item : items) {
                     MigrateQiniuTask task = new MigrateQiniuTask(config, auth, item.key, item.fsize,
                             item.hash, smallFileTransferManager, bigFileTransferManager, recordDb,
-                            semaphore);
+                            semaphore,fs);
 
                         AddTask(task);
                 }

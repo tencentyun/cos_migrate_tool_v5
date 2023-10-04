@@ -113,7 +113,7 @@ public class MigrateAwsTaskExecutor extends TaskExecutor {
                     MigrateAwsTask task = new MigrateAwsTask(config, s3Client,
                             objectSummary.getKey(), objectSummary.getSize(),
                             objectSummary.getETag(), smallFileTransferManager,
-                            bigFileTransferManager, recordDb, semaphore);
+                            bigFileTransferManager, recordDb, semaphore,fs);
                     log.info("list key: {}, size: {}, etag: {}", objectSummary.getKey(),
                             objectSummary.getSize(), objectSummary.getETag());
 

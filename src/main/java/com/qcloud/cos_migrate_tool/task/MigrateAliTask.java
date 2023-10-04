@@ -21,6 +21,7 @@ import com.qcloud.cos_migrate_tool.config.MigrateType;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.record.MigrateCompetitorRecordElement;
 import com.qcloud.cos_migrate_tool.record.RecordDb;
+import org.apache.hadoop.fs.FileSystem;
 
 public class MigrateAliTask extends Task {
 
@@ -31,9 +32,9 @@ public class MigrateAliTask extends Task {
     private Date lastModify;
 
     public MigrateAliTask(CopyFromAliConfig config, OSSClient ossClient, String srcKey,
-            long fileSize, String etag, Date lastModify, TransferManager smallFileTransfer,
-            TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore) {
-        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
+                          long fileSize, String etag, Date lastModify, TransferManager smallFileTransfer,
+                          TransferManager bigFileTransfer, RecordDb recordDb, Semaphore semaphore, FileSystem fs) {
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb,fs);
         this.ossClient = ossClient;
         this.srcKey = srcKey;
         this.fileSize = fileSize;

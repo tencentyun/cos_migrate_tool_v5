@@ -88,7 +88,7 @@ public class MigrateUrllistTaskExecutor extends TaskExecutor {
 						}
 
 						MigrateUrllistTask task = new MigrateUrllistTask(config, line, url_path,
-								smallFileTransferManager, bigFileTransferManager, recordDb, semaphore);
+								smallFileTransferManager, bigFileTransferManager, recordDb, semaphore,fs);
 							
 						AddTask(task);
 	

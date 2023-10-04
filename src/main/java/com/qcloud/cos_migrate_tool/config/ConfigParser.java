@@ -114,7 +114,7 @@ public class ConfigParser {
     private static final String URLLIST_PATH = "urllistPath";
     private static final String URLLIST_IS_SKIP_HEAD = "isSkipHead";
 
-
+    private static final String COMMON_USE_COSN = "useCosn";
 
     private CommonConfig config;
 
@@ -587,7 +587,12 @@ public class ConfigParser {
             if (resume!=null && !resume.isEmpty()) {
                 commonConfig.setResume(resume);
             }
-            
+
+            String useCosn = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_USE_COSN);
+            if (useCosn!=null && !useCosn.isEmpty()) {
+                commonConfig.setUseCosn(useCosn);
+            }
+
             String skipSamePath = getConfigValue(prefs, COMMON_SECTION_NAME, COMMON_SKIP_SAME_PATH);
             if (skipSamePath != null && !skipSamePath.isEmpty()) {
                 commonConfig.setSkipSamePath(skipSamePath);

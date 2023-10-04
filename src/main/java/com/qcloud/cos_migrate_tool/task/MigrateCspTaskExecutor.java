@@ -117,7 +117,7 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
                     System.out.println(str);
                     MigrateCspTask task = new MigrateCspTask((CopyFromCspConfig) config,
                             srcCosClient, str, -1, "", smallFileTransferManager,
-                            bigFileTransferManager, recordDb, semaphore);
+                            bigFileTransferManager, recordDb, semaphore,fs);
                     log.info("list from file key: {}", str);
                     try {
                         AddTask(task);
@@ -155,7 +155,7 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
                             MigrateCspTask task =
                                     new MigrateCspTask((CopyFromCspConfig) config, srcCosClient,
                                             srcKey, srcSize, srcEtag, smallFileTransferManager,
-                                            bigFileTransferManager, recordDb, semaphore);
+                                            bigFileTransferManager, recordDb, semaphore,fs);
                             log.info("list key: {}, size: {}, etag: {}", srcKey, srcSize, srcEtag);
 
                             AddTask(task);

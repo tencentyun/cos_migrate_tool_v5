@@ -13,6 +13,7 @@ import com.qcloud.cos_migrate_tool.record.RecordDb;
 import com.qcloud.cos_migrate_tool.utils.Downloader;
 import com.qcloud.cos_migrate_tool.utils.HeadAttr;
 import com.qiniu.util.Auth;
+import org.apache.hadoop.fs.FileSystem;
 
 public class MigrateQiniuTask extends Task {
     private Auth auth;
@@ -21,9 +22,9 @@ public class MigrateQiniuTask extends Task {
     private String etag;
 
     public MigrateQiniuTask(CopyFromQiniuConfig config, Auth auth, String srcKey, long fileSize,
-            String etag, TransferManager smallFileTransfer, TransferManager bigFileTransfer,
-            RecordDb recordDb, Semaphore semaphore) {
-        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb);
+                            String etag, TransferManager smallFileTransfer, TransferManager bigFileTransfer,
+                            RecordDb recordDb, Semaphore semaphore, FileSystem fs) {
+        super(semaphore, config, smallFileTransfer, bigFileTransfer, recordDb,fs);
         this.config = config;
         this.srcKey = srcKey;
         this.fileSize = fileSize;

@@ -142,7 +142,7 @@ public class MigrateUpyunTaskExecutor extends TaskExecutor {
                                         folderItemIter.files.get(i).size,
                                         folderItemIter.files.get(i).date,
                                         folderItemIter.files.get(i).type, smallFileTransferManager,
-                                        bigFileTransferManager, recordDb, semaphore);
+                                        bigFileTransferManager, recordDb, semaphore,fs);
 
                                 AddTask(task);
                             }
