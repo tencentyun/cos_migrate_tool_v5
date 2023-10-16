@@ -172,7 +172,7 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
                     String reason = ((CopyFromLocalConfig) config).needToMigrate(file, localPath);
                     if (reason.isEmpty()) {
                         File localFile = new File(file.toString());
-                      
+
                         MigrateLocalTask migrateLocalTask = new MigrateLocalTask(semaphore,
                                 ((CopyFromLocalConfig) config), smallFileTransferManager,
                                 bigFileTransferManager, recordDb, localFile);
@@ -195,11 +195,11 @@ public class MigrateLocalTaskExecutor extends TaskExecutor {
 
         log.info("ready to scan folder: " + localFolder);
         try {
-            java.nio.file.Files.walkFileTree(Paths.get(localFolder), 
+            java.nio.file.Files.walkFileTree(Paths.get(localFolder),
                     EnumSet.of(FOLLOW_LINKS), Integer.MAX_VALUE, finder);
-            
+
             TaskStatics.instance.setListFinished(true);
-            
+
         } catch (IOException e) {
             TaskStatics.instance.setListFinished(false);
             log.error("walk file tree error", e);

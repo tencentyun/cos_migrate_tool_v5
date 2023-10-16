@@ -112,6 +112,7 @@ public class CopyFromLocalConfig extends CommonConfig {
     public long getIgnoreModifiedTimeLessThan() {
         return ignoreModifiedTimeLessThan;
     }
+
     public boolean isFileListMode() {
         return fileListMode;
     }

@@ -33,8 +33,8 @@ public class MigrateLocalTask extends Task {
 
 
     public MigrateLocalTask(Semaphore semaphore, CopyFromLocalConfig copyFromLocalConfig,
-            TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
-            File localFile) {
+                            TransferManager smallFileTransfer, TransferManager bigFileTransfer, RecordDb recordDb,
+                            File localFile) {
         super(semaphore, copyFromLocalConfig, smallFileTransfer, bigFileTransfer, recordDb);
         this.bucketName = copyFromLocalConfig.getBucketName();
         this.localFolder = copyFromLocalConfig.getLocalPath();
@@ -108,9 +108,9 @@ public class MigrateLocalTask extends Task {
             } else {
                 TaskStatics.instance.addUpdateCnt();
             }
-            
+
             if(!config.getOutputFinishedFilePath().isEmpty()) {
-                SimpleDateFormat dateFormat= new SimpleDateFormat("YYYY-MM-dd");//设置当前时间的格式，为年-月-日 
+                SimpleDateFormat dateFormat= new SimpleDateFormat("YYYY-MM-dd");//设置当前时间的格式，为年-月-日
                 String file_name = dateFormat.format(new Date()) + ".out";
                 String resultFile = config.getOutputFinishedFilePath() + file_name;
                 try {
@@ -126,8 +126,8 @@ public class MigrateLocalTask extends Task {
                     log.error("write result fail,result \n"  + e.toString());
                 }
             }
-            
-            
+
+
             String printMsg =
                     String.format("[ok] [requestid: %s], task_info: %s", requestId == null ? "NULL" : requestId, migrateLocalRecordElement.buildKey());
             System.out.println(printMsg);
