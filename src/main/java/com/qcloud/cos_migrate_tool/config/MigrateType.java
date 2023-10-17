@@ -8,7 +8,8 @@ public enum MigrateType {
     MIGRATE_FROM_URLLIST("migrateUrl"),
     MIGRATE_FROM_COS_BUCKET_COPY("migrateBucketCopy"),
     MIGRATE_FROM_CSP("migrateCsp"),
-    MIGRATE_FROM_UPYUN("migrateUpyun");
+    MIGRATE_FROM_UPYUN("migrateUpyun"),
+    MIGRATE_FROM_LOCAL_TO_COSN_FS("migrateLocalToCosnFs");
 
     private String migrateType;
 

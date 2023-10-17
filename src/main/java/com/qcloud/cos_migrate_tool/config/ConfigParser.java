@@ -76,6 +76,8 @@ public class ConfigParser {
     private static final String FILE_LIST_PATH = "fileListPath";
     private static final String CHECK_LOCAL_RECORD = "checkLocalRecord";
 
+    private static final String LOCAL_TO_COSN_FS_SECTION_NAME = "migrateLocalToCosnFs";
+
     private static final String ALI_SECTION_NAME = "migrateAli";
     private static final String AWS_SECTION_NAME = "migrateAws";
     private static final String QINIU_SECTION_NAME = "migrateQiniu";
@@ -303,6 +305,14 @@ public class ConfigParser {
             if (!initCopyFromUpyunConfig(prefs, (CopyFromUpyunConfig) config)) {
                 return false;
             }
+        } else if (migrateType.equals(MigrateType.MIGRATE_FROM_LOCAL_TO_COSN_FS)){
+            if (!checkMigrateLocalToCosnFsConfig(prefs)) {
+                return false;
+            }
+            config = new CopyFromLocalToCosnConfig();
+            if (!initCopyFromLocalToCosnConfig(prefs, (CopyFromLocalToCosnConfig) config)) {
+                return false;
+            }
         }
         
         
@@ -397,6 +407,13 @@ public class ConfigParser {
 
     private boolean checkMigrateLocalConfig(Preferences prefs) {
         if (!isKeyExist(prefs, LOCAL_SECTION_NAME, LOCAL_LOCALPATH)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkMigrateLocalToCosnFsConfig(Preferences prefs) {
+        if (!isKeyExist(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, LOCAL_LOCALPATH)) {
             return false;
         }
         return true;
@@ -704,6 +721,69 @@ public class ConfigParser {
             }
 
             String strCheckLocal = getConfigValue(prefs, LOCAL_SECTION_NAME, CHECK_LOCAL_RECORD);
+            if (strCheckLocal != null) {
+                copyLocalConfig.setCheckLocalRecord(strCheckLocal);
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            log.error(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean initCopyFromLocalToCosnConfig(Preferences prefs,
+                                            CopyFromLocalToCosnConfig copyLocalConfig) {
+        if (!initCommonConfig(prefs, copyLocalConfig)) {
+            return false;
+        }
+        try {
+
+            String localPathConfig = getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, LOCAL_LOCALPATH);
+            assert (localPathConfig != null);
+            copyLocalConfig.setLocalPath(localPathConfig);
+
+            String excludes = getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, LOCAL_EXECLUDE);
+            if (excludes != null && !excludes.trim().isEmpty()) {
+                copyLocalConfig.setExcludes(excludes);
+            } else {
+                excludes = getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, "excludes");
+                if (excludes != null && !excludes.trim().isEmpty()) {
+                    copyLocalConfig.setExcludes(excludes);
+                }
+            }
+
+            String ignoreModifiedTimeLessThanStr =
+                    getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, IGNORE_MODIFIED_TIME_LESS_THAN);
+            if (ignoreModifiedTimeLessThanStr != null
+                    && !ignoreModifiedTimeLessThanStr.trim().isEmpty()) {
+                copyLocalConfig.setIgnoreModifiedTimeLessThan(ignoreModifiedTimeLessThanStr);
+            }
+
+            String ignoreSuffix = getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, IGNORE_SUFFIX);
+            if (ignoreSuffix != null && !ignoreSuffix.trim().isEmpty()) {
+                copyLocalConfig.setIgnoreSuffix(ignoreSuffix);
+            }
+
+            String includeSuffix = getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, INCLUDE_SUFFIX);
+            if (includeSuffix != null && !includeSuffix.trim().isEmpty()) {
+                copyLocalConfig.setIncludeSuffix(includeSuffix);
+            }
+
+            String ignoreEmptyFile =  getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, IGNORE_EMPTY_FILE);
+            if (ignoreEmptyFile != null && (ignoreEmptyFile.compareToIgnoreCase("on") == 0)) {
+                copyLocalConfig.setIgnoreEmptyFile(true);
+            }
+            String fileListMode = getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, FILE_LIST_MODE);
+            if (fileListMode != null && (fileListMode.compareToIgnoreCase("on") == 0)) {
+                copyLocalConfig.setFileListMode(true);
+            }
+            String fileListPath = getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, FILE_LIST_PATH);
+            if (fileListPath != null) {
+                copyLocalConfig.setFileListPath(fileListPath);
+            }
+
+            String strCheckLocal = getConfigValue(prefs, LOCAL_TO_COSN_FS_SECTION_NAME, CHECK_LOCAL_RECORD);
             if (strCheckLocal != null) {
                 copyLocalConfig.setCheckLocalRecord(strCheckLocal);
             }

@@ -37,7 +37,7 @@ public abstract class Task implements Runnable {
     protected long smallFileThreshold;
     private RecordDb recordDb;
     protected CommonConfig config;
-    QUERY_RESULT query_result;
+    protected QUERY_RESULT query_result;
 
 
 

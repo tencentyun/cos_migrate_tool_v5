@@ -7,18 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import com.qcloud.cos.internal.SkipMd5CheckStrategy;
-import com.qcloud.cos_migrate_tool.config.CommonConfig;
-import com.qcloud.cos_migrate_tool.config.ConfigParser;
-import com.qcloud.cos_migrate_tool.config.CopyBucketConfig;
-import com.qcloud.cos_migrate_tool.config.CopyFromAliConfig;
-import com.qcloud.cos_migrate_tool.config.CopyFromAwsConfig;
-import com.qcloud.cos_migrate_tool.config.CopyFromCompetitorConfig;
-import com.qcloud.cos_migrate_tool.config.CopyFromCspConfig;
-import com.qcloud.cos_migrate_tool.config.CopyFromLocalConfig;
-import com.qcloud.cos_migrate_tool.config.CopyFromQiniuConfig;
-import com.qcloud.cos_migrate_tool.config.CopyFromUpyunConfig;
-import com.qcloud.cos_migrate_tool.config.CopyFromUrllistConfig;
-import com.qcloud.cos_migrate_tool.config.MigrateType;
+import com.qcloud.cos_migrate_tool.config.*;
 import com.qcloud.cos_migrate_tool.meta.TaskStatics;
 import com.qcloud.cos_migrate_tool.task.MigrateAliTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.MigrateAwsTaskExecutor;
@@ -31,6 +20,7 @@ import com.qcloud.cos_migrate_tool.task.MigrateUpyunTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.MigrateUrllistTaskExecutor;
 import com.qcloud.cos_migrate_tool.task.TaskExecutor;
 
+import com.qcloud.cos_migrate_tool.hadoop_fs_task.MigrateLocalToCosnTaskExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +47,8 @@ public class App {
             return new MigrateCspTaskExecutor((CopyFromCspConfig) config);
         } else if (ConfigParser.instance.getMigrateType().equals(MigrateType.MIGRATE_FROM_UPYUN)) {
             return new MigrateUpyunTaskExecutor((CopyFromUpyunConfig) config);
+        } else if (ConfigParser.instance.getMigrateType().equals(MigrateType.MIGRATE_FROM_LOCAL_TO_COSN_FS)) {
+            return new MigrateLocalToCosnTaskExecutor((CopyFromLocalToCosnConfig) config);
         } else {
             System.out.println("unknown migrate type");
         }
