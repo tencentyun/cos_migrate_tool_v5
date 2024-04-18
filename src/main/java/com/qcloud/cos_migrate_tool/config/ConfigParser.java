@@ -23,6 +23,7 @@ public class ConfigParser {
 
     private static final String MIGRATE_TYPE_SECTION_NAME = "migrateType";
     private static final String MIGRATE_TYPE = "type";
+    private static final String DEPRECATED_TYPE = "deprecatedType";
 
     private static final String COMMON_SECTION_NAME = "common";
     private static final String COMMON_REGION = "region";
@@ -323,6 +324,23 @@ public class ConfigParser {
             String migrateTypeStr = getConfigValue(prefs, MIGRATE_TYPE_SECTION_NAME, MIGRATE_TYPE);
             assert (migrateTypeStr != null);
             migrateType = MigrateType.fromValue(migrateTypeStr);
+
+            /* check deprecated type
+                [migrateType]
+                type=migrateLocal
+                deprecatedType=on
+             */
+
+            String deprecatedStr = getConfigValue(prefs, MIGRATE_TYPE_SECTION_NAME, DEPRECATED_TYPE);
+            if (!"on".equalsIgnoreCase(deprecatedStr)) {
+                if (migrateType != MigrateType.MIGRATE_FROM_LOCAL) {
+                    String errMsg = String.format("Deprecated type: %s is no longer supported, only %s is supported.", migrateType, MigrateType.MIGRATE_FROM_LOCAL);
+                    System.err.println(errMsg);
+                    log.error(errMsg);
+                    return false;
+                }
+            }
+
         } catch (IllegalArgumentException e) {
             String errMsg = String.format("invalid config. section:%s, key:%s",
                     MIGRATE_TYPE_SECTION_NAME, MIGRATE_TYPE);
