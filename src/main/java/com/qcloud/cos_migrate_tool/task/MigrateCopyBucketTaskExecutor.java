@@ -51,6 +51,7 @@ public class MigrateCopyBucketTaskExecutor extends TaskExecutor {
             srcCred = new BasicCOSCredentials(config.getSrcAk(), config.getSrcSk());
         }
         ClientConfig clientConfig = new ClientConfig(new Region(config.getSrcRegion()));
+        clientConfig.setAddLogDebugHeader(false);
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
         } else {

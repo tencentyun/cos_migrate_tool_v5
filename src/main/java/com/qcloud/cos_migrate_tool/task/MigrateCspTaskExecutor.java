@@ -44,6 +44,7 @@ public class MigrateCspTaskExecutor extends TaskExecutor {
         COSCredentials srcCred =
                 new BasicCOSCredentials(config.getSrcAccessKeyId(), config.getSrcAccessKeySecret());
         ClientConfig clientConfig = new ClientConfig();
+        clientConfig.setAddLogDebugHeader(false);
         if (config.isEnableSrcHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
         } else {
