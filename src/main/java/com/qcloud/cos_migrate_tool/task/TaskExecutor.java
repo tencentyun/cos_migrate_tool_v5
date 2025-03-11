@@ -88,6 +88,7 @@ public abstract class TaskExecutor {
 
         //COSCredentials cred = new BasicCOSCredentials(config.getAk(), config.getSk());
         ClientConfig clientConfig = new ClientConfig(new Region(config.getRegion()));
+        clientConfig.setAddLogDebugHeader(false);
         if (config.isEnableHttps()) {
             clientConfig.setHttpProtocol(HttpProtocol.https);
         } else {
