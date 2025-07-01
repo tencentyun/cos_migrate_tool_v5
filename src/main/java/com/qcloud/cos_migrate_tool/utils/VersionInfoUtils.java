@@ -61,6 +61,7 @@ public class VersionInfoUtils {
     /**
      * @return Returns the User Agent string to be used when communicating with the COS services.
      *         The User Agent encapsulates SDK, Java, OS and region information.
+     *         eg:cos-migrate-tool-v${project.version}/Linux/jdk-1.8.0_271/Java HotSpot(TM) 64-Bit Server VM=
      */
     public static String getUserAgent() {
         if (userAgent == null) {
